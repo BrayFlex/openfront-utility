@@ -35,6 +35,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const toolCircleBtn = document.getElementById(
     "tool-circle"
   ) as HTMLButtonElement;
+  const toolSelectBtn = document.getElementById(
+    "tool-select"
+  ) as HTMLButtonElement;
   const starSizeInput = document.getElementById(
     "star-size"
   ) as HTMLInputElement;
@@ -76,6 +79,12 @@ document.addEventListener("DOMContentLoaded", () => {
   ) as HTMLButtonElement;
   const shiftDownBtn = document.getElementById(
     "shiftDownBtn"
+  ) as HTMLButtonElement;
+  const rotateLeftBtn = document.getElementById(
+    "rotateLeftBtn"
+  ) as HTMLButtonElement;
+  const rotateRightBtn = document.getElementById(
+    "rotateRightBtn"
   ) as HTMLButtonElement;
   const gridDiv = document.getElementById("grid")!;
   const outputTextarea = document.getElementById(
@@ -121,6 +130,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const viewPreviewInput = document.getElementById(
     "view-preview"
   ) as HTMLInputElement | null;
+  const tabActionsInput = document.getElementById(
+    "tab-actions"
+  ) as HTMLInputElement;
+  const tabToolsInput = document.getElementById(
+    "tab-tools"
+  ) as HTMLInputElement;
+  const tabGridInput = document.getElementById(
+    "tab-grid"
+  ) as HTMLInputElement;
   const previewPanel = document.querySelector(
     ".preview-panel"
   ) as HTMLElement | null;
@@ -141,6 +159,7 @@ document.addEventListener("DOMContentLoaded", () => {
     toolFillBtn,
     toolStarBtn,
     toolCircleBtn,
+    toolSelectBtn,
     penSizeInput,
     starSizeInput,
     circleSizeInput,
@@ -160,6 +179,8 @@ document.addEventListener("DOMContentLoaded", () => {
     shiftLeftBtn,
     shiftRightBtn,
     invertBtn: document.getElementById("invertGridBtn") as HTMLButtonElement,
+    rotateLeftBtn,
+    rotateRightBtn,
     initialPattern,
     guideState,
     toolState,
@@ -373,6 +394,16 @@ document.addEventListener("DOMContentLoaded", () => {
     updateOutput();
   };
   setupHistoryShortcuts({ onUndo: handleUndo, onRedo: handleRedo });
+
+  const syncRotateSelectWithActionsTab = () => {
+    if (!tabActionsInput.checked && toolState.getCurrentTool() === "select") {
+      toolSelectBtn.click();
+    }
+  };
+
+  tabActionsInput.addEventListener("change", syncRotateSelectWithActionsTab);
+  tabToolsInput.addEventListener("change", syncRotateSelectWithActionsTab);
+  tabGridInput.addEventListener("change", syncRotateSelectWithActionsTab);
 
   gridManager.generateGrid();
 

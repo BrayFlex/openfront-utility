@@ -19,6 +19,8 @@ type GridManagerOptions = {
   shiftLeftBtn: HTMLButtonElement;
   shiftRightBtn: HTMLButtonElement;
   invertBtn?: HTMLButtonElement;
+  rotateLeftBtn?: HTMLButtonElement;
+  rotateRightBtn?: HTMLButtonElement;
   initialPattern: number[][];
   guideState: GuideState;
   toolState: ToolState;
@@ -50,6 +52,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     shiftLeftBtn,
     shiftRightBtn,
     invertBtn,
+    rotateLeftBtn,
+    rotateRightBtn,
     initialPattern,
     guideState,
     toolState,
@@ -67,9 +71,16 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   let currentWidth = 0;
   let lineStart: GridPoint | null = null;
   let circlePreviewCells: GridPoint[] = [];
+  let selectionStart: GridPoint | null = null;
+  let selectionEnd: GridPoint | null = null;
+  let selectionTimeout: number | null = null;
+  let isSelectionActive = false;
+  let selectionCells: GridPoint[] = [];
+  let selectionAnchorCell: GridPoint | null = null;
   let patternState: number[][] = [];
   let cellMatrix: HTMLDivElement[][] = [];
   const baseCellSize = 20;
+  const selectionHoldDelay = 250;
 
   const getGridScale = () => {
     const nextScale = gridScaleInput ? parseFloat(gridScaleInput.value) : 1;
@@ -123,6 +134,79 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   const setDrawingTools = (tools: DrawingTools) => (drawingTools = tools);
 
+  const clearSelection = () => {
+    selectionCells.forEach((point) => {
+      cellMatrix[point.y]?.[point.x]?.classList.remove("selection-cell");
+    });
+    selectionCells = [];
+    selectionStart = null;
+    selectionEnd = null;
+    selectionAnchorCell = null;
+    isSelectionActive = false;
+    gridDiv.classList.remove("selection-active");
+  };
+
+  const clearSelectionTimer = () => {
+    if (selectionTimeout !== null) {
+      window.clearTimeout(selectionTimeout);
+      selectionTimeout = null;
+    }
+  };
+
+  const renderSelection = () => {
+    selectionCells.forEach((point) => {
+      cellMatrix[point.y]?.[point.x]?.classList.remove("selection-cell");
+    });
+    selectionCells = [];
+    if (!selectionStart || !selectionEnd) return;
+    const rect = getSelectionCorner(selectionStart, selectionEnd);
+    for (let y = rect.y; y < rect.y + rect.size; y++) {
+      for (let x = rect.x; x < rect.x + rect.size; x++) {
+        if (!isInBounds(x, y)) continue;
+        selectionCells.push({ x, y });
+        cellMatrix[y]?.[x]?.classList.add("selection-cell");
+      }
+    }
+    selectionAnchorCell = { x: selectionStart.x, y: selectionStart.y };
+    cellMatrix[selectionAnchorCell.y]?.[selectionAnchorCell.x]?.classList.add(
+      "selection-anchor"
+    );
+    gridDiv.classList.add("selection-active");
+  };
+
+  const getSelectedSquare = () => {
+    if (!selectionStart || !selectionEnd) return null;
+    const rect = getSelectionCorner(selectionStart, selectionEnd);
+    if (rect.size <= 0) return null;
+    if (rect.x + rect.size > tileWidth || rect.y + rect.size > tileHeight) return null;
+    return rect;
+  };
+
+  const rotateSelection = (direction: "left" | "right") => {
+    const rect = getSelectedSquare();
+    if (!rect) return;
+    const square = Array.from({ length: rect.size }, (_, y) =>
+      Array.from({ length: rect.size }, (_, x) => patternState[rect.y + y][rect.x + x])
+    );
+    const rotated = Array.from({ length: rect.size }, () => new Array(rect.size).fill(0));
+    for (let y = 0; y < rect.size; y++) {
+      for (let x = 0; x < rect.size; x++) {
+        if (direction === "right") {
+          rotated[x][rect.size - 1 - y] = square[y][x];
+        } else {
+          rotated[rect.size - 1 - x][y] = square[y][x];
+        }
+      }
+    }
+    for (let y = 0; y < rect.size; y++) {
+      for (let x = 0; x < rect.size; x++) {
+        setCellActive(rect.x + x, rect.y + y, rotated[y][x] === 1);
+      }
+    }
+    renderSelection();
+    onPatternChange();
+  };
+
   const setLineStart = (point: GridPoint | null) => {
     if (lineStart) {
       cellMatrix[lineStart.y]?.[lineStart.x]?.classList.remove("line-start");
@@ -159,6 +243,10 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   toolState.subscribeToToolChanges((tool) => {
     if (tool !== "line") setLineStart(null);
     if (tool !== "circle") clearCirclePreview();
+    if (tool !== "select") {
+      clearSelectionTimer();
+      clearSelection();
+    }
   });
 
   const applyPattern = (nextPattern: number[][]) => {
@@ -172,6 +260,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   const applyPatternTransform = (transform: (pattern: number[][]) => number[][]) => {
     setLineStart(null);
     clearCirclePreview();
+    clearSelection();
     applyPattern(transform(patternState));
     onPatternChange();
   };
@@ -196,6 +285,54 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     applyPatternTransform(invertPattern);
   });
 
+  rotateLeftBtn?.addEventListener("click", () => rotateSelection("left"));
+  rotateRightBtn?.addEventListener("click", () => rotateSelection("right"));
+
+  const startSelection = (x: number, y: number) => {
+    clearSelectionTimer();
+    clearSelection();
+    selectionStart = { x, y };
+    selectionEnd = { x, y };
+    selectionTimeout = window.setTimeout(() => {
+      isSelectionActive = true;
+      renderSelection();
+    }, selectionHoldDelay);
+  };
+
+  const updateSelection = (x: number, y: number) => {
+    if (!selectionStart) return;
+    selectionEnd = { x, y };
+    if (isSelectionActive) renderSelection();
+  };
+
+  const getSelectionCorner = (start: GridPoint, end: GridPoint) => {
+    const side = Math.min(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
+    const x = end.x >= start.x ? start.x : start.x - side;
+    const y = end.y >= start.y ? start.y : start.y - side;
+    return {
+      x: Math.max(0, Math.min(x, tileWidth - (side + 1))),
+      y: Math.max(0, Math.min(y, tileHeight - (side + 1))),
+      size: side + 1,
+    };
+  };
+
+  const finishSelection = () => {
+    clearSelectionTimer();
+    if (!isSelectionActive) {
+      clearSelection();
+      return;
+    }
+    renderSelection();
+  };
+
+  document.body.addEventListener("mouseup", () => {
+    isMouseDown = false;
+    toggleState = null;
+    if (toolState.getCurrentTool() === "select") {
+      finishSelection();
+    }
+  });
+
   function getCurrentPattern(): number[][] {
     return patternState;
   }
@@ -205,6 +342,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     tileHeight = parseInt(tileHeightInput.value);
     setLineStart(null);
     clearCirclePreview();
+    clearSelection();
     applyGridSizing();
     const basePattern =
       pattern || (isFirstLoad ? initialPattern : patternState);
@@ -284,6 +422,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
         cell.classList.remove("guide-v", "guide-h", "center-v", "center-h");
         cell.classList.remove("line-start", "circle-hover");
+        cell.classList.remove("selection-cell");
+        cell.classList.remove("selection-anchor");
         cell.classList.toggle("active", patternState[y][x] === 1);
 
         if (guideState.isBlackEnabled()) {
@@ -336,6 +476,19 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             onPatternChange();
           } else if (!isMouseDown && tool === "circle") {
             previewCircle({ x, y }, toolState.getCircleRadius());
+          } else if (isMouseDown && tool === "select") {
+            updateSelection(x, y);
+          }
+        };
+
+        cell.onmousedown = () => {
+          if (toolState.getCurrentTool() === "select") {
+            startSelection(x, y);
+          }
+        };
+        cell.onmouseup = () => {
+          if (toolState.getCurrentTool() === "select") {
+            finishSelection();
           }
         };
       }
@@ -348,6 +501,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   function clearGrid() {
     setLineStart(null);
     clearCirclePreview();
+    clearSelection();
     for (let y = 0; y < tileHeight; y++) {
       for (let x = 0; x < tileWidth; x++) {
         setCellActive(x, y, false);
