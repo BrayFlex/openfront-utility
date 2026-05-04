@@ -33,10 +33,12 @@
           <input type="radio" name="control-tab" id="tab-tools" checked />
           <input type="radio" name="control-tab" id="tab-actions" />
           <input type="radio" name="control-tab" id="tab-grid" />
+          <input type="radio" name="control-tab" id="tab-stamp" />
           <div class="tab-controls">
             <label for="tab-tools" class="tab-button">Tools</label>
             <label for="tab-actions" class="tab-button">Actions</label>
             <label for="tab-grid" class="tab-button">Grid</label>
+            <label for="tab-stamp" class="tab-button">Stamp</label>
           </div>
           <div class="tab-panels">
             <div class="tab-panel tools">
@@ -74,6 +76,10 @@
                     <input type="checkbox" id="circle-fill" checked />
                     Fill
                   </label>
+                </div>
+                <div class="tool-group">
+                  <button id="tool-stamp" class="tool-btn" data-tool="stamp">🧩 Stamp</button>
+                  <input type="range" id="stamp-brush-size" min="1" max="9" step="1" value="2" class="tool-range" aria-label="Stamp brush size" title="Stamp brush size" />
                 </div>
               </div>
             </div>
@@ -121,6 +127,36 @@
                   <option value="2">x2</option>
                   <option value="3">x3</option>
                 </select>
+              </div>
+            </div>
+            <div class="tab-panel stamp">
+              <div class="stamp-panel">
+                <div class="row slider-row stamp-size-row">
+                  <label for="stampWidth">Pattern W</label>
+                  <input type="number" id="stampWidth" min="1" max="24" value="4" class="number-input" />
+                  <label for="stampHeight">H</label>
+                  <input type="number" id="stampHeight" min="1" max="24" value="4" class="number-input" />
+                </div>
+                <div class="row">
+                  <label for="stampApplyMode">Apply mode</label>
+                  <select id="stampApplyMode" class="select-input">
+                    <option value="overwrite" selected>Overwrite</option>
+                    <option value="overlay">Overlay</option>
+                  </select>
+                </div>
+                <div class="stamp-editor-wrap">
+                  <div class="stamp-editor-toolbar">
+                    <span class="panel-title">Pattern</span>
+                    <button id="stampClearBtn" type="button">Clear</button>
+                  </div>
+                  <div id="stampEditor" class="stamp-editor" aria-label="Stamp pattern editor"></div>
+                </div>
+                <div class="row">
+                  <button id="stampApplyBtn" class="btn-primary">Apply</button>
+                </div>
+                <p class="stamp-help">
+                  Hold and drag on the canvas to add circular stamp area.
+                </p>
               </div>
             </div>
           </div>

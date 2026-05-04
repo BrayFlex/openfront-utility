@@ -266,6 +266,13 @@ textarea:focus-visible {
   outline-offset: -1px;
 }
 
+.stamp-selection-cell {
+  background: rgba(214, 82, 57, 0.22);
+  box-shadow: inset 0 0 0 1px rgba(214, 82, 57, 0.72);
+  outline: 1px solid rgba(214, 82, 57, 0.15);
+  outline-offset: -1px;
+}
+
 .selection-anchor {
   background: #0c7c7b;
 }
@@ -579,7 +586,8 @@ input[type="color"]:hover {
 #tab-import:checked ~ .tab-controls label[for="tab-import"],
 #tab-tools:checked ~ .tab-controls label[for="tab-tools"],
 #tab-actions:checked ~ .tab-controls label[for="tab-actions"],
-#tab-grid:checked ~ .tab-controls label[for="tab-grid"] {
+#tab-grid:checked ~ .tab-controls label[for="tab-grid"],
+#tab-stamp:checked ~ .tab-controls label[for="tab-stamp"] {
   background: #ffffff;
   color: var(--text);
   box-shadow: var(--shadow-card);
@@ -628,12 +636,64 @@ input[type="color"]:hover {
   display: flex;
 }
 
+#tab-stamp:checked ~ .tab-panels .tab-panel.stamp {
+  display: flex;
+}
+
 #preview {
   display: block;
   max-width: 100%;
   border-radius: 14px;
   border: 1px solid var(--border);
   background: #ffffff;
+}
+
+.stamp-size-row {
+  grid-template-columns: 90px 1fr 24px 1fr;
+}
+
+.stamp-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stamp-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stamp-editor {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #ffffff;
+  overflow: auto;
+}
+
+.stamp-editor-cell {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 0;
+}
+
+.stamp-editor-cell.active {
+  background: var(--accent);
+  border-color: var(--accent-strong);
+}
+
+.stamp-help {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
 }
 
 .color-row label {
