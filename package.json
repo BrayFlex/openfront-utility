@@ -6,6 +6,7 @@
   "scripts": {
     "build": "tsc && node scripts/copy-static.js",
     "start": "npx serve docs",
+    "dev": "npm run build && npm run start",
     "test": "npm run build && node scripts/test-initial-pattern.js && node scripts/test-image-pattern-conversion.js && node scripts/test-circle-geometry.js"
   },
   "devDependencies": {
