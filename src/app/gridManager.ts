@@ -38,6 +38,10 @@ export type GridManager = {
   setCellActive: (x: number, y: number, active: boolean) => void;
   setDrawingTools: (tools: DrawingTools) => void;
   getStampSelection: () => GridPoint[];
+  setShiftSelectionMode: (mode: "all" | "partial") => void;
+  setShiftOverwriteMode: (overwrite: boolean) => void;
+  enableShiftSelect: (enabled: boolean) => void;
+  clearShiftSelect: () => void;
 };
 
 export function createGridManager(options: GridManagerOptions): GridManager {
@@ -78,6 +82,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   let isSelectionActive = false;
   let selectionCells: GridPoint[] = [];
   let selectionAnchorCell: GridPoint | null = null;
+  let shiftSelectionStart: GridPoint | null = null;
+  let shiftSelectionEnd: GridPoint | null = null;
+  let shiftSelectionCells: GridPoint[] = [];
+  let shiftSelectionAnchorCell: GridPoint | null = null;
+  let shiftSelectionActive = false;
+  let shiftSelectionMode: "all" | "partial" = "all";
+  let shiftOverwriteMode = true;
+  let isShiftSelectEnabled = false;
   let stampSelectionCells: GridPoint[] = [];
   let stampSelectionVisited = new Set<string>();
   let stampSelectionLastPoint: GridPoint | null = null;
@@ -202,6 +214,23 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     gridDiv.classList.remove("selection-active");
   };
 
+  const clearShiftSelection = () => {
+    shiftSelectionCells.forEach((point) => {
+      cellMatrix[point.y]?.[point.x]?.classList.remove("shift-selection-cell");
+    });
+    if (shiftSelectionAnchorCell) {
+      cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.remove(
+        "shift-selection-anchor"
+      );
+    }
+    shiftSelectionCells = [];
+    shiftSelectionStart = null;
+    shiftSelectionEnd = null;
+    shiftSelectionAnchorCell = null;
+    shiftSelectionActive = false;
+    gridDiv.classList.remove("shift-selection-active");
+  };
+
   const clearSelectionTimer = () => {
     if (selectionTimeout !== null) {
       window.clearTimeout(selectionTimeout);
@@ -230,12 +259,96 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     gridDiv.classList.add("selection-active");
   };
 
+  const renderShiftSelection = () => {
+    shiftSelectionCells.forEach((point) => {
+      cellMatrix[point.y]?.[point.x]?.classList.remove("shift-selection-cell");
+    });
+    if (shiftSelectionAnchorCell) {
+      cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.remove(
+        "shift-selection-anchor"
+      );
+    }
+    shiftSelectionCells = [];
+    if (!shiftSelectionStart || !shiftSelectionEnd) return;
+    const x1 = Math.min(shiftSelectionStart.x, shiftSelectionEnd.x);
+    const y1 = Math.min(shiftSelectionStart.y, shiftSelectionEnd.y);
+    const x2 = Math.max(shiftSelectionStart.x, shiftSelectionEnd.x);
+    const y2 = Math.max(shiftSelectionStart.y, shiftSelectionEnd.y);
+    for (let y = y1; y <= y2; y++) {
+      for (let x = x1; x <= x2; x++) {
+        if (!isInBounds(x, y)) continue;
+        shiftSelectionCells.push({ x, y });
+        cellMatrix[y]?.[x]?.classList.add("shift-selection-cell");
+      }
+    }
+    shiftSelectionAnchorCell = { x: shiftSelectionStart.x, y: shiftSelectionStart.y };
+    cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.add(
+      "shift-selection-anchor"
+    );
+    gridDiv.classList.add("shift-selection-active");
+  };
+
   const getSelectedSquare = () => {
     if (!selectionStart || !selectionEnd) return null;
     const rect = getSelectionCorner(selectionStart, selectionEnd);
     if (rect.size <= 0) return null;
     if (rect.x + rect.size > tileWidth || rect.y + rect.size > tileHeight) return null;
     return rect;
+  };
+
+  const getShiftSelectionRect = () => {
+    if (!shiftSelectionStart || !shiftSelectionEnd) return null;
+    return {
+      x1: Math.min(shiftSelectionStart.x, shiftSelectionEnd.x),
+      y1: Math.min(shiftSelectionStart.y, shiftSelectionEnd.y),
+      x2: Math.max(shiftSelectionStart.x, shiftSelectionEnd.x),
+      y2: Math.max(shiftSelectionStart.y, shiftSelectionEnd.y),
+    };
+  };
+
+  const shiftSelectedArea = (dx: number, dy: number) => {
+    const rect = getShiftSelectionRect();
+    if (!rect || shiftSelectionMode !== "partial") return false;
+    const source = patternState.map((row) => row.slice());
+    const next = patternState.map((row) => row.slice());
+    const isInsideSelection = (x: number, y: number) =>
+      x >= rect.x1 && x <= rect.x2 && y >= rect.y1 && y <= rect.y2;
+    const movingCells: Array<{ x: number; y: number }> = [];
+    for (let y = rect.y1; y <= rect.y2; y++) {
+      for (let x = rect.x1; x <= rect.x2; x++) {
+        if (source[y]?.[x] === 1) movingCells.push({ x, y });
+      }
+    }
+    if (!movingCells.length) return false;
+    const movedTargets = movingCells
+      .map((cell) => ({ x: cell.x + dx, y: cell.y + dy }))
+      .filter((point) => isInBounds(point.x, point.y));
+    if (!shiftOverwriteMode) {
+      const blocked = movedTargets.some(
+        (point) => !isInsideSelection(point.x, point.y) && source[point.y]?.[point.x] === 1
+      );
+      if (blocked) return false;
+    }
+    for (const cell of movingCells) {
+      next[cell.y][cell.x] = 0;
+    }
+    for (const cell of movingCells) {
+      const targetX = cell.x + dx;
+      const targetY = cell.y + dy;
+      if (!isInBounds(targetX, targetY)) continue;
+      next[targetY][targetX] = 1;
+    }
+    patternState = next;
+    shiftSelectionStart = shiftSelectionStart
+      ? { x: shiftSelectionStart.x + dx, y: shiftSelectionStart.y + dy }
+      : null;
+    shiftSelectionEnd = shiftSelectionEnd
+      ? { x: shiftSelectionEnd.x + dx, y: shiftSelectionEnd.y + dy }
+      : null;
+    applyPattern(patternState);
+    renderShiftSelection();
+    onPatternChange();
+    return true;
   };
 
   const rotateSelection = (direction: "left" | "right") => {
@@ -303,6 +416,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       clearSelectionTimer();
       clearSelection();
     }
+    if (tool !== "select" && !isShiftSelectEnabled) {
+      clearShiftSelection();
+    }
     if (tool !== "stamp") {
       clearStampSelection();
     }
@@ -320,24 +436,41 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setLineStart(null);
     clearCirclePreview();
     clearSelection();
+    clearShiftSelection();
     clearStampSelection();
     applyPattern(transform(patternState));
     onPatternChange();
   };
 
   shiftLeftBtn.addEventListener("click", () => {
+    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
+      if (!shiftSelectedArea(-1, 0)) window.alert("No shift area selected or target area is occupied.");
+      return;
+    }
     applyPatternTransform(shiftPatternLeft);
   });
 
   shiftRightBtn.addEventListener("click", () => {
+    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
+      if (!shiftSelectedArea(1, 0)) window.alert("No shift area selected or target area is occupied.");
+      return;
+    }
     applyPatternTransform(shiftPatternRight);
   });
 
   shiftDownBtn.addEventListener("click", () => {
+    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
+      if (!shiftSelectedArea(0, 1)) window.alert("No shift area selected or target area is occupied.");
+      return;
+    }
     applyPatternTransform(shiftPatternDown);
   });
 
   shiftUpBtn.addEventListener("click", () => {
+    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
+      if (!shiftSelectedArea(0, -1)) window.alert("No shift area selected or target area is occupied.");
+      return;
+    }
     applyPatternTransform(shiftPatternUp);
   });
 
@@ -359,6 +492,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     }, selectionHoldDelay);
   };
 
+  const startShiftSelection = (x: number, y: number) => {
+    clearShiftSelection();
+    shiftSelectionStart = { x, y };
+    shiftSelectionEnd = { x, y };
+    shiftSelectionActive = true;
+    renderShiftSelection();
+  };
+
   const startStampSelection = (x: number, y: number) => {
     clearStampSelection();
     addStampCircle({ x, y });
@@ -369,6 +510,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     if (!selectionStart) return;
     selectionEnd = { x, y };
     if (isSelectionActive) renderSelection();
+  };
+
+  const updateShiftSelection = (x: number, y: number) => {
+    if (!shiftSelectionStart) return;
+    shiftSelectionEnd = { x, y };
+    if (shiftSelectionActive) renderShiftSelection();
   };
 
   const updateStampSelection = (x: number, y: number) => {
@@ -400,10 +547,21 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     renderSelection();
   };
 
+  const finishShiftSelection = () => {
+    if (!shiftSelectionStart) return;
+    if (!shiftSelectionActive) {
+      clearShiftSelection();
+      return;
+    }
+    renderShiftSelection();
+  };
+
   document.body.addEventListener("mouseup", () => {
     isMouseDown = false;
     toggleState = null;
-    if (toolState.getCurrentTool() === "select") {
+    if (isShiftSelectEnabled) {
+      finishShiftSelection();
+    } else if (toolState.getCurrentTool() === "select") {
       finishSelection();
     }
   });
@@ -418,6 +576,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setLineStart(null);
     clearCirclePreview();
     clearSelection();
+    clearShiftSelection();
     clearStampSelection();
     applyGridSizing();
     const basePattern =
@@ -501,6 +660,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         cell.classList.remove("selection-cell");
         cell.classList.remove("selection-anchor");
         cell.classList.remove("stamp-selection-cell");
+        cell.classList.remove("shift-selection-cell");
+        cell.classList.remove("shift-selection-anchor");
         cell.classList.toggle("active", patternState[y][x] === 1);
 
         if (guideState.isBlackEnabled()) {
@@ -513,6 +674,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         }
 
         cell.onclick = () => {
+          if (isShiftSelectEnabled) {
+            return;
+          }
           const tool = toolState.getCurrentTool();
           if (tool === "pen") {
             const shouldActivate = !isCellActive(x, y);
@@ -546,6 +710,10 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         };
 
         cell.onmouseover = () => {
+          if (isShiftSelectEnabled) {
+            if (isMouseDown) updateShiftSelection(x, y);
+            return;
+          }
           const tool = toolState.getCurrentTool();
           if (isMouseDown && tool === "pen") {
             if (toggleState === null) {
@@ -557,20 +725,26 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             previewCircle({ x, y }, toolState.getCircleRadius());
           } else if (isMouseDown && tool === "select") {
             updateSelection(x, y);
+          } else if (isMouseDown && isShiftSelectEnabled) {
+            updateShiftSelection(x, y);
           } else if (isMouseDown && tool === "stamp") {
             updateStampSelection(x, y);
           }
         };
 
         cell.onmousedown = () => {
-          if (toolState.getCurrentTool() === "select") {
+          if (isShiftSelectEnabled) {
+            startShiftSelection(x, y);
+          } else if (toolState.getCurrentTool() === "select") {
             startSelection(x, y);
           } else if (toolState.getCurrentTool() === "stamp") {
             startStampSelection(x, y);
           }
         };
         cell.onmouseup = () => {
-          if (toolState.getCurrentTool() === "select") {
+          if (isShiftSelectEnabled) {
+            finishShiftSelection();
+          } else if (toolState.getCurrentTool() === "select") {
             finishSelection();
           } else if (toolState.getCurrentTool() === "stamp") {
             stampSelectionLastPoint = null;
@@ -587,6 +761,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setLineStart(null);
     clearCirclePreview();
     clearSelection();
+    clearShiftSelection();
     clearStampSelection();
     for (let y = 0; y < tileHeight; y++) {
       for (let x = 0; x < tileWidth; x++) {
@@ -606,5 +781,20 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setCellActive,
     setDrawingTools,
     getStampSelection: () => stampSelectionCells,
+    setShiftSelectionMode: (mode) => {
+      shiftSelectionMode = mode;
+      if (mode === "all") clearShiftSelection();
+    },
+    setShiftOverwriteMode: (overwrite) => {
+      shiftOverwriteMode = overwrite;
+    },
+    enableShiftSelect: (enabled) => {
+      isShiftSelectEnabled = enabled;
+      if (!enabled) clearShiftSelection();
+    },
+    clearShiftSelect: () => {
+      isShiftSelectEnabled = false;
+      clearShiftSelection();
+    },
   };
 }

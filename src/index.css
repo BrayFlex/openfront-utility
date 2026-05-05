@@ -266,6 +266,13 @@ textarea:focus-visible {
   outline-offset: -1px;
 }
 
+.shift-selection-cell {
+  background: rgba(12, 124, 123, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(12, 124, 123, 0.7);
+  outline: 1px solid rgba(12, 124, 123, 0.18);
+  outline-offset: -1px;
+}
+
 .stamp-selection-cell {
   background: rgba(214, 82, 57, 0.22);
   box-shadow: inset 0 0 0 1px rgba(214, 82, 57, 0.72);
@@ -277,7 +284,12 @@ textarea:focus-visible {
   background: #0c7c7b;
 }
 
-.selection-active .cell:not(.selection-cell):not(.selection-anchor) {
+.shift-selection-anchor {
+  background: #0c7c7b;
+}
+
+.selection-active .cell:not(.selection-cell):not(.selection-anchor),
+.shift-selection-active .cell:not(.shift-selection-cell):not(.shift-selection-anchor) {
   opacity: 0.7;
 }
 
@@ -313,6 +325,80 @@ textarea:focus-visible {
 
 .shift-pad button {
   width: 100%;
+}
+
+.shift-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--shadow-card);
+}
+
+.shift-box-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--surface-alt);
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+
+.toggle-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-pill-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+.toggle-pill-option:hover {
+  color: var(--text);
+}
+
+#shift-mode-all:checked ~ label[for="shift-mode-all"],
+#shift-mode-partial:checked ~ label[for="shift-mode-partial"],
+#shift-overwrite-on:checked ~ label[for="shift-overwrite-on"],
+#shift-overwrite-off:checked ~ label[for="shift-overwrite-off"] {
+  background: #ffffff;
+  color: var(--text);
+  box-shadow: var(--shadow-card);
+  border: 1px solid var(--border);
+}
+
+.toggle-pill-secondary {
+  flex-wrap: wrap;
+}
+
+.shift-select-hidden {
+  display: none;
+}
+
+.shift-select-visible {
+  display: inline-flex;
 }
 
 #shiftUpBtn {

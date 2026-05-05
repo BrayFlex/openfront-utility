@@ -41,6 +41,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const toolSelectBtn = document.getElementById(
     "tool-select"
   ) as HTMLButtonElement;
+  const shiftSelectBtn = document.getElementById(
+    "shift-select-btn"
+  ) as HTMLButtonElement;
   const starSizeInput = document.getElementById(
     "star-size"
   ) as HTMLInputElement;
@@ -86,6 +89,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const shiftDownBtn = document.getElementById(
     "shiftDownBtn"
   ) as HTMLButtonElement;
+  const shiftModeAll = document.getElementById("shift-mode-all") as HTMLInputElement;
+  const shiftModePartial = document.getElementById("shift-mode-partial") as HTMLInputElement;
+  const shiftOverwriteOn = document.getElementById("shift-overwrite-on") as HTMLInputElement;
+  const shiftOverwriteOff = document.getElementById("shift-overwrite-off") as HTMLInputElement;
   const stampWidthInput = document.getElementById("stampWidth") as HTMLInputElement;
   const stampHeightInput = document.getElementById("stampHeight") as HTMLInputElement;
   const stampApplyModeSelect = document.getElementById(
@@ -496,6 +503,8 @@ document.addEventListener("DOMContentLoaded", () => {
   setupHistoryShortcuts({ onUndo: handleUndo, onRedo: handleRedo });
 
   const syncRotateSelectWithActionsTab = () => {
+    gridManager.clearShiftSelect();
+    clearShiftSelectUI();
     if (!tabActionsInput.checked && toolState.getCurrentTool() === "select") {
       toolSelectBtn.click();
     }
@@ -511,6 +520,51 @@ document.addEventListener("DOMContentLoaded", () => {
   tabToolsInput.addEventListener("change", syncRotateSelectWithActionsTab);
   tabGridInput.addEventListener("change", syncRotateSelectWithActionsTab);
   tabStampInput.addEventListener("change", syncStampToolWithTab);
+
+  const syncShiftSelectButtonVisibility = () => {
+    const visible = shiftModePartial.checked;
+    shiftSelectBtn.classList.toggle("shift-select-visible", visible);
+    shiftSelectBtn.classList.toggle("shift-select-hidden", !visible);
+  };
+  const clearShiftSelectUI = () => {
+    shiftSelectBtn.classList.remove("selected");
+    shiftModeAll.checked = true;
+    shiftModePartial.checked = false;
+    syncShiftSelectButtonVisibility();
+  };
+
+  shiftSelectBtn.onclick = () => {
+    const next = !shiftSelectBtn.classList.contains("selected");
+    shiftSelectBtn.classList.toggle("selected", next);
+    gridManager.enableShiftSelect(next);
+  };
+  toolSelectBtn.addEventListener("click", () => {
+    gridManager.clearShiftSelect();
+    clearShiftSelectUI();
+  });
+  shiftOverwriteOn.onchange = () => {
+    if (shiftOverwriteOn.checked) gridManager.setShiftOverwriteMode(true);
+  };
+  shiftOverwriteOff.onchange = () => {
+    if (shiftOverwriteOff.checked) gridManager.setShiftOverwriteMode(false);
+  };
+  shiftModeAll.onchange = () => {
+    if (shiftModeAll.checked) {
+      gridManager.setShiftSelectionMode("all");
+      gridManager.clearShiftSelect();
+      clearShiftSelectUI();
+      syncShiftSelectButtonVisibility();
+    }
+  };
+  shiftModePartial.onchange = () => {
+    if (shiftModePartial.checked) {
+      gridManager.setShiftSelectionMode("partial");
+      syncShiftSelectButtonVisibility();
+    }
+  };
+  syncShiftSelectButtonVisibility();
+  gridManager.setShiftSelectionMode("all");
+  gridManager.setShiftOverwriteMode(true);
 
   stampWidthInput.addEventListener("change", renderStampEditor);
   stampHeightInput.addEventListener("change", renderStampEditor);

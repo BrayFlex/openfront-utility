@@ -95,11 +95,28 @@
                 <button id="rotateLeftBtn">Rotate Left</button>
                 <button id="rotateRightBtn">Rotate Right</button>
               </div>
-              <div class="shift-pad">
-                <button id="shiftUpBtn">Shift Up</button>
-                <button id="shiftLeftBtn">Shift Left</button>
-                <button id="shiftRightBtn">Shift Right</button>
-                <button id="shiftDownBtn">Shift Down</button>
+              <div class="shift-box">
+                <div class="shift-box-header">
+                  <div class="toggle-pill" role="tablist" aria-label="Shift selection mode">
+                    <input type="radio" name="shift-selection-mode" id="shift-mode-all" checked />
+                    <input type="radio" name="shift-selection-mode" id="shift-mode-partial" />
+                    <label for="shift-mode-all" class="toggle-pill-option">All</label>
+                    <label for="shift-mode-partial" class="toggle-pill-option">Partial</label>
+                  </div>
+                  <button id="shift-select-btn" class="tool-btn shift-select-hidden">⬚ Shift Select</button>
+                  <div class="toggle-pill toggle-pill-secondary" role="tablist" aria-label="Shift overwrite mode">
+                    <input type="radio" name="shift-overwrite-mode" id="shift-overwrite-on" checked />
+                    <input type="radio" name="shift-overwrite-mode" id="shift-overwrite-off" />
+                    <label for="shift-overwrite-on" class="toggle-pill-option">Overwrite</label>
+                    <label for="shift-overwrite-off" class="toggle-pill-option">Do not overwrite</label>
+                  </div>
+                </div>
+                <div class="shift-pad">
+                  <button id="shiftUpBtn">Shift Up</button>
+                  <button id="shiftLeftBtn">Shift Left</button>
+                  <button id="shiftRightBtn">Shift Right</button>
+                  <button id="shiftDownBtn">Shift Down</button>
+                </div>
               </div>
             </div>
             <div class="tab-panel grid">
