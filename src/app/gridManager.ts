@@ -21,7 +21,6 @@ type GridManagerOptions = {
   invertBtn?: HTMLButtonElement;
   rotateLeftBtn?: HTMLButtonElement;
   rotateRightBtn?: HTMLButtonElement;
-  initialPattern: number[][];
   guideState: GuideState;
   toolState: ToolState;
   drawingTools?: DrawingTools;
@@ -59,7 +58,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     invertBtn,
     rotateLeftBtn,
     rotateRightBtn,
-    initialPattern,
     guideState,
     toolState,
     drawingTools: initialDrawingTools,
@@ -71,7 +69,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   let tileHeight = parseInt(tileHeightInput.value);
   let isMouseDown = false;
   let toggleState: boolean | null = null;
-  let isFirstLoad = true;
   let currentHeight = 0;
   let currentWidth = 0;
   let lineStart: GridPoint | null = null;
@@ -579,8 +576,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     clearShiftSelection();
     clearStampSelection();
     applyGridSizing();
-    const basePattern =
-      pattern || (isFirstLoad ? initialPattern : patternState);
+    const basePattern = pattern ?? patternState;
     patternState = Array.from({ length: tileHeight }, (_, y) =>
       Array.from({ length: tileWidth }, (_, x) =>
         basePattern[y] && basePattern[y][x] === 1 ? 1 : 0
@@ -753,7 +749,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       }
     }
     cellMatrix = nextCellMatrix;
-    isFirstLoad = false;
     onPatternChange();
   }
 

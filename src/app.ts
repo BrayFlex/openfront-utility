@@ -10,7 +10,6 @@ import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
-import { initialPattern } from "./app/initialPattern.js";
 import {
   decodePatternBase64,
   generatePatternBase64,
@@ -216,7 +215,6 @@ document.addEventListener("DOMContentLoaded", () => {
     invertBtn: document.getElementById("invertGridBtn") as HTMLButtonElement,
     rotateLeftBtn,
     rotateRightBtn,
-    initialPattern,
     guideState,
     toolState,
     onPatternChange: () => updateOutput(),
@@ -397,8 +395,20 @@ document.addEventListener("DOMContentLoaded", () => {
     : "";
   let initialColors: { primary: string; secondary: string } | null = null;
   let shouldFocusPreview = false;
-  if (hashValue) {
-    const [patternPart, queryPart] = hashValue.split("?");
+  if (!hashValue) {
+    const isEasterEgg = Math.random() < 0.25;
+    const injectedHash = isEasterEgg
+      ? "#AFlhAAAAAADg______8DAAAAAAA4sbvhzgBRIVFEBGBOZIaZA0SRRBFRgKuRK-4MAAAAAADg______8DAAAAAADgAHAAOAAiABGACCAIMAQIAgICi4GAQECgIBAQBBCCCAGEqsIooaqwaggirBoCCAmGAEJVoaJQVVg1JBhWDQICIYGAgCBAGiAI4APwAfgAAAAAAAAA?primary=fedd67&secondary=000000"
+      : "#AAEiAAAAAAAAAAAAAAAAAAAAAIDD8YnweTiiD5FIYEIgEpkIRCKBCoFIpCIQeTwyPB6RjEAkEIgQKEQiApFAIEIgEYkIOAKfCIGIIyIAAAAAAAAAAAA?primary=ffffff&secondary=000000";
+    window.history.replaceState(null, "", injectedHash);
+  }
+
+  const effectiveHashValue = window.location.hash.startsWith("#")
+    ? window.location.hash.slice(1)
+    : "";
+
+  if (effectiveHashValue) {
+    const [patternPart, queryPart] = effectiveHashValue.split("?");
     if (patternPart) {
       base64Input.value = patternPart;
       setTimeout(loadFromBase64, 0);
