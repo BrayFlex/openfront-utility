@@ -1,6 +1,7 @@
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
+import { initEditorViewControls } from "./app/editorViewControls.js";
 import {
   buildDevStorageOutput,
   buildDiscordOutput,
@@ -16,114 +17,96 @@ import {
   generatePatternBase64,
 } from "./app/patternEncoding.js";
 import { createPatternLoader } from "./app/patternLoader.js";
+import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
 import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
+import { initWorkspaceControls } from "./app/workspaceControls.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const toolbox = document.getElementById("toolbox");
-  const base64Input = document.getElementById(
-    "base64Input"
-  ) as HTMLInputElement;
+  const base64Input = document.getElementById("base64Input") as HTMLInputElement;
   const toolPenBtn = document.getElementById("tool-pen") as HTMLButtonElement;
-  const penSizeInput = document.getElementById(
-    "pen-size"
-  ) as HTMLInputElement;
+  const penSizeInput = document.getElementById("pen-size") as HTMLInputElement;
   const toolLineBtn = document.getElementById("tool-line") as HTMLButtonElement;
   const toolFillBtn = document.getElementById("tool-fill") as HTMLButtonElement;
   const toolStarBtn = document.getElementById("tool-star") as HTMLButtonElement;
-  const toolCircleBtn = document.getElementById(
-    "tool-circle"
-  ) as HTMLButtonElement;
-  const starSizeInput = document.getElementById(
-    "star-size"
-  ) as HTMLInputElement;
-  const circleSizeInput = document.getElementById(
-    "circle-size"
-  ) as HTMLInputElement;
-  const circleFillInput = document.getElementById(
-    "circle-fill"
-  ) as HTMLInputElement;
+  const toolCircleBtn = document.getElementById("tool-circle") as HTMLButtonElement;
+  const starSizeInput = document.getElementById("star-size") as HTMLInputElement;
+  const circleSizeInput = document.getElementById("circle-size") as HTMLInputElement;
+  const circleFillInput = document.getElementById("circle-fill") as HTMLInputElement;
   const loadBtn = document.getElementById("loadBtn") as HTMLButtonElement;
-  const tileWidthInput = document.getElementById(
-    "tileWidth"
-  ) as HTMLInputElement;
-  const tileWidthValue = document.getElementById(
-    "tileWidth-value"
-  ) as HTMLInputElement;
-  const tileHeightInput = document.getElementById(
-    "tileHeight"
-  ) as HTMLInputElement;
-  const tileHeightValue = document.getElementById(
-    "tileHeight-value"
-  ) as HTMLInputElement;
+  const tileWidthInput = document.getElementById("tileWidth") as HTMLInputElement;
+  const tileWidthValue = document.getElementById("tileWidth-value") as HTMLInputElement;
+  const tileHeightInput = document.getElementById("tileHeight") as HTMLInputElement;
+  const tileHeightValue = document.getElementById("tileHeight-value") as HTMLInputElement;
   const scaleInput = document.getElementById("scale") as HTMLInputElement;
   const scaleValue = document.getElementById("scale-value") as HTMLSpanElement;
-  const gridScaleInput = document.getElementById(
-    "gridScale"
-  ) as HTMLSelectElement;
-  const clearGridBtn = document.getElementById(
-    "clearGridBtn"
-  ) as HTMLButtonElement;
+  const gridScaleInput = document.getElementById("gridScale") as HTMLSelectElement;
+  const clearGridBtn = document.getElementById("clearGridBtn") as HTMLButtonElement;
   const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
   const redoBtn = document.getElementById("redoBtn") as HTMLButtonElement;
   const shiftUpBtn = document.getElementById("shiftUpBtn") as HTMLButtonElement;
-  const shiftLeftBtn = document.getElementById(
-    "shiftLeftBtn"
-  ) as HTMLButtonElement;
-  const shiftRightBtn = document.getElementById(
-    "shiftRightBtn"
-  ) as HTMLButtonElement;
-  const shiftDownBtn = document.getElementById(
-    "shiftDownBtn"
-  ) as HTMLButtonElement;
+  const shiftLeftBtn = document.getElementById("shiftLeftBtn") as HTMLButtonElement;
+  const shiftRightBtn = document.getElementById("shiftRightBtn") as HTMLButtonElement;
+  const shiftDownBtn = document.getElementById("shiftDownBtn") as HTMLButtonElement;
   const gridDiv = document.getElementById("grid")!;
-  const outputTextarea = document.getElementById(
-    "output"
-  ) as HTMLTextAreaElement;
-  const discordOutputTextarea = document.getElementById(
-    "discordOutput"
-  ) as HTMLTextAreaElement;
-  const previewLinkTextarea = document.getElementById(
-    "previewLinkOutput"
-  ) as HTMLTextAreaElement;
-  const devStorageTextarea = document.getElementById(
-    "devStorageOutput"
-  ) as HTMLTextAreaElement;
-  const copyOutputBtn = document.getElementById(
-    "copyOutputBtn"
-  ) as HTMLButtonElement;
-  const copyDiscordBtn = document.getElementById(
-    "copyDiscordBtn"
-  ) as HTMLButtonElement;
-  const copyPreviewLinkBtn = document.getElementById(
-    "copyPreviewLinkBtn"
-  ) as HTMLButtonElement;
-  const copyDevStorageBtn = document.getElementById(
-    "copyDevStorageBtn"
-  ) as HTMLButtonElement;
+  const outputTextarea = document.getElementById("output") as HTMLTextAreaElement;
+  const discordOutputTextarea = document.getElementById("discordOutput") as HTMLTextAreaElement;
+  const previewLinkTextarea = document.getElementById("previewLinkOutput") as HTMLTextAreaElement;
+  const devStorageTextarea = document.getElementById("devStorageOutput") as HTMLTextAreaElement;
+  const copyOutputBtn = document.getElementById("copyOutputBtn") as HTMLButtonElement;
+  const copyDiscordBtn = document.getElementById("copyDiscordBtn") as HTMLButtonElement;
+  const copyPreviewLinkBtn = document.getElementById("copyPreviewLinkBtn") as HTMLButtonElement;
+  const copyDevStorageBtn = document.getElementById("copyDevStorageBtn") as HTMLButtonElement;
   const previewCanvas = document.getElementById("preview") as HTMLCanvasElement;
-  const previewPrimaryColorInput = document.getElementById(
-    "previewPrimaryColor"
-  ) as HTMLInputElement;
-  const previewSecondaryColorInput = document.getElementById(
-    "previewSecondaryColor"
-  ) as HTMLInputElement;
-  const swapColorsBtn = document.getElementById(
-    "swapColorsBtn"
+  const previewPrimaryColorInput = document.getElementById("previewPrimaryColor") as HTMLInputElement;
+  const previewSecondaryColorInput = document.getElementById("previewSecondaryColor") as HTMLInputElement;
+  const swapColorsBtn = document.getElementById("swapColorsBtn") as HTMLButtonElement;
+  const colorPresetContainer = document.getElementById("colorPresetContainer") as HTMLDivElement;
+  const selectedPresetLabel = document.getElementById("selectedPresetLabel");
+  const editorShell = document.querySelector(".editor-shell") as HTMLElement;
+  const toolbarToggleBtn = document.getElementById(
+    "toolbarToggleBtn"
   ) as HTMLButtonElement;
-  const colorPresetContainer = document.getElementById(
-    "colorPresetContainer"
-  ) as HTMLDivElement;
-  const layoutTabsInput = document.getElementById(
-    "layout-tabs"
-  ) as HTMLInputElement | null;
-  const viewPreviewInput = document.getElementById(
-    "view-preview"
-  ) as HTMLInputElement | null;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
+    "[data-view-mode]"
+  );
+  const floatPreviewBtn = document.getElementById(
+    "floatPreviewBtn"
+  ) as HTMLButtonElement;
+  const dockPreviewBtn = document.getElementById(
+    "dockPreviewBtn"
+  ) as HTMLButtonElement;
   const previewPanel = document.querySelector(
     ".preview-panel"
-  ) as HTMLElement | null;
+  ) as HTMLElement;
+  const previewHeader = document.querySelector(
+    ".preview-header"
+  ) as HTMLElement;
+  const workspaceControls = initWorkspaceControls({
+    workspace: document.getElementById("canvasWorkspace") as HTMLElement,
+    viewport: document.getElementById("gridViewport") as HTMLElement,
+    zoomInButton: document.getElementById("zoomInBtn") as HTMLButtonElement,
+    zoomOutButton: document.getElementById("zoomOutBtn") as HTMLButtonElement,
+    resetButton: document.getElementById("resetViewBtn") as HTMLButtonElement,
+    zoomValue: document.getElementById("zoomValue") as HTMLOutputElement,
+  });
+  const editorViewControls = initEditorViewControls({
+    shell: editorShell,
+    toolbarToggleButton: toolbarToggleBtn,
+    modeButtons,
+    previewPanel,
+    previewHeader,
+    floatPreviewButton: floatPreviewBtn,
+    dockPreviewButton: dockPreviewBtn,
+  });
+  initPaneResizeControls({
+    shell: editorShell,
+    workspaceSplit: document.querySelector(".workspace-split") as HTMLElement,
+    toolbarHandle: document.getElementById("toolbarResizeHandle") as HTMLElement,
+    previewHandle: document.getElementById("previewResizeHandle") as HTMLElement,
+  });
 
   if (!colorPresetContainer) {
     throw new Error("Missing color preset container");
@@ -308,6 +291,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container: colorPresetContainer,
     primaryColorInput: previewPrimaryColorInput,
     secondaryColorInput: previewSecondaryColorInput,
+    selectedLabel: selectedPresetLabel,
     initialColors,
     onChange: () => updateOutput(),
   });
@@ -377,15 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
   gridManager.generateGrid();
 
   if (shouldFocusPreview) {
-    if (layoutTabsInput) {
-      layoutTabsInput.checked = true;
-    }
-    if (viewPreviewInput) {
-      viewPreviewInput.checked = true;
-    }
-    const scrollTarget = previewPanel ?? previewCanvas;
-    setTimeout(() => {
-      scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
+    editorViewControls.setViewMode("preview");
   }
+  workspaceControls.reset();
 });

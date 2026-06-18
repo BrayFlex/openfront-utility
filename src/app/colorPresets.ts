@@ -10,11 +10,9 @@ type ColorPresetOptions = {
   container: HTMLDivElement;
   primaryColorInput: HTMLInputElement;
   secondaryColorInput: HTMLInputElement;
+  selectedLabel?: HTMLElement | null;
   onChange: () => void;
-  initialColors?: {
-    primary: string;
-    secondary: string;
-  } | null;
+  initialColors?: { primary: string; secondary: string } | null;
 };
 
 const COLOR_PRESET_URL = "color-presets.json";
@@ -24,13 +22,13 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     container,
     primaryColorInput,
     secondaryColorInput,
+    selectedLabel,
     onChange,
     initialColors,
   } = options;
   let colorPresets: ColorPresetMap = {};
   let presetButtons: Record<string, HTMLButtonElement> = {};
   let customPresetButton: HTMLButtonElement | null = null;
-  let selectedPresetKey: string | null = null;
 
   async function loadColorPresets(): Promise<ColorPresetMap> {
     if (Object.keys(colorPresets).length > 0) {
@@ -38,11 +36,10 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     }
     try {
       const response = await fetch(COLOR_PRESET_URL, { cache: "no-cache" });
-      if (!response.ok) {
-        throw new Error(`Failed to load color presets: ${response.status}`);
-      }
-      const data = (await response.json()) as ColorPresetMap;
-      colorPresets = data;
+    if (!response.ok) {
+      throw new Error(`Failed to load color presets: ${response.status}`);
+    }
+      colorPresets = (await response.json()) as ColorPresetMap;
     } catch (error) {
       console.warn("Failed to load color presets", error);
       colorPresets = {};
@@ -51,7 +48,9 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   }
 
   function setSelectedPreset(key: string | null) {
-    selectedPresetKey = key;
+    if (selectedLabel) {
+      selectedLabel.textContent = key ? colorPresets[key]?.name ?? key : "Custom colors";
+    }
     Object.values(presetButtons).forEach((button) => {
       const presetKey = button.dataset.presetKey ?? "";
       button.classList.toggle("selected", presetKey === key);
@@ -114,9 +113,7 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     button.appendChild(swatches);
     button.appendChild(name);
 
-    button.addEventListener("click", () => {
-      applyPreset(key);
-    });
+    button.addEventListener("click", () => applyPreset(key));
 
     return button;
   }
