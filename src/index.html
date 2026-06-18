@@ -103,6 +103,10 @@
                   <input type="range" id="circle-size" min="2" max="15" value="5" class="tool-range" />
                   <label class="tool-toggle"><input type="checkbox" id="circle-fill" checked /> Fill</label>
                 </div>
+                <div class="tool-group">
+                  <button id="tool-stamp" class="tool-btn" data-tool="stamp">Stamp</button>
+                  <input type="range" id="stamp-brush-size" min="1" max="9" step="1" value="2" class="tool-range" aria-label="Stamp brush size" title="Stamp brush size" />
+                </div>
               </div>
             </section>
 
@@ -146,15 +150,60 @@
                 <button id="clearGridBtn">Clear</button>
                 <button id="invertGridBtn">Invert</button>
               </div>
+              <div class="action-row">
+                <button id="tool-select" class="tool-btn" data-tool="select">Rotate Select</button>
+                <button id="rotateLeftBtn">Rotate Left</button>
+                <button id="rotateRightBtn">Rotate Right</button>
+              </div>
               <details>
-                <summary>Shift / Rotate</summary>
-                <div class="shift-pad details-body">
-                  <button id="shiftUpBtn">Up</button>
-                  <button id="shiftLeftBtn">Left</button>
-                  <button id="shiftRightBtn">Right</button>
-                  <button id="shiftDownBtn">Down</button>
+                <summary>Shift</summary>
+                <div class="details-body">
+                  <div class="toggle-pill" role="tablist" aria-label="Shift selection mode">
+                    <input type="radio" name="shift-selection-mode" id="shift-mode-all" checked />
+                    <input type="radio" name="shift-selection-mode" id="shift-mode-partial" />
+                    <label for="shift-mode-all" class="toggle-pill-option">All</label>
+                    <label for="shift-mode-partial" class="toggle-pill-option">Partial</label>
+                  </div>
+                  <button id="shift-select-btn" class="tool-btn shift-select-hidden">Shift Select</button>
+                  <div class="toggle-pill toggle-pill-secondary" role="tablist" aria-label="Shift overwrite mode">
+                    <input type="radio" name="shift-overwrite-mode" id="shift-overwrite-on" checked />
+                    <input type="radio" name="shift-overwrite-mode" id="shift-overwrite-off" />
+                    <label for="shift-overwrite-on" class="toggle-pill-option">Overwrite</label>
+                    <label for="shift-overwrite-off" class="toggle-pill-option">Keep Filled</label>
+                  </div>
+                  <div class="shift-pad">
+                    <button id="shiftUpBtn">Up</button>
+                    <button id="shiftLeftBtn">Left</button>
+                    <button id="shiftRightBtn">Right</button>
+                    <button id="shiftDownBtn">Down</button>
+                  </div>
                 </div>
               </details>
+            </section>
+
+            <section id="stampSection" class="toolbar-section">
+              <div class="panel-title">Stamp</div>
+              <div class="row slider-row stamp-size-row">
+                <label for="stampWidth">Pattern W</label>
+                <input type="number" id="stampWidth" min="1" max="24" value="4" class="number-input" />
+                <label for="stampHeight">H</label>
+                <input type="number" id="stampHeight" min="1" max="24" value="4" class="number-input" />
+              </div>
+              <div class="row input-row">
+                <label for="stampApplyMode">Apply</label>
+                <select id="stampApplyMode" class="select-input">
+                  <option value="overwrite" selected>Overwrite</option>
+                  <option value="overlay">Overlay</option>
+                </select>
+              </div>
+              <div class="stamp-editor-wrap">
+                <div class="stamp-editor-toolbar">
+                  <span class="panel-title">Pattern</span>
+                  <button id="stampClearBtn" type="button">Clear</button>
+                </div>
+                <div id="stampEditor" class="stamp-editor" aria-label="Stamp pattern editor"></div>
+              </div>
+              <button id="stampApplyBtn" class="btn-primary">Apply Stamp</button>
             </section>
 
             <section class="toolbar-section">

@@ -11,7 +11,6 @@ import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
-import { initialPattern } from "./app/initialPattern.js";
 import {
   decodePatternBase64,
   generatePatternBase64,
@@ -19,6 +18,8 @@ import {
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
+import { initShiftControls } from "./app/shiftControls.js";
+import { initStampControls } from "./app/stampControls.js";
 import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
@@ -32,8 +33,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const toolFillBtn = document.getElementById("tool-fill") as HTMLButtonElement;
   const toolStarBtn = document.getElementById("tool-star") as HTMLButtonElement;
   const toolCircleBtn = document.getElementById("tool-circle") as HTMLButtonElement;
+  const toolStampBtn = document.getElementById("tool-stamp") as HTMLButtonElement;
+  const toolSelectBtn = document.getElementById("tool-select") as HTMLButtonElement;
+  const shiftSelectBtn = document.getElementById("shift-select-btn") as HTMLButtonElement;
   const starSizeInput = document.getElementById("star-size") as HTMLInputElement;
   const circleSizeInput = document.getElementById("circle-size") as HTMLInputElement;
+  const stampBrushSizeInput = document.getElementById("stamp-brush-size") as HTMLInputElement;
   const circleFillInput = document.getElementById("circle-fill") as HTMLInputElement;
   const loadBtn = document.getElementById("loadBtn") as HTMLButtonElement;
   const tileWidthInput = document.getElementById("tileWidth") as HTMLInputElement;
@@ -66,24 +71,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const colorPresetContainer = document.getElementById("colorPresetContainer") as HTMLDivElement;
   const selectedPresetLabel = document.getElementById("selectedPresetLabel");
   const editorShell = document.querySelector(".editor-shell") as HTMLElement;
-  const toolbarToggleBtn = document.getElementById(
-    "toolbarToggleBtn"
-  ) as HTMLButtonElement;
-  const modeButtons = document.querySelectorAll<HTMLButtonElement>(
-    "[data-view-mode]"
-  );
-  const floatPreviewBtn = document.getElementById(
-    "floatPreviewBtn"
-  ) as HTMLButtonElement;
-  const dockPreviewBtn = document.getElementById(
-    "dockPreviewBtn"
-  ) as HTMLButtonElement;
-  const previewPanel = document.querySelector(
-    ".preview-panel"
-  ) as HTMLElement;
-  const previewHeader = document.querySelector(
-    ".preview-header"
-  ) as HTMLElement;
+  const toolbarToggleBtn = document.getElementById("toolbarToggleBtn") as HTMLButtonElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>("[data-view-mode]");
+  const floatPreviewBtn = document.getElementById("floatPreviewBtn") as HTMLButtonElement;
+  const dockPreviewBtn = document.getElementById("dockPreviewBtn") as HTMLButtonElement;
+  const previewPanel = document.querySelector(".preview-panel") as HTMLElement;
+  const previewHeader = document.querySelector(".preview-header") as HTMLElement;
+
+  if (!colorPresetContainer) {
+    throw new Error("Missing color preset container");
+  }
+
+  const previewContext = previewCanvas.getContext("2d");
+  if (!previewContext) throw new Error("2D context not supported");
+
   const workspaceControls = initWorkspaceControls({
     workspace: document.getElementById("canvasWorkspace") as HTMLElement,
     viewport: document.getElementById("gridViewport") as HTMLElement,
@@ -108,25 +109,20 @@ document.addEventListener("DOMContentLoaded", () => {
     previewHandle: document.getElementById("previewResizeHandle") as HTMLElement,
   });
 
-  if (!colorPresetContainer) {
-    throw new Error("Missing color preset container");
-  }
-
-  const previewContext = previewCanvas.getContext("2d");
-  if (!previewContext) throw new Error("2D context not supported");
-
   let handleGuideChange = () => {};
   const guideState = setupGridGuides(toolbox, () => handleGuideChange());
-
   const toolState = createToolState({
     toolPenBtn,
     toolLineBtn,
     toolFillBtn,
     toolStarBtn,
     toolCircleBtn,
+    toolSelectBtn,
+    toolStampBtn,
     penSizeInput,
     starSizeInput,
     circleSizeInput,
+    stampBrushSizeInput,
     circleFillInput,
   });
 
@@ -143,7 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
     shiftLeftBtn,
     shiftRightBtn,
     invertBtn: document.getElementById("invertGridBtn") as HTMLButtonElement,
-    initialPattern,
+    rotateLeftBtn: document.getElementById("rotateLeftBtn") as HTMLButtonElement,
+    rotateRightBtn: document.getElementById("rotateRightBtn") as HTMLButtonElement,
     guideState,
     toolState,
     onPatternChange: () => updateOutput(),
@@ -224,9 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
       secondary: previewSecondaryColorInput.value.replace("#", ""),
     });
     window.history.replaceState(null, "", `#${base64}?${params.toString()}`);
-    if (!isApplyingHistory) {
-      historyManager.record(base64);
-    }
+    if (!isApplyingHistory) historyManager.record(base64);
     updateHistoryButtons();
   };
 
@@ -253,6 +248,14 @@ document.addEventListener("DOMContentLoaded", () => {
     return `#${cleaned.toLowerCase()}`;
   };
 
+  if (!window.location.hash) {
+    const isEasterEgg = Math.random() < 0.25;
+    const injectedHash = isEasterEgg
+      ? "#AFlhAAAAAADg______8DAAAAAAA4sbvhzgBRIVFEBGBOZIaZA0SRRBFRgKuRK-4MAAAAAADg______8DAAAAAADgAHAAOAAiABGACCAIMAQIAgICi4GAQECgIBAQBBCCCAGEqsIooaqwaggirBoCCAmGAEJVoaJQVVg1JBhWDQICIYGAgCBAGiAI4APwAfgAAAAAAAAA?primary=fedd67&secondary=000000"
+      : "#AAEiAAAAAAAAAAAAAAAAAAAAAIDD8YnweTiiD5FIYEIgEpkIRCKBCoFIpCIQeTwyPB6RjEAkEIgQKEQiApFAIEIgEYkIOAKfCIGIIyIAAAAAAAAAAAA?primary=ffffff&secondary=000000";
+    window.history.replaceState(null, "", injectedHash);
+  }
+
   const hashValue = window.location.hash.startsWith("#")
     ? window.location.hash.slice(1)
     : "";
@@ -277,13 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
       const previewFlag = params.get("preview");
-      if (
-        previewFlag !== null &&
-        previewFlag !== "0" &&
-        previewFlag !== "false"
-      ) {
-        shouldFocusPreview = true;
-      }
+      shouldFocusPreview =
+        previewFlag !== null && previewFlag !== "0" && previewFlag !== "false";
     }
   }
 
@@ -306,15 +304,34 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   });
 
-  function copyOutput() {
-    copyText(outputTextarea.value);
-  }
+  initStampControls({
+    gridManager,
+    toolState,
+    toolStampBtn,
+    stampWidthInput: document.getElementById("stampWidth") as HTMLInputElement,
+    stampHeightInput: document.getElementById("stampHeight") as HTMLInputElement,
+    stampApplyModeSelect: document.getElementById("stampApplyMode") as HTMLSelectElement,
+    stampEditor: document.getElementById("stampEditor") as HTMLDivElement,
+    stampApplyBtn: document.getElementById("stampApplyBtn") as HTMLButtonElement,
+    stampClearBtn: document.getElementById("stampClearBtn") as HTMLButtonElement,
+    onChange: () => updateOutput(),
+  });
+  initShiftControls({
+    gridManager,
+    toolState,
+    toolSelectBtn,
+    shiftSelectBtn,
+    shiftModeAll: document.getElementById("shift-mode-all") as HTMLInputElement,
+    shiftModePartial: document.getElementById("shift-mode-partial") as HTMLInputElement,
+    shiftOverwriteOn: document.getElementById("shift-overwrite-on") as HTMLInputElement,
+    shiftOverwriteOff: document.getElementById("shift-overwrite-off") as HTMLInputElement,
+  });
 
-  function copyDiscordOutput() {
-    copyText(discordOutputTextarea.value);
-  }
-
-  function copyPreviewLink() {
+  loadBtn.onclick = loadFromBase64;
+  clearGridBtn.onclick = gridManager.clearGrid;
+  copyOutputBtn.onclick = () => copyText(outputTextarea.value);
+  copyDiscordBtn.onclick = () => copyText(discordOutputTextarea.value);
+  copyPreviewLinkBtn.onclick = () => {
     const link = buildPreviewLink(
       window.location.href,
       outputTextarea.value.trim(),
@@ -323,30 +340,17 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     previewLinkTextarea.value = link;
     copyText(link);
-  }
-
-  function copyDevStorageOutput() {
-    copyText(devStorageTextarea.value);
-  }
+  };
+  copyDevStorageBtn.onclick = () => copyText(devStorageTextarea.value);
 
   const handleUndo = () => {
     const base64 = historyManager.undo();
-    if (!base64) return;
-    applyHistoryState(base64);
+    if (base64) applyHistoryState(base64);
   };
-
   const handleRedo = () => {
     const base64 = historyManager.redo();
-    if (!base64) return;
-    applyHistoryState(base64);
+    if (base64) applyHistoryState(base64);
   };
-
-  loadBtn.onclick = loadFromBase64;
-  clearGridBtn.onclick = gridManager.clearGrid;
-  copyOutputBtn.onclick = copyOutput;
-  copyDiscordBtn.onclick = copyDiscordOutput;
-  copyPreviewLinkBtn.onclick = copyPreviewLink;
-  copyDevStorageBtn.onclick = copyDevStorageOutput;
   undoBtn.onclick = handleUndo;
   redoBtn.onclick = handleRedo;
   swapColorsBtn.onclick = () => {
@@ -359,9 +363,6 @@ document.addEventListener("DOMContentLoaded", () => {
   setupHistoryShortcuts({ onUndo: handleUndo, onRedo: handleRedo });
 
   gridManager.generateGrid();
-
-  if (shouldFocusPreview) {
-    editorViewControls.setViewMode("preview");
-  }
+  if (shouldFocusPreview) editorViewControls.setViewMode("preview");
   workspaceControls.reset();
 });

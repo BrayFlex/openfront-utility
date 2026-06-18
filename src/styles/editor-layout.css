@@ -114,6 +114,31 @@
   box-shadow: inset 0 0 0 2px #f4a261;
 }
 
+.selection-cell,
+.shift-selection-cell {
+  background: rgba(11, 111, 109, 0.12);
+  box-shadow: inset 0 0 0 1px rgba(11, 111, 109, 0.72);
+  outline: 1px solid rgba(11, 111, 109, 0.18);
+  outline-offset: -1px;
+}
+
+.stamp-selection-cell {
+  background: rgba(154, 52, 18, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(154, 52, 18, 0.72);
+  outline: 1px solid rgba(154, 52, 18, 0.18);
+  outline-offset: -1px;
+}
+
+.selection-anchor,
+.shift-selection-anchor {
+  background: var(--accent);
+}
+
+.selection-active .cell:not(.selection-cell):not(.selection-anchor),
+.shift-selection-active .cell:not(.shift-selection-cell):not(.shift-selection-anchor) {
+  opacity: 0.72;
+}
+
 #preview {
   display: block;
   width: 100%;

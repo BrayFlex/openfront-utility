@@ -29,6 +29,11 @@
     "primaryColor": "#000000",
     "secondaryColor": "#FFFFFF"
   },
+  "white_black": {
+    "name": "white_black",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#000000"
+  },
   "green_black": {
     "name": "green_black",
     "primaryColor": "#00ff00",
@@ -239,6 +244,16 @@
     "primaryColor": "#c83c00",
     "secondaryColor": "#641e00"
   },
+  "forest_mint": {
+    "name": "forest_mint",
+    "primaryColor": "#eeede7",
+    "secondaryColor": "#268f00"
+  },
+  "lavender_dreams": {
+    "name": "lavender_dreams",
+    "primaryColor": "#823299",
+    "secondaryColor": "#E5CA1F"
+  },
   "vintage_nobility": {
     "name": "vintage_nobility",
     "primaryColor": "#1e8cff",
@@ -274,6 +289,11 @@
     "primaryColor": "#4682B4",
     "secondaryColor": "#B0E0E6"
   },
+  "bubblegum_rose": {
+    "name": "bubblegum_rose",
+    "primaryColor": "#ffbeff",
+    "secondaryColor": "#D24141"
+  },
   "default_color": {
     "name": "default_color",
     "primaryColor": "#FFFFFF",
@@ -299,9 +319,1460 @@
     "primaryColor": "#ffff00",
     "secondaryColor": "#666600"
   },
+  "rose_dust": {
+    "name": "rose_dust",
+    "primaryColor": "#C7A3A3",
+    "secondaryColor": "#FFF5F5"
+  },
   "black_green": {
     "name": "black_green",
     "primaryColor": "#2b2b2b",
     "secondaryColor": "#52b788"
+  },
+  "polar_blue": {
+    "name": "polar_blue",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#0f2d92"
+  },
+  "neon_pulse": {
+    "name": "neon_pulse",
+    "primaryColor": "#A2449F",
+    "secondaryColor": "#4169E1"
+  },
+  "midnight_snow": {
+    "name": "midnight_snow",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#112457"
+  },
+  "candy_cane": {
+    "name": "candy_cane",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#FF3D3D"
+  },
+  "ice_baby": {
+    "name": "ice_baby",
+    "primaryColor": "#E8E8D8",
+    "secondaryColor": "#5090C0"
+  },
+  "red_&_white": {
+    "name": "red_&_white",
+    "primaryColor": "#FF3D3D",
+    "secondaryColor": "#FFFFFF"
+  },
+  "mc_donalds": {
+    "name": "mc_donalds",
+    "primaryColor": "#ff0000",
+    "secondaryColor": "#ffff00"
+  },
+  "test_09": {
+    "name": "test_09",
+    "primaryColor": "#000000",
+    "secondaryColor": "#0066ff"
+  },
+  "azure_breeze": {
+    "name": "azure_breeze",
+    "primaryColor": "#87CEEB",
+    "secondaryColor": "#FAFAFA"
+  },
+  "sea_captain": {
+    "name": "sea_captain",
+    "primaryColor": "#96f0f0",
+    "secondaryColor": "#64a0be"
+  },
+  "victory": {
+    "name": "victory",
+    "primaryColor": "#5fe8cd",
+    "secondaryColor": "#03171f"
+  },
+  "evan": {
+    "name": "evan",
+    "primaryColor": "#000000",
+    "secondaryColor": "#00b4ff"
+  },
+  "dark_romance": {
+    "name": "dark_romance",
+    "primaryColor": "#a00808",
+    "secondaryColor": "#000000"
+  },
+  "golden_night": {
+    "name": "golden_night",
+    "primaryColor": "#FBE02D",
+    "secondaryColor": "#19190F"
+  },
+  "sunset_sand": {
+    "name": "sunset_sand",
+    "primaryColor": "#FF9500",
+    "secondaryColor": "#E0DDD1"
+  },
+  "sunset_launch_v2": {
+    "name": "sunset_launch_v2",
+    "primaryColor": "#B21B1F",
+    "secondaryColor": "#F0E68C"
+  },
+  "steel_blue": {
+    "name": "steel_blue",
+    "primaryColor": "#57CDFF",
+    "secondaryColor": "#3E3C3C"
+  },
+  "amethyst_sand": {
+    "name": "amethyst_sand",
+    "primaryColor": "#EAE1C3",
+    "secondaryColor": "#75247B"
+  },
+  "evan2": {
+    "name": "evan2",
+    "primaryColor": "#001464",
+    "secondaryColor": "#0078c8"
+  },
+  "sam_test": {
+    "name": "sam_test",
+    "primaryColor": "#4a4a4a",
+    "secondaryColor": "#64a0be"
+  },
+  "brick_fortress": {
+    "name": "brick_fortress",
+    "primaryColor": "#eeede7",
+    "secondaryColor": "#c62828"
+  },
+  "atr_test_1": {
+    "name": "atr_test_1",
+    "primaryColor": "#001C2E",
+    "secondaryColor": "#E0FFFD"
+  },
+  "greatest_of_all_time": {
+    "name": "greatest_of_all_time",
+    "primaryColor": "#03171f",
+    "secondaryColor": "#5fe8cd"
+  },
+  "united_to_shine": {
+    "name": "united_to_shine",
+    "primaryColor": "#03171f",
+    "secondaryColor": "#5fe8cd"
+  },
+  "testing": {
+    "name": "testing",
+    "primaryColor": "#88cafc",
+    "secondaryColor": "#000000"
+  },
+  "EnzoPlays": {
+    "name": "EnzoPlays",
+    "primaryColor": "#032096",
+    "secondaryColor": "#ff0000"
+  },
+  "testing_reversed": {
+    "name": "testing_reversed",
+    "primaryColor": "#000000",
+    "secondaryColor": "#88cafc"
+  },
+  "green apple": {
+    "name": "green apple",
+    "primaryColor": "#52b788",
+    "secondaryColor": "#2b2b2b"
+  },
+  "green apple v2": {
+    "name": "green apple v2",
+    "primaryColor": "#2b2b2b",
+    "secondaryColor": "#52b788"
+  },
+  "biscuit_v2": {
+    "name": "biscuit_v2",
+    "primaryColor": "#DEB887",
+    "secondaryColor": "#8B4513"
+  },
+  "neon_dusk": {
+    "name": "neon_dusk",
+    "primaryColor": "#a00000",
+    "secondaryColor": "#339cd1"
+  },
+  "electric_oasis": {
+    "name": "electric_oasis",
+    "primaryColor": "#fbf30e",
+    "secondaryColor": "#22b2b4"
+  },
+  "soft_denim": {
+    "name": "soft_denim",
+    "primaryColor": "#bcdafb",
+    "secondaryColor": "#6185b8"
+  },
+  "imperial_gold": {
+    "name": "imperial_gold",
+    "primaryColor": "#d71414",
+    "secondaryColor": "#daa520"
+  },
+  "nordic_crown": {
+    "name": "nordic_crown",
+    "primaryColor": "#1411c0",
+    "secondaryColor": "#d7a91d"
+  },
+  "october_fest": {
+    "name": "october_fest",
+    "primaryColor": "#914d0d",
+    "secondaryColor": "#fc9403"
+  },
+  "diablo": {
+    "name": "diablo",
+    "primaryColor": "#411b1b",
+    "secondaryColor": "#dd0e0e"
+  },
+  "coral_reef": {
+    "name": "coral_reef",
+    "primaryColor": "#E2451D",
+    "secondaryColor": "#69C2CE"
+  },
+  "sunset_royale": {
+    "name": "sunset_royale",
+    "primaryColor": "#EB8F0F",
+    "secondaryColor": "#77119C"
+  },
+  "emerald_tide": {
+    "name": "emerald_tide",
+    "primaryColor": "#215B6E",
+    "secondaryColor": "#52B788"
+  },
+  "glacial_mint": {
+    "name": "glacial_mint",
+    "primaryColor": "#4682B4",
+    "secondaryColor": "#B1E7CE"
+  },
+  "neon_garden": {
+    "name": "neon_garden",
+    "primaryColor": "#A746B4",
+    "secondaryColor": "#B5E8BD"
+  },
+  "vintage_rose": {
+    "name": "vintage_rose",
+    "primaryColor": "#582C2C",
+    "secondaryColor": "#DD6E6E"
+  },
+  "ruby_red": {
+    "name": "ruby_red",
+    "primaryColor": "#F10404",
+    "secondaryColor": "#740606"
+  },
+  "desert_light": {
+    "name": "desert_light",
+    "primaryColor": "#DD6855",
+    "secondaryColor": "#FFFFFF"
+  },
+  "lavendar_sky": {
+    "name": "lavendar_sky",
+    "primaryColor": "#CF97D3",
+    "secondaryColor": "#587EBB"
+  },
+  "garden_soil": {
+    "name": "garden_soil",
+    "primaryColor": "#4A2B2B",
+    "secondaryColor": "#3CB978"
+  },
+  "heritage_stone": {
+    "name": "heritage_stone",
+    "primaryColor": "#96938D",
+    "secondaryColor": "#761504"
+  },
+  "startlight": {
+    "name": "startlight",
+    "primaryColor": "#EAB253",
+    "secondaryColor": "#2A2F3C"
+  },
+  "scarlet_ink": {
+    "name": "scarlet_ink",
+    "primaryColor": "#E81717",
+    "secondaryColor": "#000000"
+  },
+  "green_rose": {
+    "name": "green_rose",
+    "primaryColor": "#8eab8e",
+    "secondaryColor": "#ff94a9"
+  },
+  "white_rose": {
+    "name": "white_rose",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#ff6b6b"
+  },
+  "nebula_sunset": {
+    "name": "nebula_sunset",
+    "primaryColor": "#FA6400",
+    "secondaryColor": "#6A5298"
+  },
+  "faded_denin": {
+    "name": "faded_denin",
+    "primaryColor": "#FDF7B4",
+    "secondaryColor": "#516294"
+  },
+  "heritage_stone_": {
+    "name": "heritage_stone_",
+    "primaryColor": "#761504",
+    "secondaryColor": "#96938D"
+  },
+  "starlight_": {
+    "name": "starlight_",
+    "primaryColor": "#2A2F3C",
+    "secondaryColor": "#EAB253"
+  },
+  "neon_garden_": {
+    "name": "neon_garden_",
+    "primaryColor": "#B5E8BD",
+    "secondaryColor": "#A746B4"
+  },
+  "scarlet_ink_": {
+    "name": "scarlet_ink_",
+    "primaryColor": "#000000",
+    "secondaryColor": "#E81717"
+  },
+  "marshmellow_crean": {
+    "name": "marshmellow_crean",
+    "primaryColor": "#FD9BBD",
+    "secondaryColor": "#FFFFFF"
+  },
+  "marshmellow_cream": {
+    "name": "marshmellow_cream",
+    "primaryColor": "#FD9BBD",
+    "secondaryColor": "#FFFFFF"
+  },
+  "marshmellow_cream_": {
+    "name": "marshmellow_cream_",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#FD9BBD"
+  },
+  "faded_denin_": {
+    "name": "faded_denin_",
+    "primaryColor": "#516294",
+    "secondaryColor": "#FDF7B4"
+  },
+  "antique_ruby": {
+    "name": "antique_ruby",
+    "primaryColor": "#FFD700",
+    "secondaryColor": "#BD5167"
+  },
+  "antique_ruby_": {
+    "name": "antique_ruby_",
+    "primaryColor": "#d03e5b",
+    "secondaryColor": "#FFD700"
+  },
+  "espresso": {
+    "name": "espresso",
+    "primaryColor": "#5d320e",
+    "secondaryColor": "#FFD700"
+  },
+  "bubblegum_pop": {
+    "name": "bubblegum_pop",
+    "primaryColor": "#ff8f8f",
+    "secondaryColor": "#7ad7ff"
+  },
+  "garden_soil_": {
+    "name": "garden_soil_",
+    "primaryColor": "#3CB978",
+    "secondaryColor": "#4A2B2B"
+  },
+  "lewis_test": {
+    "name": "lewis_test",
+    "primaryColor": "#36E7D3",
+    "secondaryColor": "#000000"
+  },
+  "Crescent 1": {
+    "name": "Crescent 1",
+    "primaryColor": "#ff9e0d",
+    "secondaryColor": "#242322"
+  },
+  "golden_cannons": {
+    "name": "golden_cannons",
+    "primaryColor": "#d4af37",
+    "secondaryColor": "#0a0a0a"
+  },
+  "golden_cannons_": {
+    "name": "golden_cannons_",
+    "primaryColor": "#0a0a0a",
+    "secondaryColor": "#d4af37"
+  },
+  "blue_storm": {
+    "name": "blue_storm",
+    "primaryColor": "#2378d1",
+    "secondaryColor": "#000000"
+  },
+  "onyx_flame": {
+    "name": "onyx_flame",
+    "primaryColor": "#CE8403",
+    "secondaryColor": "#000000"
+  },
+  "Turkey": {
+    "name": "Turkey",
+    "primaryColor": "#ff9e0d",
+    "secondaryColor": "#242322"
+  },
+  "Crescent": {
+    "name": "Crescent",
+    "primaryColor": "#242322",
+    "secondaryColor": "#ff9e0d"
+  },
+  "holly_jolly": {
+    "name": "holly_jolly",
+    "primaryColor": "#861313",
+    "secondaryColor": "#FFFFFF"
+  },
+  "holly_jolly_": {
+    "name": "holly_jolly_",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#861313"
+  },
+  "frosty": {
+    "name": "frosty",
+    "primaryColor": "#0055ff",
+    "secondaryColor": "#FFFFFF"
+  },
+  "frosty_": {
+    "name": "frosty_",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#0055ff"
+  },
+  "yogurt": {
+    "name": "yogurt",
+    "primaryColor": "#4dc9ff",
+    "secondaryColor": "#FFFFFF"
+  },
+  "yogurt_": {
+    "name": "yogurt_",
+    "primaryColor": "#FFFFFF",
+    "secondaryColor": "#4dc9ff"
+  },
+  "opl2025": {
+    "name": "opl2025",
+    "primaryColor": "#000000",
+    "secondaryColor": "#e3b749"
+  },
+  "Opl20252": {
+    "name": "Opl20252",
+    "primaryColor": "#e3b749",
+    "secondaryColor": "#000000"
+  },
+  "coloursbroken": {
+    "name": "coloursbroken",
+    "primaryColor": "#8403fc",
+    "secondaryColor": "#413b47"
+  },
+  "Test": {
+    "name": "Test",
+    "primaryColor": "#FFDF00",
+    "secondaryColor": "#FF0000"
+  },
+  "Winter Wonderland": {
+    "name": "Winter Wonderland",
+    "primaryColor": "#e3330b",
+    "secondaryColor": "#3206c2"
+  },
+  "open_eigen": {
+    "name": "open_eigen",
+    "primaryColor": "#00e1ff",
+    "secondaryColor": "#0b0d28"
+  },
+  "charcoal": {
+    "name": "charcoal",
+    "primaryColor": "#969696",
+    "secondaryColor": "#454545"
+  },
+  "monarch_gold": {
+    "name": "monarch_gold",
+    "primaryColor": "#E6A509",
+    "secondaryColor": "#980B0B"
+  },
+  "GOSH": {
+    "name": "GOSH",
+    "primaryColor": "#33f8ff",
+    "secondaryColor": "#000000"
+  },
+  "St Judes 2026": {
+    "name": "St Judes 2026",
+    "primaryColor": "#ff584d",
+    "secondaryColor": "#ffffff"
+  },
+  "ash": {
+    "name": "ash",
+    "primaryColor": "#121218",
+    "secondaryColor": "#464653"
+  },
+  "midnight_lux": {
+    "name": "midnight_lux",
+    "primaryColor": "#0B0E56",
+    "secondaryColor": "#E2AA32"
+  },
+  "ash_": {
+    "name": "ash_",
+    "primaryColor": "#464653",
+    "secondaryColor": "#121218"
+  },
+  "Desert_Sand": {
+    "name": "Desert_Sand",
+    "primaryColor": "#896D48",
+    "secondaryColor": "#D6BC83"
+  },
+  "gothic_noir": {
+    "name": "gothic_noir",
+    "primaryColor": "#4A1C23",
+    "secondaryColor": "#121218"
+  },
+  "MY NAME IS LEWIS": {
+    "name": "MY NAME IS LEWIS",
+    "primaryColor": "#1dc978",
+    "secondaryColor": "#2b2b2b"
+  },
+  "mysterious_night": {
+    "name": "mysterious_night",
+    "primaryColor": "#000000",
+    "secondaryColor": "#f3daaf"
+  },
+  "electric royalty": {
+    "name": "electric royalty",
+    "primaryColor": "#4505BD",
+    "secondaryColor": "#fd77e0"
+  },
+  "Evergreen Linen": {
+    "name": "Evergreen Linen",
+    "primaryColor": "#EEDEC4",
+    "secondaryColor": "#1F5502"
+  },
+  "Neon Jungle": {
+    "name": "Neon Jungle",
+    "primaryColor": "#5AE763",
+    "secondaryColor": "#138636"
+  },
+  "Gothic Smoke": {
+    "name": "Gothic Smoke",
+    "primaryColor": "#706666",
+    "secondaryColor": "#000000"
+  },
+  "Tranquil Edge": {
+    "name": "Tranquil Edge",
+    "primaryColor": "#E9F2ED",
+    "secondaryColor": "#000000"
+  },
+  "lavendar_linen": {
+    "name": "lavendar_linen",
+    "primaryColor": "#CABBAE",
+    "secondaryColor": "#504758"
+  },
+  "forest_gold_": {
+    "name": "forest_gold_",
+    "primaryColor": "#e4a017",
+    "secondaryColor": "#07340b"
+  },
+  "Chocolate Wheat": {
+    "name": "Chocolate Wheat",
+    "primaryColor": "#403930",
+    "secondaryColor": "#D2B48C"
+  },
+  "st_jude_2026": {
+    "name": "st_jude_2026",
+    "primaryColor": "#ff584d",
+    "secondaryColor": "#ffffff"
+  },
+  "royal_fire": {
+    "name": "royal_fire",
+    "primaryColor": "#FF0000",
+    "secondaryColor": "#FFD700"
+  },
+  "peace_and_love": {
+    "name": "peace_and_love",
+    "primaryColor": "#1d4745",
+    "secondaryColor": "#15b0a8"
+  },
+  "evergreen_linen": {
+    "name": "evergreen_linen",
+    "primaryColor": "#EEDEC4",
+    "secondaryColor": "#1F5502"
+  },
+  "electric_royalty": {
+    "name": "electric_royalty",
+    "primaryColor": "#4505BD",
+    "secondaryColor": "#fd77e0"
+  },
+  "neon_jungle": {
+    "name": "neon_jungle",
+    "primaryColor": "#5AE763",
+    "secondaryColor": "#138636"
+  },
+  "gothic_smoke": {
+    "name": "gothic_smoke",
+    "primaryColor": "#706666",
+    "secondaryColor": "#000000"
+  },
+  "the_wild": {
+    "name": "the_wild",
+    "primaryColor": "#5AE763",
+    "secondaryColor": "#138636"
+  },
+  "lions_gold": {
+    "name": "lions_gold",
+    "primaryColor": "#07340b",
+    "secondaryColor": "#e4a017"
+  },
+  "tigers_prowel": {
+    "name": "tigers_prowel",
+    "primaryColor": "#e4a017",
+    "secondaryColor": "#07340b"
+  },
+  "royal_prestige": {
+    "name": "royal_prestige",
+    "primaryColor": "#E2AA32",
+    "secondaryColor": "#0B0E56"
+  },
+  "greek_power": {
+    "name": "greek_power",
+    "primaryColor": "#D2B48C",
+    "secondaryColor": "#403930"
+  },
+  "synth_dream": {
+    "name": "synth_dream",
+    "primaryColor": "#ea16f5",
+    "secondaryColor": "#16f5f5"
+  },
+  "striking_thunder": {
+    "name": "striking_thunder",
+    "primaryColor": "#6413cf",
+    "secondaryColor": "#e0de3d"
+  },
+  "total_domination": {
+    "name": "total_domination",
+    "primaryColor": "#ff0000",
+    "secondaryColor": "#ffffff"
+  },
+  "fuze": {
+    "name": "fuze",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#ff0000"
+  },
+  "didier": {
+    "name": "didier",
+    "primaryColor": "#707070",
+    "secondaryColor": "#f50fcb"
+  },
+  "didier_and_framboise": {
+    "name": "didier_and_framboise",
+    "primaryColor": "#f033cd",
+    "secondaryColor": "#000000"
+  },
+  "Velvet Dusk": {
+    "name": "Velvet Dusk",
+    "primaryColor": "#7278ac",
+    "secondaryColor": "#77777e"
+  },
+  "velvet_dusk": {
+    "name": "velvet_dusk",
+    "primaryColor": "#353131",
+    "secondaryColor": "#7F83B8"
+  },
+  "pastle_didierception": {
+    "name": "pastle_didierception",
+    "primaryColor": "#000000",
+    "secondaryColor": "#00eaff"
+  },
+  "neon_didierception": {
+    "name": "neon_didierception",
+    "primaryColor": "#000000",
+    "secondaryColor": "#ff00d0"
+  },
+  "rose": {
+    "name": "rose",
+    "primaryColor": "#ff61c5",
+    "secondaryColor": "#071c55"
+  },
+  "chocolate_buscuit": {
+    "name": "chocolate_buscuit",
+    "primaryColor": "#deb887",
+    "secondaryColor": "#8b4713"
+  },
+  "didier_3d": {
+    "name": "didier_3d",
+    "primaryColor": "#ff5900",
+    "secondaryColor": "#262626"
+  },
+  "harbouring_steel": {
+    "name": "harbouring_steel",
+    "primaryColor": "#949494",
+    "secondaryColor": "#122d7a"
+  },
+  "california_roll": {
+    "name": "california_roll",
+    "primaryColor": "#eeff00",
+    "secondaryColor": "#000000"
+  },
+  "electric_evil": {
+    "name": "electric_evil",
+    "primaryColor": "#04ff00",
+    "secondaryColor": "#000000"
+  },
+  "bao_buddies": {
+    "name": "bao_buddies",
+    "primaryColor": "#fedd67",
+    "secondaryColor": "#000000"
+  },
+  "burnt_onion": {
+    "name": "burnt_onion",
+    "primaryColor": "#abfe67",
+    "secondaryColor": "#000000"
+  },
+  "lavender_medow": {
+    "name": "lavender_medow",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#bf3efa"
+  },
+  "waters_edge": {
+    "name": "waters_edge",
+    "primaryColor": "#36E7D3",
+    "secondaryColor": "#242324"
+  },
+  "mystic_gardens": {
+    "name": "mystic_gardens",
+    "primaryColor": "#a8cc66",
+    "secondaryColor": "#1b0c04"
+  },
+  "fire_garden": {
+    "name": "fire_garden",
+    "primaryColor": "#f9ac06",
+    "secondaryColor": "#2e2c28"
+  },
+  "neubla": {
+    "name": "neubla",
+    "primaryColor": "#541e8a",
+    "secondaryColor": "#08002e"
+  },
+  "touch_grass": {
+    "name": "touch_grass",
+    "primaryColor": "#212121",
+    "secondaryColor": "#df7c0c"
+  },
+  "shell_shocked": {
+    "name": "shell_shocked",
+    "primaryColor": "#969696",
+    "secondaryColor": "#141432"
+  },
+  "stand_to": {
+    "name": "stand_to",
+    "primaryColor": "#969696",
+    "secondaryColor": "#255c0a"
+  },
+  "action": {
+    "name": "action",
+    "primaryColor": "#501e0a",
+    "secondaryColor": "#a07814"
+  },
+  "choo_choo": {
+    "name": "choo_choo",
+    "primaryColor": "#282828",
+    "secondaryColor": "#7f8c8d"
+  },
+  "iceland_power": {
+    "name": "iceland_power",
+    "primaryColor": "#000000",
+    "secondaryColor": "#52fcff"
+  },
+  "iceland_freedom": {
+    "name": "iceland_freedom",
+    "primaryColor": "#ffd952",
+    "secondaryColor": "#272447"
+  },
+  "fuzion": {
+    "name": "fuzion",
+    "primaryColor": "#eb34eb",
+    "secondaryColor": "#121411"
+  },
+  "fire_fuzion": {
+    "name": "fire_fuzion",
+    "primaryColor": "#d4913f",
+    "secondaryColor": "#000000"
+  },
+  "1v1_me_bro_fire": {
+    "name": "1v1_me_bro_fire",
+    "primaryColor": "#c83c00",
+    "secondaryColor": "#641e00"
+  },
+  "1v1_me_bro_royal": {
+    "name": "1v1_me_bro_royal",
+    "primaryColor": "#db952c",
+    "secondaryColor": "#0f2666"
+  },
+  "1v1_me_bro_toxic": {
+    "name": "1v1_me_bro_toxic",
+    "primaryColor": "#9900ff",
+    "secondaryColor": "#a6ff00"
+  },
+  "1v1_me_bro_ice": {
+    "name": "1v1_me_bro_ice",
+    "primaryColor": "#112457",
+    "secondaryColor": "#2effcb"
+  },
+  "winner_winner": {
+    "name": "winner_winner",
+    "primaryColor": "#d8ae53",
+    "secondaryColor": "#060a0c"
+  },
+  "your_bonkers": {
+    "name": "your_bonkers",
+    "primaryColor": "#2b2b2b",
+    "secondaryColor": "#52b788"
+  },
+  "adz_on_fire": {
+    "name": "adz_on_fire",
+    "primaryColor": "#db952c",
+    "secondaryColor": "#0f2666"
+  },
+  "lbu": {
+    "name": "lbu",
+    "primaryColor": "#eeb700",
+    "secondaryColor": "#060703"
+  },
+  "clown_time": {
+    "name": "clown_time",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#d42020"
+  },
+  "acid_clown": {
+    "name": "acid_clown",
+    "primaryColor": "#a6ff00",
+    "secondaryColor": "#9900ff"
+  },
+  "clown_town": {
+    "name": "clown_town",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#7b68ee"
+  },
+  "bork": {
+    "name": "bork",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#d42020"
+  },
+  "camo_bork": {
+    "name": "camo_bork",
+    "primaryColor": "#e4a017",
+    "secondaryColor": "#07340b"
+  },
+  "royal_bork": {
+    "name": "royal_bork",
+    "primaryColor": "#ffaa00",
+    "secondaryColor": "#446bc2"
+  },
+  "fenrus_custom_1of1": {
+    "name": "fenrus_custom_1of1",
+    "primaryColor": "#df8301",
+    "secondaryColor": "#000f3d"
+  },
+  "devils_garden": {
+    "name": "devils_garden",
+    "primaryColor": "#bc7ec2",
+    "secondaryColor": "#07000a"
+  },
+  "panda_synth": {
+    "name": "panda_synth",
+    "primaryColor": "#00ffe1",
+    "secondaryColor": "#ff24b7"
+  },
+  "panda_trip": {
+    "name": "panda_trip",
+    "primaryColor": "#a6ff00",
+    "secondaryColor": "#9900ff"
+  },
+  "panda_royalty": {
+    "name": "panda_royalty",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#dc143c"
+  },
+  "hul": {
+    "name": "hul",
+    "primaryColor": "#79d2d1",
+    "secondaryColor": "#121212"
+  },
+  "dreadnought": {
+    "name": "dreadnought",
+    "primaryColor": "#9864b4",
+    "secondaryColor": "#210222"
+  },
+  "love_is_in_the_air": {
+    "name": "love_is_in_the_air",
+    "primaryColor": "#ff2499",
+    "secondaryColor": "#520000"
+  },
+  "x": { "name": "x", "primaryColor": "#ffa8be", "secondaryColor": "#ff0000" },
+  "loves_twist": {
+    "name": "loves_twist",
+    "primaryColor": "#ff9ecd",
+    "secondaryColor": "#c1152f"
+  },
+  "lovers_bar": {
+    "name": "lovers_bar",
+    "primaryColor": "#4e4646",
+    "secondaryColor": "#ff0000"
+  },
+  "dont_let_this_die": {
+    "name": "dont_let_this_die",
+    "primaryColor": "#5da522",
+    "secondaryColor": "#8b0000"
+  },
+  "love_struck": {
+    "name": "love_struck",
+    "primaryColor": "#ff99a3",
+    "secondaryColor": "#f0e68c"
+  },
+  "1_1": {
+    "name": "1_1",
+    "primaryColor": "#de3b64",
+    "secondaryColor": "#0d0d0d"
+  },
+  "the_knowing_eye": {
+    "name": "the_knowing_eye",
+    "primaryColor": "#8f1919",
+    "secondaryColor": "#0f0f0f"
+  },
+  "the_rats_revenge": {
+    "name": "the_rats_revenge",
+    "primaryColor": "#BD0000",
+    "secondaryColor": "#3B1302"
+  },
+  "the_royal_rat": {
+    "name": "the_royal_rat",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#0033aa"
+  },
+  "rats_murder": {
+    "name": "rats_murder",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#d42020"
+  },
+  "breakfast": {
+    "name": "breakfast",
+    "primaryColor": "#ffe370",
+    "secondaryColor": "#dea32a"
+  },
+  "lunch": {
+    "name": "lunch",
+    "primaryColor": "#c88200",
+    "secondaryColor": "#781e00"
+  },
+  "ohana": {
+    "name": "ohana",
+    "primaryColor": "#2f4f2f",
+    "secondaryColor": "#d2b48c"
+  },
+  "oceans_waves": {
+    "name": "oceans_waves",
+    "primaryColor": "#112457",
+    "secondaryColor": "#49c9e3"
+  },
+  "the_royal_dude": {
+    "name": "the_royal_dude",
+    "primaryColor": "#446bc2",
+    "secondaryColor": "#ffaa00"
+  },
+  "its_black_and_white": {
+    "name": "its_black_and_white",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#000000"
+  },
+  "erm_actually": {
+    "name": "erm_actually",
+    "primaryColor": "#ffff00",
+    "secondaryColor": "#000000"
+  },
+  "acid_goat": {
+    "name": "acid_goat",
+    "primaryColor": "#00ffe1",
+    "secondaryColor": "#ff24b7"
+  },
+  "chill_goat": {
+    "name": "chill_goat",
+    "primaryColor": "#88cafc",
+    "secondaryColor": "#000000"
+  },
+  "the_goose": {
+    "name": "the_goose",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#ff7b00"
+  },
+  "happy_little_goose": {
+    "name": "happy_little_goose",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#0033aa"
+  },
+  "synth_molky": {
+    "name": "synth_molky",
+    "primaryColor": "#00ffe1",
+    "secondaryColor": "#ff24b7"
+  },
+  "royal_molky": {
+    "name": "royal_molky",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#dc143c"
+  },
+  "molky_molky": {
+    "name": "molky_molky",
+    "primaryColor": "#feafa8",
+    "secondaryColor": "#000000"
+  },
+  "25m": {
+    "name": "25m",
+    "primaryColor": "#ff0000",
+    "secondaryColor": "#ffffff"
+  },
+  "50m": {
+    "name": "50m",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#ff0000"
+  },
+  "75m": {
+    "name": "75m",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#dc143c"
+  },
+  "ramadangg": {
+    "name": "ramadangg",
+    "primaryColor": "#004708",
+    "secondaryColor": "#ffbb00"
+  },
+  "orang_brown": {
+    "name": "orang_brown",
+    "primaryColor": "#ffb957",
+    "secondaryColor": "#8b4713"
+  },
+  "ramadanfix": {
+    "name": "ramadanfix",
+    "primaryColor": "#ffbb00",
+    "secondaryColor": "#004708"
+  },
+  "lunarwishes": {
+    "name": "lunarwishes",
+    "primaryColor": "#b10b0b",
+    "secondaryColor": "#edae0c"
+  },
+  "lantern": {
+    "name": "lantern",
+    "primaryColor": "#bd0000",
+    "secondaryColor": "#ffb700"
+  },
+  "party_rings": {
+    "name": "party_rings",
+    "primaryColor": "#fff3ad",
+    "secondaryColor": "#ff94a9"
+  },
+  "blue_pale_yellow": {
+    "name": "blue_pale_yellow",
+    "primaryColor": "#fff3ad",
+    "secondaryColor": "#73c3e6"
+  },
+  "ofmspmnr_placements_26": {
+    "name": "ofmspmnr_placements_26",
+    "primaryColor": "#d6bc83",
+    "secondaryColor": "#9e753f"
+  },
+  "ofm26": {
+    "name": "ofm26",
+    "primaryColor": "#d4af37",
+    "secondaryColor": "#000000"
+  },
+  "warrior_of_bones": {
+    "name": "warrior_of_bones",
+    "primaryColor": "#ff0000",
+    "secondaryColor": "#000000"
+  },
+  "hold_the_world": {
+    "name": "hold_the_world",
+    "primaryColor": "#00ff00",
+    "secondaryColor": "#000000"
+  },
+  "rexs_rat_army": {
+    "name": "rexs_rat_army",
+    "primaryColor": "#ff7300",
+    "secondaryColor": "#000000"
+  },
+  "grey_desert": {
+    "name": "grey_desert",
+    "primaryColor": "#8f8f8f",
+    "secondaryColor": "#454545"
+  },
+  "desert_scape": {
+    "name": "desert_scape",
+    "primaryColor": "#e3b469",
+    "secondaryColor": "#78b85c"
+  },
+  "desert_night": {
+    "name": "desert_night",
+    "primaryColor": "#413264",
+    "secondaryColor": "#DDB95F"
+  },
+  "nuclear_voltage": {
+    "name": "nuclear_voltage",
+    "primaryColor": "#FFDD00",
+    "secondaryColor": "#000000"
+  },
+  "steel_shadow": {
+    "name": "steel_shadow",
+    "primaryColor": "#949494",
+    "secondaryColor": "#454545"
+  },
+  "sand_anethyst": {
+    "name": "sand_anethyst",
+    "primaryColor": "#75247B",
+    "secondaryColor": "#EAE1C3"
+  },
+  "dark_amethyst": {
+    "name": "dark_amethyst",
+    "primaryColor": "#bf3efa",
+    "secondaryColor": "#353131"
+  },
+  "samurai": {
+    "name": "samurai",
+    "primaryColor": "#822A2A",
+    "secondaryColor": "#B4BD3E"
+  },
+  "ocean_waves": {
+    "name": "ocean_waves",
+    "primaryColor": "#73B1CE",
+    "secondaryColor": "#F6ECEB"
+  },
+  "bubble_berry": {
+    "name": "bubble_berry",
+    "primaryColor": "#7D0093",
+    "secondaryColor": "#FF65F0"
+  },
+  "rusted_sunset": {
+    "name": "rusted_sunset",
+    "primaryColor": "#FF4500",
+    "secondaryColor": "#F0E68C"
+  },
+  "leatherback": {
+    "name": "leatherback",
+    "primaryColor": "#622713",
+    "secondaryColor": "#fbab90"
+  },
+  "bubblegum_cream": {
+    "name": "bubblegum_cream",
+    "primaryColor": "#CF97D3",
+    "secondaryColor": "#FFF5F5"
+  },
+  "touchgrass": {
+    "name": "touchgrass",
+    "primaryColor": "#39ae19",
+    "secondaryColor": "#000000"
+  },
+  "royalty": {
+    "name": "royalty",
+    "primaryColor": "#6b19da",
+    "secondaryColor": "#c7a800"
+  },
+  "black_ice": {
+    "name": "black_ice",
+    "primaryColor": "#121218",
+    "secondaryColor": "#2d2d39"
+  },
+  "deaths_glitch": {
+    "name": "deaths_glitch",
+    "primaryColor": "#ffd700",
+    "secondaryColor": "#dc143c"
+  },
+  "blood_red": {
+    "name": "blood_red",
+    "primaryColor": "#c83c00",
+    "secondaryColor": "#641e00"
+  },
+  "party_ring": {
+    "name": "party_ring",
+    "primaryColor": "#ff94a9",
+    "secondaryColor": "#fff3ad"
+  },
+  "sunrise": {
+    "name": "sunrise",
+    "primaryColor": "#f0e68c",
+    "secondaryColor": "#b85151"
+  },
+  "grassland": {
+    "name": "grassland",
+    "primaryColor": "#5AFF56",
+    "secondaryColor": "#0a0a0a"
+  },
+  "strawberry_caramel": {
+    "name": "strawberry_caramel",
+    "primaryColor": "#FEBEFF",
+    "secondaryColor": "#9E7D24"
+  },
+  "banana_split": {
+    "name": "banana_split",
+    "primaryColor": "#FFEA9E",
+    "secondaryColor": "#9E7D24"
+  },
+  "strawberry_cream": {
+    "name": "strawberry_cream",
+    "primaryColor": "#F19FFF",
+    "secondaryColor": "#0a0a0a"
+  },
+  "mint_engraving": {
+    "name": "mint_engraving",
+    "primaryColor": "#ABFFFE",
+    "secondaryColor": "#9E7D24"
+  },
+  "navy_night": {
+    "name": "navy_night",
+    "primaryColor": "#00137F",
+    "secondaryColor": "#000000"
+  },
+  "burning_coal": {
+    "name": "burning_coal",
+    "primaryColor": "#666666",
+    "secondaryColor": "#121218"
+  },
+  "toxic_rails": {
+    "name": "toxic_rails",
+    "primaryColor": "#cf11d2",
+    "secondaryColor": "#19e764"
+  },
+  "wild_ocean": {
+    "name": "wild_ocean",
+    "primaryColor": "#F6ECEB",
+    "secondaryColor": "#62b7df"
+  },
+  "lunar_glow": {
+    "name": "lunar_glow",
+    "primaryColor": "#0f2666",
+    "secondaryColor": "#DDB95F"
+  },
+  "sweet_dreams": {
+    "name": "sweet_dreams",
+    "primaryColor": "#6185b8",
+    "secondaryColor": "#bcdafb"
+  },
+  "chocolate_carmel": {
+    "name": "chocolate_carmel",
+    "primaryColor": "#D4AF37",
+    "secondaryColor": "#601419"
+  },
+  "chocolate_caramel": {
+    "name": "chocolate_caramel",
+    "primaryColor": "#D4AF37",
+    "secondaryColor": "#601419"
+  },
+  "golden_currency": {
+    "name": "golden_currency",
+    "primaryColor": "#ffd500",
+    "secondaryColor": "#395739"
+  },
+  "chocolate_wheat": {
+    "name": "chocolate_wheat",
+    "primaryColor": "#403930",
+    "secondaryColor": "#D2B48C"
+  },
+  "muted_sky": {
+    "name": "muted_sky",
+    "primaryColor": "#b0e0e6",
+    "secondaryColor": "#3e406d"
+  },
+  "early_set": {
+    "name": "early_set",
+    "primaryColor": "#F0E68C",
+    "secondaryColor": "#d29f5d"
+  },
+  "deep_sun_set": {
+    "name": "deep_sun_set",
+    "primaryColor": "#CD0025",
+    "secondaryColor": "#FFE2E8"
+  },
+  "combat_carrot": {
+    "name": "combat_carrot",
+    "primaryColor": "#1E461E",
+    "secondaryColor": "#FF873C"
+  },
+  "dusk_blossom": {
+    "name": "dusk_blossom",
+    "primaryColor": "#302531",
+    "secondaryColor": "#FF8FF6"
+  },
+  "cookie_cream": {
+    "name": "cookie_cream",
+    "primaryColor": "#fff4cc",
+    "secondaryColor": "#14053d"
+  },
+  "dblue_gold": {
+    "name": "dblue_gold",
+    "primaryColor": "#0a0057",
+    "secondaryColor": "#ffd22e"
+  },
+  "egg_and_wax": {
+    "name": "egg_and_wax",
+    "primaryColor": "#b4552d",
+    "secondaryColor": "#180e06"
+  },
+  "slap": {
+    "name": "slap",
+    "primaryColor": "#ebd700",
+    "secondaryColor": "#262626"
+  },
+  "soft_pinks": {
+    "name": "soft_pinks",
+    "primaryColor": "#EE59FF",
+    "secondaryColor": "#FEBBFF"
+  },
+  "aquatic": {
+    "name": "aquatic",
+    "primaryColor": "#00FFD5",
+    "secondaryColor": "#B0FEFF"
+  },
+  "banana_shake": {
+    "name": "banana_shake",
+    "primaryColor": "#FFCE1F",
+    "secondaryColor": "#F8FFC2"
+  },
+  "slimy_petri": {
+    "name": "slimy_petri",
+    "primaryColor": "#53baff",
+    "secondaryColor": "#c4ffbd"
+  },
+  "cheesebo": {
+    "name": "cheesebo",
+    "primaryColor": "#daa520",
+    "secondaryColor": "#6b5b95"
+  },
+  "damned_crown": {
+    "name": "damned_crown",
+    "primaryColor": "#7645a1",
+    "secondaryColor": "#2e2600"
+  },
+  "deep_sky_glow": {
+    "name": "deep_sky_glow",
+    "primaryColor": "#2EFFCB",
+    "secondaryColor": "#212b47"
+  },
+  "purple_dream": {
+    "name": "purple_dream",
+    "primaryColor": "#F26EFF",
+    "secondaryColor": "#DDFCFF"
+  },
+  "amber_alert": {
+    "name": "amber_alert",
+    "primaryColor": "#F9D50B",
+    "secondaryColor": "#23304D"
+  },
+  "radiation_leak": {
+    "name": "radiation_leak",
+    "primaryColor": "#A6FF00",
+    "secondaryColor": "#8ba659"
+  },
+  "maroon": {
+    "name": "maroon",
+    "primaryColor": "#780042",
+    "secondaryColor": "#000000"
+  },
+  "illuminate": {
+    "name": "illuminate",
+    "primaryColor": "#24DBFF",
+    "secondaryColor": "#934871"
+  },
+  "polo": {
+    "name": "polo",
+    "primaryColor": "#24DBFF",
+    "secondaryColor": "#E0DDE4"
+  },
+  "shadow_plum": {
+    "name": "shadow_plum",
+    "primaryColor": "#735abf",
+    "secondaryColor": "#2b1a2d"
+  },
+  "leather_bound": {
+    "name": "leather_bound",
+    "primaryColor": "#fbab90",
+    "secondaryColor": "#622713"
+  },
+  "unearthed_gold": {
+    "name": "unearthed_gold",
+    "primaryColor": "#483c14",
+    "secondaryColor": "#000000"
+  },
+  "blackice": {
+    "name": "blackice",
+    "primaryColor": "#2d2d39",
+    "secondaryColor": "#121218"
+  },
+  "serene_skies": {
+    "name": "serene_skies",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#070070"
+  },
+  "cyberpunk_bumblebee": {
+    "name": "cyberpunk_bumblebee",
+    "primaryColor": "#ffcc00",
+    "secondaryColor": "#000000"
+  },
+  "american_patriotism": {
+    "name": "american_patriotism",
+    "primaryColor": "#ffffff",
+    "secondaryColor": "#b31942"
+  },
+  "aqua": {
+    "name": "aqua",
+    "primaryColor": "#11eee3",
+    "secondaryColor": "#000000"
+  },
+  "sunny": {
+    "name": "sunny",
+    "primaryColor": "#e9e66d",
+    "secondaryColor": "#000000"
+  },
+  "deep_streets_glow": {
+    "name": "deep_streets_glow",
+    "primaryColor": "#00fbff",
+    "secondaryColor": "#420146"
+  },
+  "toxic_streets": {
+    "name": "toxic_streets",
+    "primaryColor": "#bbff00",
+    "secondaryColor": "#002266"
+  },
+  "city_streets": {
+    "name": "city_streets",
+    "primaryColor": "#FFB300",
+    "secondaryColor": "#2f3455"
+  },
+  "book_blue": {
+    "name": "book_blue",
+    "primaryColor": "#0F2666",
+    "secondaryColor": "#E8B569"
+  },
+  "red_brick": {
+    "name": "red_brick",
+    "primaryColor": "#a53712",
+    "secondaryColor": "#1a1a1a"
+  },
+  "mother_earth": {
+    "name": "mother_earth",
+    "primaryColor": "#3D5A8A",
+    "secondaryColor": "#8A9E6A"
+  },
+  "scorched_earth": {
+    "name": "scorched_earth",
+    "primaryColor": "#4A3D30",
+    "secondaryColor": "#C4500A"
+  },
+  "rust_and_dust": {
+    "name": "rust_and_dust",
+    "primaryColor": "#A64A2E",
+    "secondaryColor": "#C4B090"
+  },
+  "cosmic_abyss": {
+    "name": "cosmic_abyss",
+    "primaryColor": "#0000c8",
+    "secondaryColor": "#FF1EFD"
+  },
+  "cosmic_blue": {
+    "name": "cosmic_blue",
+    "primaryColor": "#0000c8",
+    "secondaryColor": "#FF1EFD"
+  },
+  "charmed": {
+    "name": "charmed",
+    "primaryColor": "#0A1628",
+    "secondaryColor": "#A8842A"
+  },
+  "sickly_green": {
+    "name": "sickly_green",
+    "primaryColor": "#0F1A08",
+    "secondaryColor": "#94B828"
+  },
+  "blood_clot": {
+    "name": "blood_clot",
+    "primaryColor": "#2A0808",
+    "secondaryColor": "#D4C0A0"
   }
 }

@@ -1,4 +1,11 @@
-export type ToolKind = "pen" | "line" | "fill" | "star" | "circle";
+export type ToolKind =
+  | "pen"
+  | "line"
+  | "fill"
+  | "star"
+  | "circle"
+  | "select"
+  | "stamp";
 
 type ToolStateOptions = {
   toolPenBtn: HTMLButtonElement;
@@ -6,9 +13,12 @@ type ToolStateOptions = {
   toolFillBtn: HTMLButtonElement;
   toolStarBtn: HTMLButtonElement;
   toolCircleBtn: HTMLButtonElement;
+  toolSelectBtn: HTMLButtonElement;
+  toolStampBtn: HTMLButtonElement;
   penSizeInput: HTMLInputElement;
   starSizeInput: HTMLInputElement;
   circleSizeInput: HTMLInputElement;
+  stampBrushSizeInput: HTMLInputElement;
   circleFillInput: HTMLInputElement;
 };
 
@@ -17,9 +27,10 @@ export type ToolState = {
   getPenSize: () => number;
   getStarRadius: () => number;
   getCircleRadius: () => number;
+  getStampBrushRadius: () => number;
   isCircleFilled: () => boolean;
   subscribeToToolChanges: (
-    listener: (tool: ToolKind) => void
+    listener: (tool: ToolKind | null) => void
   ) => () => void;
 };
 
@@ -30,19 +41,30 @@ export function createToolState(options: ToolStateOptions): ToolState {
     toolFillBtn,
     toolStarBtn,
     toolCircleBtn,
+    toolSelectBtn,
+    toolStampBtn,
     penSizeInput,
     starSizeInput,
     circleSizeInput,
+    stampBrushSizeInput,
     circleFillInput,
   } = options;
 
   let currentTool: ToolKind | null = null;
-  const listeners = new Set<(tool: ToolKind) => void>();
+  const listeners = new Set<(tool: ToolKind | null) => void>();
 
-  function selectTool(tool: ToolKind) {
+  function selectTool(tool: ToolKind | null) {
     if (currentTool === tool) return;
     currentTool = tool;
-    [toolPenBtn, toolLineBtn, toolFillBtn, toolStarBtn, toolCircleBtn].forEach(
+    [
+      toolPenBtn,
+      toolLineBtn,
+      toolFillBtn,
+      toolStarBtn,
+      toolCircleBtn,
+      toolSelectBtn,
+      toolStampBtn,
+    ].forEach(
       (btn) => btn.classList.remove("selected")
     );
     if (tool === "pen") toolPenBtn.classList.add("selected");
@@ -50,6 +72,8 @@ export function createToolState(options: ToolStateOptions): ToolState {
     if (tool === "fill") toolFillBtn.classList.add("selected");
     if (tool === "star") toolStarBtn.classList.add("selected");
     if (tool === "circle") toolCircleBtn.classList.add("selected");
+    if (tool === "select") toolSelectBtn.classList.add("selected");
+    if (tool === "stamp") toolStampBtn.classList.add("selected");
     listeners.forEach((listener) => listener(tool));
   }
 
@@ -58,6 +82,8 @@ export function createToolState(options: ToolStateOptions): ToolState {
   toolFillBtn.onclick = () => selectTool("fill");
   toolStarBtn.onclick = () => selectTool("star");
   toolCircleBtn.onclick = () => selectTool("circle");
+  toolSelectBtn.onclick = () => selectTool(currentTool === "select" ? null : "select");
+  toolStampBtn.onclick = () => selectTool("stamp");
   selectTool("pen");
 
   starSizeInput.oninput = () => {
@@ -75,7 +101,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
       // No preview behavior yet.
     }
   };
-  circleFillInput.onchange = () => {
+    circleFillInput.onchange = () => {
     if (currentTool === "circle") {
       // No preview behavior yet.
     }
@@ -86,6 +112,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
     getPenSize: () => parseInt(penSizeInput.value),
     getStarRadius: () => parseInt(starSizeInput.value),
     getCircleRadius: () => parseInt(circleSizeInput.value),
+    getStampBrushRadius: () => parseInt(stampBrushSizeInput.value),
     isCircleFilled: () => circleFillInput.checked,
     subscribeToToolChanges: (listener) => {
       listeners.add(listener);
