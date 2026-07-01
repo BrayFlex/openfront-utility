@@ -1,4 +1,5 @@
 /// <reference lib="es2017" />
+import { PatternDecoder } from "./app/patternEncoding.js";
 
 type PaletteDefinition = {
   name: string;
