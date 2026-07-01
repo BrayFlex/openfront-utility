@@ -1,6 +1,7 @@
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
+import { initEditorViewControls } from "./app/editorViewControls.js";
 import {
   buildDevStorageOutput,
   buildDiscordOutput,
@@ -15,160 +16,67 @@ import {
   generatePatternBase64,
 } from "./app/patternEncoding.js";
 import { createPatternLoader } from "./app/patternLoader.js";
+import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
+import { initShiftControls } from "./app/shiftControls.js";
+import { initStampControls } from "./app/stampControls.js";
 import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
+import { initWorkspaceControls } from "./app/workspaceControls.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const toolbox = document.getElementById("toolbox");
-  const base64Input = document.getElementById(
-    "base64Input"
-  ) as HTMLInputElement;
+  const base64Input = document.getElementById("base64Input") as HTMLInputElement;
   const toolPenBtn = document.getElementById("tool-pen") as HTMLButtonElement;
-  const penSizeInput = document.getElementById(
-    "pen-size"
-  ) as HTMLInputElement;
+  const penSizeInput = document.getElementById("pen-size") as HTMLInputElement;
   const toolLineBtn = document.getElementById("tool-line") as HTMLButtonElement;
   const toolFillBtn = document.getElementById("tool-fill") as HTMLButtonElement;
   const toolStarBtn = document.getElementById("tool-star") as HTMLButtonElement;
-  const toolCircleBtn = document.getElementById(
-    "tool-circle"
-  ) as HTMLButtonElement;
-  const toolStampBtn = document.getElementById(
-    "tool-stamp"
-  ) as HTMLButtonElement;
-  const toolSelectBtn = document.getElementById(
-    "tool-select"
-  ) as HTMLButtonElement;
-  const shiftSelectBtn = document.getElementById(
-    "shift-select-btn"
-  ) as HTMLButtonElement;
-  const starSizeInput = document.getElementById(
-    "star-size"
-  ) as HTMLInputElement;
-  const circleSizeInput = document.getElementById(
-    "circle-size"
-  ) as HTMLInputElement;
-  const stampBrushSizeInput = document.getElementById(
-    "stamp-brush-size"
-  ) as HTMLInputElement;
-  const circleFillInput = document.getElementById(
-    "circle-fill"
-  ) as HTMLInputElement;
+  const toolCircleBtn = document.getElementById("tool-circle") as HTMLButtonElement;
+  const toolStampBtn = document.getElementById("tool-stamp") as HTMLButtonElement;
+  const toolSelectBtn = document.getElementById("tool-select") as HTMLButtonElement;
+  const shiftSelectBtn = document.getElementById("shift-select-btn") as HTMLButtonElement;
+  const starSizeInput = document.getElementById("star-size") as HTMLInputElement;
+  const circleSizeInput = document.getElementById("circle-size") as HTMLInputElement;
+  const stampBrushSizeInput = document.getElementById("stamp-brush-size") as HTMLInputElement;
+  const circleFillInput = document.getElementById("circle-fill") as HTMLInputElement;
   const loadBtn = document.getElementById("loadBtn") as HTMLButtonElement;
-  const tileWidthInput = document.getElementById(
-    "tileWidth"
-  ) as HTMLInputElement;
-  const tileWidthValue = document.getElementById(
-    "tileWidth-value"
-  ) as HTMLInputElement;
-  const tileHeightInput = document.getElementById(
-    "tileHeight"
-  ) as HTMLInputElement;
-  const tileHeightValue = document.getElementById(
-    "tileHeight-value"
-  ) as HTMLInputElement;
+  const tileWidthInput = document.getElementById("tileWidth") as HTMLInputElement;
+  const tileWidthValue = document.getElementById("tileWidth-value") as HTMLInputElement;
+  const tileHeightInput = document.getElementById("tileHeight") as HTMLInputElement;
+  const tileHeightValue = document.getElementById("tileHeight-value") as HTMLInputElement;
   const scaleInput = document.getElementById("scale") as HTMLInputElement;
   const scaleValue = document.getElementById("scale-value") as HTMLSpanElement;
-  const gridScaleInput = document.getElementById(
-    "gridScale"
-  ) as HTMLSelectElement;
-  const clearGridBtn = document.getElementById(
-    "clearGridBtn"
-  ) as HTMLButtonElement;
+  const gridScaleInput = document.getElementById("gridScale") as HTMLSelectElement;
+  const clearGridBtn = document.getElementById("clearGridBtn") as HTMLButtonElement;
   const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
   const redoBtn = document.getElementById("redoBtn") as HTMLButtonElement;
   const shiftUpBtn = document.getElementById("shiftUpBtn") as HTMLButtonElement;
-  const shiftLeftBtn = document.getElementById(
-    "shiftLeftBtn"
-  ) as HTMLButtonElement;
-  const shiftRightBtn = document.getElementById(
-    "shiftRightBtn"
-  ) as HTMLButtonElement;
-  const shiftDownBtn = document.getElementById(
-    "shiftDownBtn"
-  ) as HTMLButtonElement;
-  const shiftModeAll = document.getElementById("shift-mode-all") as HTMLInputElement;
-  const shiftModePartial = document.getElementById("shift-mode-partial") as HTMLInputElement;
-  const shiftOverwriteOn = document.getElementById("shift-overwrite-on") as HTMLInputElement;
-  const shiftOverwriteOff = document.getElementById("shift-overwrite-off") as HTMLInputElement;
-  const stampWidthInput = document.getElementById("stampWidth") as HTMLInputElement;
-  const stampHeightInput = document.getElementById("stampHeight") as HTMLInputElement;
-  const stampApplyModeSelect = document.getElementById(
-    "stampApplyMode"
-  ) as HTMLSelectElement;
-  const stampEditor = document.getElementById("stampEditor") as HTMLDivElement;
-  const stampApplyBtn = document.getElementById(
-    "stampApplyBtn"
-  ) as HTMLButtonElement;
-  const stampClearBtn = document.getElementById(
-    "stampClearBtn"
-  ) as HTMLButtonElement;
-  const rotateLeftBtn = document.getElementById(
-    "rotateLeftBtn"
-  ) as HTMLButtonElement;
-  const rotateRightBtn = document.getElementById(
-    "rotateRightBtn"
-  ) as HTMLButtonElement;
+  const shiftLeftBtn = document.getElementById("shiftLeftBtn") as HTMLButtonElement;
+  const shiftRightBtn = document.getElementById("shiftRightBtn") as HTMLButtonElement;
+  const shiftDownBtn = document.getElementById("shiftDownBtn") as HTMLButtonElement;
   const gridDiv = document.getElementById("grid")!;
-  const outputTextarea = document.getElementById(
-    "output"
-  ) as HTMLTextAreaElement;
-  const discordOutputTextarea = document.getElementById(
-    "discordOutput"
-  ) as HTMLTextAreaElement;
-  const previewLinkTextarea = document.getElementById(
-    "previewLinkOutput"
-  ) as HTMLTextAreaElement;
-  const devStorageTextarea = document.getElementById(
-    "devStorageOutput"
-  ) as HTMLTextAreaElement;
-  const copyOutputBtn = document.getElementById(
-    "copyOutputBtn"
-  ) as HTMLButtonElement;
-  const copyDiscordBtn = document.getElementById(
-    "copyDiscordBtn"
-  ) as HTMLButtonElement;
-  const copyPreviewLinkBtn = document.getElementById(
-    "copyPreviewLinkBtn"
-  ) as HTMLButtonElement;
-  const copyDevStorageBtn = document.getElementById(
-    "copyDevStorageBtn"
-  ) as HTMLButtonElement;
+  const outputTextarea = document.getElementById("output") as HTMLTextAreaElement;
+  const discordOutputTextarea = document.getElementById("discordOutput") as HTMLTextAreaElement;
+  const previewLinkTextarea = document.getElementById("previewLinkOutput") as HTMLTextAreaElement;
+  const devStorageTextarea = document.getElementById("devStorageOutput") as HTMLTextAreaElement;
+  const copyOutputBtn = document.getElementById("copyOutputBtn") as HTMLButtonElement;
+  const copyDiscordBtn = document.getElementById("copyDiscordBtn") as HTMLButtonElement;
+  const copyPreviewLinkBtn = document.getElementById("copyPreviewLinkBtn") as HTMLButtonElement;
+  const copyDevStorageBtn = document.getElementById("copyDevStorageBtn") as HTMLButtonElement;
   const previewCanvas = document.getElementById("preview") as HTMLCanvasElement;
-  const previewPrimaryColorInput = document.getElementById(
-    "previewPrimaryColor"
-  ) as HTMLInputElement;
-  const previewSecondaryColorInput = document.getElementById(
-    "previewSecondaryColor"
-  ) as HTMLInputElement;
-  const swapColorsBtn = document.getElementById(
-    "swapColorsBtn"
-  ) as HTMLButtonElement;
-  const colorPresetContainer = document.getElementById(
-    "colorPresetContainer"
-  ) as HTMLDivElement;
-  const layoutTabsInput = document.getElementById(
-    "layout-tabs"
-  ) as HTMLInputElement | null;
-  const viewPreviewInput = document.getElementById(
-    "view-preview"
-  ) as HTMLInputElement | null;
-  const tabActionsInput = document.getElementById(
-    "tab-actions"
-  ) as HTMLInputElement;
-  const tabToolsInput = document.getElementById(
-    "tab-tools"
-  ) as HTMLInputElement;
-  const tabGridInput = document.getElementById(
-    "tab-grid"
-  ) as HTMLInputElement;
-  const tabStampInput = document.getElementById(
-    "tab-stamp"
-  ) as HTMLInputElement;
-  const previewPanel = document.querySelector(
-    ".preview-panel"
-  ) as HTMLElement | null;
+  const previewPrimaryColorInput = document.getElementById("previewPrimaryColor") as HTMLInputElement;
+  const previewSecondaryColorInput = document.getElementById("previewSecondaryColor") as HTMLInputElement;
+  const swapColorsBtn = document.getElementById("swapColorsBtn") as HTMLButtonElement;
+  const colorPresetContainer = document.getElementById("colorPresetContainer") as HTMLDivElement;
+  const selectedPresetLabel = document.getElementById("selectedPresetLabel");
+  const editorShell = document.querySelector(".editor-shell") as HTMLElement;
+  const toolbarToggleBtn = document.getElementById("toolbarToggleBtn") as HTMLButtonElement;
+  const modeButtons = document.querySelectorAll<HTMLButtonElement>("[data-view-mode]");
+  const floatPreviewBtn = document.getElementById("floatPreviewBtn") as HTMLButtonElement;
+  const dockPreviewBtn = document.getElementById("dockPreviewBtn") as HTMLButtonElement;
+  const previewPanel = document.querySelector(".preview-panel") as HTMLElement;
+  const previewHeader = document.querySelector(".preview-header") as HTMLElement;
 
   if (!colorPresetContainer) {
     throw new Error("Missing color preset container");
@@ -177,9 +85,32 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewContext = previewCanvas.getContext("2d");
   if (!previewContext) throw new Error("2D context not supported");
 
+  const workspaceControls = initWorkspaceControls({
+    workspace: document.getElementById("canvasWorkspace") as HTMLElement,
+    viewport: document.getElementById("gridViewport") as HTMLElement,
+    zoomInButton: document.getElementById("zoomInBtn") as HTMLButtonElement,
+    zoomOutButton: document.getElementById("zoomOutBtn") as HTMLButtonElement,
+    resetButton: document.getElementById("resetViewBtn") as HTMLButtonElement,
+    zoomValue: document.getElementById("zoomValue") as HTMLOutputElement,
+  });
+  const editorViewControls = initEditorViewControls({
+    shell: editorShell,
+    toolbarToggleButton: toolbarToggleBtn,
+    modeButtons,
+    previewPanel,
+    previewHeader,
+    floatPreviewButton: floatPreviewBtn,
+    dockPreviewButton: dockPreviewBtn,
+  });
+  initPaneResizeControls({
+    shell: editorShell,
+    workspaceSplit: document.querySelector(".workspace-split") as HTMLElement,
+    toolbarHandle: document.getElementById("toolbarResizeHandle") as HTMLElement,
+    previewHandle: document.getElementById("previewResizeHandle") as HTMLElement,
+  });
+
   let handleGuideChange = () => {};
   const guideState = setupGridGuides(toolbox, () => handleGuideChange());
-
   const toolState = createToolState({
     toolPenBtn,
     toolLineBtn,
@@ -193,11 +124,6 @@ document.addEventListener("DOMContentLoaded", () => {
     circleSizeInput,
     stampBrushSizeInput,
     circleFillInput,
-  });
-  toolState.subscribeToToolChanges((tool) => {
-    if (tool === "stamp") {
-      tabStampInput.checked = true;
-    }
   });
 
   let updateOutput = () => {};
@@ -213,8 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
     shiftLeftBtn,
     shiftRightBtn,
     invertBtn: document.getElementById("invertGridBtn") as HTMLButtonElement,
-    rotateLeftBtn,
-    rotateRightBtn,
+    rotateLeftBtn: document.getElementById("rotateLeftBtn") as HTMLButtonElement,
+    rotateRightBtn: document.getElementById("rotateRightBtn") as HTMLButtonElement,
     guideState,
     toolState,
     onPatternChange: () => updateOutput(),
@@ -237,72 +163,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const historyManager = createHistoryManager();
   let isApplyingHistory = false;
-  let stampPattern: number[][] = Array.from({ length: 4 }, () =>
-    Array.from({ length: 4 }, () => 0)
-  );
-
-  const clampInt = (
-    value: string,
-    min: number,
-    max: number,
-    fallback: number
-  ) => {
-    const parsed = parseInt(value);
-    if (!Number.isFinite(parsed)) return fallback;
-    return Math.max(min, Math.min(max, parsed));
-  };
-
-  const ensureStampPatternSize = () => {
-    const width = clampInt(stampWidthInput.value, 1, 24, 4);
-    const height = clampInt(stampHeightInput.value, 1, 24, 4);
-    stampWidthInput.value = String(width);
-    stampHeightInput.value = String(height);
-    stampPattern = Array.from({ length: height }, (_, y) =>
-      Array.from({ length: width }, (_, x) => stampPattern[y]?.[x] ?? 0)
-    );
-  };
-
-  const renderStampEditor = () => {
-    ensureStampPatternSize();
-    stampEditor.style.gridTemplateColumns = `repeat(${stampPattern[0]?.length ?? 0}, 18px)`;
-    const cells: HTMLElement[] = [];
-    for (let y = 0; y < stampPattern.length; y++) {
-      for (let x = 0; x < stampPattern[y].length; x++) {
-        const cell = document.createElement("button");
-        cell.type = "button";
-        cell.className = `stamp-editor-cell${stampPattern[y][x] === 1 ? " active" : ""}`;
-        cell.title = `${x}, ${y}`;
-        cell.onclick = () => {
-          stampPattern[y][x] = stampPattern[y][x] === 1 ? 0 : 1;
-          renderStampEditor();
-        };
-        cells.push(cell);
-      }
-    }
-    stampEditor.replaceChildren(...cells);
-  };
-
-  const getTiledStampValue = (x: number, y: number) => {
-    const height = stampPattern.length;
-    const width = stampPattern[0]?.length ?? 0;
-    if (!width || !height) return 0;
-    return stampPattern[y % height][x % width] === 1 ? 1 : 0;
-  };
-
-  const applyStampPattern = () => {
-    const selection = gridManager.getStampSelection();
-    if (!selection.length) return;
-    const targetCells = new Set(selection.map((point) => `${point.x},${point.y}`));
-    const mode = stampApplyModeSelect.value;
-    for (let y = 0; y < gridManager.getTileHeight(); y++) {
-      for (let x = 0; x < gridManager.getTileWidth(); x++) {
-        if (!targetCells.has(`${x},${y}`)) continue;
-        if (mode === "overlay" && gridManager.isCellActive(x, y)) continue;
-        gridManager.setCellActive(x, y, getTiledStampValue(x, y) === 1);
-      }
-    }
-    updateOutput();
-  };
 
   const updateHistoryButtons = () => {
     undoBtn.disabled = !historyManager.canUndo();
@@ -361,9 +221,7 @@ document.addEventListener("DOMContentLoaded", () => {
       secondary: previewSecondaryColorInput.value.replace("#", ""),
     });
     window.history.replaceState(null, "", `#${base64}?${params.toString()}`);
-    if (!isApplyingHistory) {
-      historyManager.record(base64);
-    }
+    if (!isApplyingHistory) historyManager.record(base64);
     updateHistoryButtons();
   };
 
@@ -390,12 +248,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return `#${cleaned.toLowerCase()}`;
   };
 
-  const hashValue = window.location.hash.startsWith("#")
-    ? window.location.hash.slice(1)
-    : "";
-  let initialColors: { primary: string; secondary: string } | null = null;
-  let shouldFocusPreview = false;
-  if (!hashValue) {
+  if (!window.location.hash) {
     const isEasterEgg = Math.random() < 0.25;
     const injectedHash = isEasterEgg
       ? "#AFlhAAAAAADg______8DAAAAAAA4sbvhzgBRIVFEBGBOZIaZA0SRRBFRgKuRK-4MAAAAAADg______8DAAAAAADgAHAAOAAiABGACCAIMAQIAgICi4GAQECgIBAQBBCCCAGEqsIooaqwaggirBoCCAmGAEJVoaJQVVg1JBhWDQICIYGAgCBAGiAI4APwAfgAAAAAAAAA?primary=fedd67&secondary=000000"
@@ -403,12 +256,13 @@ document.addEventListener("DOMContentLoaded", () => {
     window.history.replaceState(null, "", injectedHash);
   }
 
-  const effectiveHashValue = window.location.hash.startsWith("#")
+  const hashValue = window.location.hash.startsWith("#")
     ? window.location.hash.slice(1)
     : "";
-
-  if (effectiveHashValue) {
-    const [patternPart, queryPart] = effectiveHashValue.split("?");
+  let initialColors: { primary: string; secondary: string } | null = null;
+  let shouldFocusPreview = false;
+  if (hashValue) {
+    const [patternPart, queryPart] = hashValue.split("?");
     if (patternPart) {
       base64Input.value = patternPart;
       setTimeout(loadFromBase64, 0);
@@ -426,13 +280,8 @@ document.addEventListener("DOMContentLoaded", () => {
         };
       }
       const previewFlag = params.get("preview");
-      if (
-        previewFlag !== null &&
-        previewFlag !== "0" &&
-        previewFlag !== "false"
-      ) {
-        shouldFocusPreview = true;
-      }
+      shouldFocusPreview =
+        previewFlag !== null && previewFlag !== "0" && previewFlag !== "false";
     }
   }
 
@@ -440,6 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container: colorPresetContainer,
     primaryColorInput: previewPrimaryColorInput,
     secondaryColorInput: previewSecondaryColorInput,
+    selectedLabel: selectedPresetLabel,
     initialColors,
     onChange: () => updateOutput(),
   });
@@ -454,15 +304,34 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   });
 
-  function copyOutput() {
-    copyText(outputTextarea.value);
-  }
+  initStampControls({
+    gridManager,
+    toolState,
+    toolStampBtn,
+    stampWidthInput: document.getElementById("stampWidth") as HTMLInputElement,
+    stampHeightInput: document.getElementById("stampHeight") as HTMLInputElement,
+    stampApplyModeSelect: document.getElementById("stampApplyMode") as HTMLSelectElement,
+    stampEditor: document.getElementById("stampEditor") as HTMLDivElement,
+    stampApplyBtn: document.getElementById("stampApplyBtn") as HTMLButtonElement,
+    stampClearBtn: document.getElementById("stampClearBtn") as HTMLButtonElement,
+    onChange: () => updateOutput(),
+  });
+  initShiftControls({
+    gridManager,
+    toolState,
+    toolSelectBtn,
+    shiftSelectBtn,
+    shiftModeAll: document.getElementById("shift-mode-all") as HTMLInputElement,
+    shiftModePartial: document.getElementById("shift-mode-partial") as HTMLInputElement,
+    shiftOverwriteOn: document.getElementById("shift-overwrite-on") as HTMLInputElement,
+    shiftOverwriteOff: document.getElementById("shift-overwrite-off") as HTMLInputElement,
+  });
 
-  function copyDiscordOutput() {
-    copyText(discordOutputTextarea.value);
-  }
-
-  function copyPreviewLink() {
+  loadBtn.onclick = loadFromBase64;
+  clearGridBtn.onclick = gridManager.clearGrid;
+  copyOutputBtn.onclick = () => copyText(outputTextarea.value);
+  copyDiscordBtn.onclick = () => copyText(discordOutputTextarea.value);
+  copyPreviewLinkBtn.onclick = () => {
     const link = buildPreviewLink(
       window.location.href,
       outputTextarea.value.trim(),
@@ -471,36 +340,17 @@ document.addEventListener("DOMContentLoaded", () => {
     );
     previewLinkTextarea.value = link;
     copyText(link);
-  }
-
-  function copyDevStorageOutput() {
-    copyText(devStorageTextarea.value);
-  }
+  };
+  copyDevStorageBtn.onclick = () => copyText(devStorageTextarea.value);
 
   const handleUndo = () => {
     const base64 = historyManager.undo();
-    if (!base64) return;
-    applyHistoryState(base64);
+    if (base64) applyHistoryState(base64);
   };
-
   const handleRedo = () => {
     const base64 = historyManager.redo();
-    if (!base64) return;
-    applyHistoryState(base64);
+    if (base64) applyHistoryState(base64);
   };
-
-  loadBtn.onclick = loadFromBase64;
-  clearGridBtn.onclick = gridManager.clearGrid;
-  stampApplyBtn.onclick = applyStampPattern;
-  stampClearBtn.onclick = () => {
-    ensureStampPatternSize();
-    stampPattern = stampPattern.map((row) => row.map(() => 0));
-    renderStampEditor();
-  };
-  copyOutputBtn.onclick = copyOutput;
-  copyDiscordBtn.onclick = copyDiscordOutput;
-  copyPreviewLinkBtn.onclick = copyPreviewLink;
-  copyDevStorageBtn.onclick = copyDevStorageOutput;
   undoBtn.onclick = handleUndo;
   redoBtn.onclick = handleRedo;
   swapColorsBtn.onclick = () => {
@@ -512,85 +362,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   setupHistoryShortcuts({ onUndo: handleUndo, onRedo: handleRedo });
 
-  const syncRotateSelectWithActionsTab = () => {
-    gridManager.clearShiftSelect();
-    clearShiftSelectUI();
-    if (!tabActionsInput.checked && toolState.getCurrentTool() === "select") {
-      toolSelectBtn.click();
-    }
-  };
-
-  const syncStampToolWithTab = () => {
-    if (tabStampInput.checked && toolState.getCurrentTool() !== "stamp") {
-      toolStampBtn.click();
-    }
-  };
-
-  tabActionsInput.addEventListener("change", syncRotateSelectWithActionsTab);
-  tabToolsInput.addEventListener("change", syncRotateSelectWithActionsTab);
-  tabGridInput.addEventListener("change", syncRotateSelectWithActionsTab);
-  tabStampInput.addEventListener("change", syncStampToolWithTab);
-
-  const syncShiftSelectButtonVisibility = () => {
-    const visible = shiftModePartial.checked;
-    shiftSelectBtn.classList.toggle("shift-select-visible", visible);
-    shiftSelectBtn.classList.toggle("shift-select-hidden", !visible);
-  };
-  const clearShiftSelectUI = () => {
-    shiftSelectBtn.classList.remove("selected");
-    shiftModeAll.checked = true;
-    shiftModePartial.checked = false;
-    syncShiftSelectButtonVisibility();
-  };
-
-  shiftSelectBtn.onclick = () => {
-    const next = !shiftSelectBtn.classList.contains("selected");
-    shiftSelectBtn.classList.toggle("selected", next);
-    gridManager.enableShiftSelect(next);
-  };
-  toolSelectBtn.addEventListener("click", () => {
-    gridManager.clearShiftSelect();
-    clearShiftSelectUI();
-  });
-  shiftOverwriteOn.onchange = () => {
-    if (shiftOverwriteOn.checked) gridManager.setShiftOverwriteMode(true);
-  };
-  shiftOverwriteOff.onchange = () => {
-    if (shiftOverwriteOff.checked) gridManager.setShiftOverwriteMode(false);
-  };
-  shiftModeAll.onchange = () => {
-    if (shiftModeAll.checked) {
-      gridManager.setShiftSelectionMode("all");
-      gridManager.clearShiftSelect();
-      clearShiftSelectUI();
-      syncShiftSelectButtonVisibility();
-    }
-  };
-  shiftModePartial.onchange = () => {
-    if (shiftModePartial.checked) {
-      gridManager.setShiftSelectionMode("partial");
-      syncShiftSelectButtonVisibility();
-    }
-  };
-  syncShiftSelectButtonVisibility();
-  gridManager.setShiftSelectionMode("all");
-  gridManager.setShiftOverwriteMode(true);
-
-  stampWidthInput.addEventListener("change", renderStampEditor);
-  stampHeightInput.addEventListener("change", renderStampEditor);
-  renderStampEditor();
   gridManager.generateGrid();
-
-  if (shouldFocusPreview) {
-    if (layoutTabsInput) {
-      layoutTabsInput.checked = true;
-    }
-    if (viewPreviewInput) {
-      viewPreviewInput.checked = true;
-    }
-    const scrollTarget = previewPanel ?? previewCanvas;
-    setTimeout(() => {
-      scrollTarget.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, 0);
-  }
+  if (shouldFocusPreview) editorViewControls.setViewMode("preview");
+  workspaceControls.reset();
 });

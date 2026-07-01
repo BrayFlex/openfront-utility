@@ -275,14 +275,15 @@ const overlayMarkup = `
 
 export function ensureImageImportMarkup(): ImageImportElements {
   const layoutToolbar = document.querySelector(".layout-toolbar");
-  const layoutShell = document.querySelector(".layout-shell");
+  const layoutShell = document.querySelector(".editor-shell, .layout-shell");
+  const imageImportEntry = document.getElementById("imageImportEntry");
 
-  if (!layoutToolbar || !layoutShell) {
+  if ((!layoutToolbar && !imageImportEntry) || !layoutShell) {
     throw new Error("Missing layout shell for image import overlay");
   }
 
   if (!document.getElementById("openImageImportBtn")) {
-    layoutToolbar.insertAdjacentHTML("beforeend", triggerMarkup);
+    (imageImportEntry ?? layoutToolbar)?.insertAdjacentHTML("beforeend", triggerMarkup);
   }
 
   if (!document.getElementById("imageImportOverlay")) {

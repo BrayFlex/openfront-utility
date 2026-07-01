@@ -1,0 +1,253 @@
+.right-toolbar {
+  min-width: 0;
+  min-height: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  overflow: hidden;
+}
+
+.toolbar-scroll {
+  height: 100%;
+  overflow-y: auto;
+  padding: 10px;
+}
+
+.editor-shell.toolbar-collapsed .toolbar-scroll {
+  display: none;
+}
+
+.toolbar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.toolbar-section:first-child {
+  padding-top: 0;
+}
+
+.toolbox {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.tool-group {
+  display: grid;
+  grid-template-columns: minmax(86px, auto) 1fr;
+  align-items: center;
+  gap: 8px;
+}
+
+.tool-group:has(.tool-toggle) {
+  grid-template-columns: minmax(86px, auto) 1fr auto;
+}
+
+.tool-btn {
+  text-align: left;
+}
+
+.tool-range,
+.range-input {
+  width: 100%;
+  accent-color: var(--accent);
+}
+
+.tool-toggle,
+.color-row label,
+.slider-row label,
+.export-stack label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.slider-row {
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr) 62px;
+  gap: 8px;
+}
+
+.grid-size-row {
+  grid-template-columns: 76px minmax(0, 1fr);
+}
+
+.number-input {
+  width: 62px;
+}
+
+details {
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+summary {
+  padding: 8px 10px;
+  color: var(--muted);
+  font-weight: 700;
+  cursor: pointer;
+  list-style: none;
+}
+
+summary::-webkit-details-marker {
+  display: none;
+}
+
+summary::after {
+  content: "+";
+  float: right;
+}
+
+details[open] summary::after {
+  content: "-";
+}
+
+.details-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 10px 10px;
+}
+
+.action-row {
+  flex-wrap: wrap;
+}
+
+.shift-pad {
+  display: grid;
+  grid-template-areas:
+    ". up ."
+    "left . right"
+    ". down .";
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+#shiftUpBtn {
+  grid-area: up;
+}
+
+#shiftLeftBtn {
+  grid-area: left;
+}
+
+#shiftRightBtn {
+  grid-area: right;
+}
+
+#shiftDownBtn {
+  grid-area: down;
+}
+
+.toggle-pill {
+  display: inline-flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  width: fit-content;
+  padding: 3px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: var(--surface-muted);
+}
+
+.toggle-pill input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle-pill-option {
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+#shift-mode-all:checked ~ label[for="shift-mode-all"],
+#shift-mode-partial:checked ~ label[for="shift-mode-partial"],
+#shift-overwrite-on:checked ~ label[for="shift-overwrite-on"],
+#shift-overwrite-off:checked ~ label[for="shift-overwrite-off"] {
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text);
+}
+
+.shift-select-hidden {
+  display: none;
+}
+
+.shift-select-visible {
+  display: inline-flex;
+  width: fit-content;
+}
+
+.stamp-size-row {
+  grid-template-columns: 76px 62px 24px 62px;
+}
+
+.stamp-editor-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stamp-editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.stamp-editor {
+  display: grid;
+  gap: 2px;
+  max-width: 100%;
+  overflow: auto;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: #ffffff;
+}
+
+.stamp-editor-cell {
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border-radius: 4px;
+}
+
+.stamp-editor-cell.active {
+  border-color: var(--accent-dark);
+  background: var(--accent);
+}
+
+.color-row {
+  justify-content: space-between;
+}
+
+.export-stack textarea {
+  min-height: 54px;
+}
+
+.image-import-entry .layout-group {
+  display: block;
+}
+
+.image-import-entry button {
+  width: 100%;
+}
+
+@media (max-width: 560px) {
+  .slider-row,
+  .tool-group,
+  .tool-group:has(.tool-toggle) {
+    grid-template-columns: 1fr;
+  }
+}
