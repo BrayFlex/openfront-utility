@@ -1,0 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap");
+@import url("./styles/base.css");
+@import url("./styles/editor-layout.css");
+@import url("./styles/horizontal-toolbar.css");
+@import url("./styles/color-presets.css");

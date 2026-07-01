@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pattern Utility — 1-Bit Pattern Editor</title>
+    <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-RJ8487N9XW"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-RJ8487N9XW');
+    </script>
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="circle-tool.css" />
+    <link rel="stylesheet" href="image-import.css" />
+  </head>
+  <body>
+    <div class="page">
+
+      <!-- ═══ TOP BAR ═══ -->
+      <header class="top-bar" aria-label="Toolbar">
+
+        <!-- Logo + help -->
+        <div class="logo-block">
+          <span class="logo-eyebrow">Pattern Utility</span>
+          <h1 class="logo-title">Pattern Editor</h1>
+          <!-- help link placeholder -->
+          <a href="#" class="help-link" aria-label="Video guide / Help" title="Video guide / Help" hidden>
+            ▶ Guide
+          </a>
+        </div>
+
+        <!-- ── Tool strip ── -->
+        <div class="tool-strip" id="toolbox" role="toolbar" aria-label="Drawing tools">
+
+          <!-- Drawing tools -->
+          <div class="tool-strip-group">
+            <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil — click to draw/erase; drag erases/draws consistently">
+              <span class="tool-icon">✏</span>
+              <span class="tool-label">Pencil</span>
+            </button>
+            <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle — outline only; hover shows preview">
+              <span class="tool-icon">○</span>
+              <span class="tool-label">Circle</span>
+            </button>
+            <button id="tool-star" class="tool-btn" data-tool="star" title="Star — 5-pointed star">
+              <span class="tool-icon">★</span>
+              <span class="tool-label">Star</span>
+            </button>
+            <button id="tool-line" class="tool-btn" data-tool="line" title="Line — click start point then end point">
+              <span class="tool-icon">╱</span>
+              <span class="tool-label">Line</span>
+            </button>
+          </div>
+
+          <!-- Adaptive size slider -->
+          <div class="tool-strip-group size-group" id="toolSizeGroup">
+            <label class="size-label" for="toolSizeSlider">Size</label>
+            <div class="size-slider-wrap">
+              <input
+                type="range"
+                id="toolSizeSlider"
+                class="size-slider"
+                min="1" max="9" step="1" value="1"
+                list="toolSizeNotches"
+                aria-label="Tool size"
+              />
+              <datalist id="toolSizeNotches"></datalist>
+            </div>
+            <output id="toolSizeOutput" class="size-output">1</output>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Fill / Shade -->
+          <div class="tool-strip-group">
+            <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill area; with selection: inverts selection">
+              <span class="tool-icon">⬛</span>
+              <span class="tool-label">Fill</span>
+            </button>
+            <button id="tool-shade" class="tool-btn" data-tool="shade" title="Shade — checkerboard flood fill; with selection: shades entire selection">
+              <span class="tool-icon">▦</span>
+              <span class="tool-label">Shade</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Edit: Cut / Copy / Paste -->
+          <div class="tool-strip-group">
+            <button id="cutBtn" class="tool-btn action-btn" title="Cut selection (Ctrl+X)">
+              <span class="tool-icon">✂</span>
+              <span class="tool-label">Cut</span>
+            </button>
+            <button id="copyBtn" class="tool-btn action-btn" title="Copy selection (Ctrl+C)">
+              <span class="tool-icon">⧉</span>
+              <span class="tool-label">Copy</span>
+            </button>
+            <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (Ctrl+V) — then click top-left position">
+              <span class="tool-icon">📋</span>
+              <span class="tool-label">Paste</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- History -->
+          <div class="tool-strip-group">
+            <button id="undoBtn" class="tool-btn action-btn" disabled title="Undo (Ctrl+Z)">
+              <span class="tool-icon">↩</span>
+              <span class="tool-label">Undo</span>
+            </button>
+            <button id="redoBtn" class="tool-btn action-btn" disabled title="Redo (Ctrl+Shift+Z)">
+              <span class="tool-icon">↪</span>
+              <span class="tool-label">Redo</span>
+            </button>
+            <!-- Scrap canvas undo/redo (shown when scrap is active) -->
+            <button id="scrapUndoBtn" class="tool-btn action-btn" disabled hidden title="Undo scrap canvas (Ctrl+Z)">
+              <span class="tool-icon">↩</span>
+              <span class="tool-label">Undo</span>
+            </button>
+            <button id="scrapRedoBtn" class="tool-btn action-btn" disabled hidden title="Redo scrap canvas (Ctrl+Shift+Z)">
+              <span class="tool-icon">↪</span>
+              <span class="tool-label">Redo</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Selection tools -->
+          <div class="tool-strip-group">
+            <button id="tool-selectArea" class="tool-btn" data-tool="selectArea" title="Select Area — drag rect to add/subtract from selection">
+              <span class="tool-icon">⬚</span>
+              <span class="tool-label">Sel. Area</span>
+            </button>
+            <button id="tool-selectCustom" class="tool-btn" data-tool="selectCustom" title="Select Custom — click/drag pixels to add/remove from selection">
+              <span class="tool-icon">⬦</span>
+              <span class="tool-label">Sel. Custom</span>
+            </button>
+            <button id="deselectBtn" class="tool-btn action-btn" disabled title="Deselect all (Ctrl+D)">
+              <span class="tool-icon">⊡</span>
+              <span class="tool-label">Deselect</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Transformations (only enabled with selection) -->
+          <div class="tool-strip-group transform-group">
+            <span class="tool-group-label">Transforms</span>
+            <div class="transform-btns">
+              <button id="shiftUpBtn" class="tool-btn transform-btn" disabled title="Shift selection Up">↑</button>
+              <button id="shiftDownBtn" class="tool-btn transform-btn" disabled title="Shift selection Down">↓</button>
+              <button id="shiftLeftBtn" class="tool-btn transform-btn" disabled title="Shift selection Left">←</button>
+              <button id="shiftRightBtn" class="tool-btn transform-btn" disabled title="Shift selection Right">→</button>
+              <button id="rotateLeftBtn" class="tool-btn transform-btn" disabled title="Rotate selection Left (90° CCW)">↺</button>
+              <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate selection Right (90° CW)">↻</button>
+            </div>
+          </div>
+
+        </div><!-- end .tool-strip -->
+
+        <!-- Export / Import toggle + Pattern Utility title -->
+        <div class="top-bar-right">
+          <!-- Export / Import toggle -->
+          <div class="export-import-wrap">
+            <div class="ei-tabs">
+              <button id="exportTabBtn" class="ei-tab selected" type="button">Export</button>
+              <button id="importTabBtn" class="ei-tab" type="button">Import</button>
+            </div>
+            <!-- Export panel -->
+            <div id="exportPanel" class="ei-panel">
+              <button id="copyJsonBtn" class="ei-copy-btn" title="Copy JSON / Base64">JSON</button>
+              <button id="copyDiscordBtn" class="ei-copy-btn" title="Copy Discord-formatted output">Discord</button>
+              <button id="copyPreviewBtn" class="ei-copy-btn" title="Copy preview link">Preview</button>
+              <button id="copyConsoleBtn" class="ei-copy-btn" title="Copy dev localStorage command">Console</button>
+              <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
+            </div>
+            <!-- Import panel -->
+            <div id="importPanel" class="ei-panel" hidden>
+              <input type="text" id="base64Input" class="ei-text-input" placeholder="Paste Base64 / pattern code" />
+              <button id="loadBtn" class="ei-copy-btn btn-primary">Load</button>
+              <div id="imageImportEntry"></div>
+            </div>
+          </div>
+        </div>
+
+      </header>
+
+      <!-- ═══ MAIN AREA ═══ -->
+      <main class="editor-shell workspace-split" aria-label="Editor workspace">
+
+        <!-- ─── Canvas panel ─── -->
+        <section class="canvas-panel" aria-label="Pattern canvas">
+
+          <!-- Canvas tabs + controls bar -->
+          <div class="canvas-controls-bar">
+            <!-- Tab switcher -->
+            <div class="canvas-tabs" role="tablist">
+              <button id="canvasTabMain" class="canvas-tab selected" role="tab" aria-selected="true">Pattern Canvas</button>
+              <button id="canvasTabScrap" class="canvas-tab" role="tab" aria-selected="false">Scrap Canvas</button>
+            </div>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Invert -->
+            <button id="invertBtn" class="ctrl-btn" title="Invert canvas (or selection)">Invert</button>
+            <button id="clearBtn" class="ctrl-btn" title="Clear canvas">Clear</button>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Width -->
+            <label class="ctrl-label" for="tileWidthValue">W</label>
+            <div class="ctrl-stepper">
+              <input type="number" id="tileWidthValue" class="ctrl-number" value="66" min="2" max="129" />
+              <!-- hidden range synced by JS -->
+              <input type="range" id="tileWidth" value="66" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <div class="stepper-btns">
+                <button id="tileWidthUp" class="stepper-btn" aria-label="Increase width">▲</button>
+                <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+              </div>
+            </div>
+
+            <!-- Height -->
+            <label class="ctrl-label" for="tileHeightValue">H</label>
+            <div class="ctrl-stepper">
+              <input type="number" id="tileHeightValue" class="ctrl-number" value="10" min="2" max="129" />
+              <input type="range" id="tileHeight" value="10" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <div class="stepper-btns">
+                <button id="tileHeightUp" class="stepper-btn" aria-label="Increase height">▲</button>
+                <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+              </div>
+            </div>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Scale dropdown -->
+            <label class="ctrl-label" for="scaleSelect">Scale</label>
+            <select id="scaleSelect" class="ctrl-select">
+              <option value="0">1×</option>
+              <option value="1" selected>2×</option>
+              <option value="2">4×</option>
+              <option value="3">8×</option>
+              <option value="4">16×</option>
+            </select>
+
+            <!-- Grid Zoom dropdown -->
+            <label class="ctrl-label" for="gridZoomSelect">Grid Zoom</label>
+            <select id="gridZoomSelect" class="ctrl-select">
+              <option value="0.25">25%</option>
+              <option value="0.5">50%</option>
+              <option value="0.75">75%</option>
+              <option value="1" selected>100%</option>
+              <option value="1.25">125%</option>
+              <option value="1.5">150%</option>
+              <option value="1.75">175%</option>
+              <option value="2">200%</option>
+            </select>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Zoom control -->
+            <button id="zoomOutBtn" class="ctrl-btn" aria-label="Zoom out">−</button>
+            <output id="zoomValue" class="ctrl-zoom">100%</output>
+            <button id="zoomInBtn" class="ctrl-btn" aria-label="Zoom in">+</button>
+            <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+
+          </div>
+
+          <!-- Grid workspaces -->
+          <div id="canvasWorkspace" class="canvas-workspace">
+            <div id="gridViewport" class="grid-viewport">
+              <!-- Main canvas -->
+              <div id="mainGridWrap">
+                <div id="grid" class="grid"></div>
+              </div>
+              <!-- Scrap canvas -->
+              <div id="scrapGridWrap" hidden>
+                <div id="scrapGrid" class="grid scrap-grid"></div>
+              </div>
+            </div>
+          </div>
+
+        </section>
+
+        <!-- Resize handle -->
+        <div id="previewResizeHandle" class="resize-handle preview-resize-handle" role="separator" aria-label="Resize preview"></div>
+
+        <!-- ─── Preview panel (right, collapsible) ─── -->
+        <aside class="preview-panel" aria-label="Pattern preview">
+          <!-- Preview header -->
+          <div class="preview-header">
+            <button id="hidePreviewBtn" class="preview-hide-btn" title="Hide preview" aria-label="Hide preview">‹</button>
+            <span class="panel-title">Preview</span>
+            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview" aria-label="Float preview">⤢</button>
+            <button id="dockPreviewBtn" class="preview-float-btn" title="Dock preview" aria-label="Dock preview" hidden>⤡</button>
+          </div>
+
+          <!-- Preview canvas -->
+          <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+
+          <!-- Colors section (collapsible) -->
+          <details class="colors-section" open>
+            <summary class="colors-summary">
+              <span>Colors</span>
+            </summary>
+            <div class="colors-body">
+              <div class="color-row">
+                <label for="previewPrimaryColor" class="color-label">Primary</label>
+                <input type="color" id="previewPrimaryColor" value="#ffffff" />
+              </div>
+              <div class="color-row">
+                <label for="previewSecondaryColor" class="color-label">Secondary</label>
+                <input type="color" id="previewSecondaryColor" value="#000000" />
+              </div>
+              <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
+              <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
+              <details class="color-preset-details">
+                <summary>Color Presets</summary>
+                <div id="colorPresetContainer" class="color-preset-container loading">
+                  <div class="color-preset-placeholder">Loading presets…</div>
+                </div>
+              </details>
+            </div>
+          </details>
+
+        </aside>
+
+        <!-- Show-preview button (visible when preview is collapsed) -->
+        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">›</button>
+
+        <!-- Toolbar resize handle (left edge of preview sidebar) -->
+        <div id="toolbarResizeHandle" class="resize-handle toolbar-resize-handle" role="separator" aria-label="Resize toolbar" style="display:none"></div>
+
+      </main>
+
+    </div><!-- end .page -->
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

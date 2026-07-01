@@ -1,0 +1,11 @@
+.cell {
+  position: relative;
+}
+
+.cell.circle-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(214, 82, 57, 0.24);
+  pointer-events: none;
+}
