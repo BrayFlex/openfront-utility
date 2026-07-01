@@ -1,122 +1,125 @@
 export type ToolKind =
-  | "pen"
+  | "pencil"
   | "line"
   | "fill"
+  | "shade"
   | "star"
   | "circle"
-  | "select"
-  | "stamp";
+  | "selectArea"
+  | "selectCustom"
+  | "paste";
+
+/** Maps each tool to its slider config, or null if the tool has no size slider */
+export type ToolSizeConfig = {
+  min: number;
+  max: number;
+  step: number;
+  defaultValue: number;
+  label: string;
+};
+
+const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
+  pencil: { min: 1, max: 9, step: 2, defaultValue: 1, label: "Size" },
+  circle: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
+  star: { min: 1, max: 8, step: 1, defaultValue: 3, label: "Size" },
+};
 
 type ToolStateOptions = {
-  toolPenBtn: HTMLButtonElement;
-  toolLineBtn: HTMLButtonElement;
-  toolFillBtn: HTMLButtonElement;
-  toolStarBtn: HTMLButtonElement;
-  toolCircleBtn: HTMLButtonElement;
-  toolSelectBtn: HTMLButtonElement;
-  toolStampBtn: HTMLButtonElement;
-  penSizeInput: HTMLInputElement;
-  starSizeInput: HTMLInputElement;
-  circleSizeInput: HTMLInputElement;
-  stampBrushSizeInput: HTMLInputElement;
-  circleFillInput: HTMLInputElement;
+  toolButtons: NodeListOf<HTMLButtonElement>;
+  sizeSlider: HTMLInputElement;
+  sizeOutput: HTMLElement;
+  sizeGroup: HTMLElement;
 };
 
 export type ToolState = {
   getCurrentTool: () => ToolKind;
-  getPenSize: () => number;
+  selectTool: (tool: ToolKind) => void;
+  getPencilSize: () => number;
   getStarRadius: () => number;
   getCircleRadius: () => number;
-  getStampBrushRadius: () => number;
-  isCircleFilled: () => boolean;
-  subscribeToToolChanges: (
-    listener: (tool: ToolKind | null) => void
-  ) => () => void;
+  subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
+  /** Returns the current slider value for any sized tool */
+  getCurrentSize: () => number;
 };
 
 export function createToolState(options: ToolStateOptions): ToolState {
-  const {
-    toolPenBtn,
-    toolLineBtn,
-    toolFillBtn,
-    toolStarBtn,
-    toolCircleBtn,
-    toolSelectBtn,
-    toolStampBtn,
-    penSizeInput,
-    starSizeInput,
-    circleSizeInput,
-    stampBrushSizeInput,
-    circleFillInput,
-  } = options;
+  const { toolButtons, sizeSlider, sizeOutput, sizeGroup } = options;
 
-  let currentTool: ToolKind | null = null;
-  const listeners = new Set<(tool: ToolKind | null) => void>();
+  let currentTool: ToolKind = "pencil";
+  // Per-tool remembered sizes
+  const rememberedSizes: Partial<Record<ToolKind, number>> = {};
+  const listeners = new Set<(tool: ToolKind) => void>();
 
-  function selectTool(tool: ToolKind | null) {
-    if (currentTool === tool) return;
+  const updateSizeSlider = (tool: ToolKind) => {
+    const config = TOOL_SIZE_CONFIGS[tool];
+    if (!config) {
+      sizeGroup.hidden = true;
+      return;
+    }
+    sizeGroup.hidden = false;
+    sizeSlider.min = String(config.min);
+    sizeSlider.max = String(config.max);
+    sizeSlider.step = String(config.step);
+    // Restore remembered size or use default
+    sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
+    sizeOutput.textContent = sizeSlider.value;
+  };
+
+  function selectTool(tool: ToolKind) {
+    // Save current size before switching
+    if (TOOL_SIZE_CONFIGS[currentTool]) {
+      rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+    }
     currentTool = tool;
-    [
-      toolPenBtn,
-      toolLineBtn,
-      toolFillBtn,
-      toolStarBtn,
-      toolCircleBtn,
-      toolSelectBtn,
-      toolStampBtn,
-    ].forEach(
-      (btn) => btn.classList.remove("selected")
-    );
-    if (tool === "pen") toolPenBtn.classList.add("selected");
-    if (tool === "line") toolLineBtn.classList.add("selected");
-    if (tool === "fill") toolFillBtn.classList.add("selected");
-    if (tool === "star") toolStarBtn.classList.add("selected");
-    if (tool === "circle") toolCircleBtn.classList.add("selected");
-    if (tool === "select") toolSelectBtn.classList.add("selected");
-    if (tool === "stamp") toolStampBtn.classList.add("selected");
-    listeners.forEach((listener) => listener(tool));
+    toolButtons.forEach((btn) => {
+      btn.classList.toggle("selected", btn.dataset.tool === tool);
+    });
+    updateSizeSlider(tool);
+    listeners.forEach((l) => l(tool));
   }
 
-  toolPenBtn.onclick = () => selectTool("pen");
-  toolLineBtn.onclick = () => selectTool("line");
-  toolFillBtn.onclick = () => selectTool("fill");
-  toolStarBtn.onclick = () => selectTool("star");
-  toolCircleBtn.onclick = () => selectTool("circle");
-  toolSelectBtn.onclick = () => selectTool(currentTool === "select" ? null : "select");
-  toolStampBtn.onclick = () => selectTool("stamp");
-  selectTool("pen");
+  // Wire up tool buttons
+  toolButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const tool = btn.dataset.tool as ToolKind | undefined;
+      if (tool) selectTool(tool);
+    });
+  });
 
-  starSizeInput.oninput = () => {
-    if (currentTool === "star") {
-      // No preview behavior yet.
+  // Wire up size slider
+  sizeSlider.addEventListener("input", () => {
+    sizeOutput.textContent = sizeSlider.value;
+    if (TOOL_SIZE_CONFIGS[currentTool]) {
+      rememberedSizes[currentTool] = parseInt(sizeSlider.value);
     }
-  };
-  penSizeInput.oninput = () => {
-    if (currentTool === "pen") {
-      // No preview behavior yet.
-    }
-  };
-  circleSizeInput.oninput = () => {
-    if (currentTool === "circle") {
-      // No preview behavior yet.
-    }
-  };
-    circleFillInput.onchange = () => {
-    if (currentTool === "circle") {
-      // No preview behavior yet.
-    }
-  };
+  });
+
+  // Initialize
+  selectTool("pencil");
 
   return {
-    getCurrentTool: () => currentTool ?? "pen",
-    getPenSize: () => parseInt(penSizeInput.value),
-    getStarRadius: () => parseInt(starSizeInput.value),
-    getCircleRadius: () => parseInt(circleSizeInput.value),
-    getStampBrushRadius: () => parseInt(stampBrushSizeInput.value),
-    isCircleFilled: () => circleFillInput.checked,
+    getCurrentTool: () => currentTool,
+    selectTool,
+    getPencilSize: () => {
+      if (currentTool === "pencil") return parseInt(sizeSlider.value);
+      return rememberedSizes["pencil"] ?? 1;
+    },
+    getStarRadius: () => {
+      const size = currentTool === "star"
+        ? parseInt(sizeSlider.value)
+        : (rememberedSizes["star"] ?? 3);
+      return size;
+    },
+    getCircleRadius: () => {
+      const size = currentTool === "circle"
+        ? parseInt(sizeSlider.value)
+        : (rememberedSizes["circle"] ?? 5);
+      return Math.max(0, Math.floor(size / 2));
+    },
     subscribeToToolChanges: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
+    getCurrentSize: () => parseInt(sizeSlider.value),
   };
 }

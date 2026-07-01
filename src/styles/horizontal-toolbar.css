@@ -1,0 +1,205 @@
+/* ── Top Bar Base ───────────────────────────────────────────────────────── */
+.top-bar {
+  height: var(--top-bar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: var(--surface-muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.logo-block {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-width: 140px;
+}
+.logo-eyebrow {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+  font-weight: 700;
+  line-height: 1;
+}
+.logo-title {
+  margin: 2px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1;
+}
+
+/* ── Tool Strip ─────────────────────────────────────────────────────────── */
+.tool-strip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  overflow-x: auto;
+}
+.tool-strip::-webkit-scrollbar { display: none; }
+
+.tool-strip-group {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.tool-group-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 700;
+  margin-right: 4px;
+}
+
+.tool-strip-separator {
+  width: 1px;
+  height: 24px;
+  background: var(--border);
+}
+
+/* ── Tool Buttons ───────────────────────────────────────────────────────── */
+.tool-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  width: 44px;
+  height: 44px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--muted);
+  cursor: pointer;
+  padding: 0;
+}
+.tool-btn:hover:not(:disabled) {
+  background: rgba(0,0,0,0.04);
+  color: var(--text);
+}
+.tool-btn.selected {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--accent);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+}
+.tool-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.tool-icon {
+  font-size: 16px;
+  line-height: 1;
+}
+.tool-label {
+  font-size: 9px;
+  font-weight: 600;
+}
+.action-btn .tool-label { font-size: 9px; }
+
+.transform-btns {
+  display: flex;
+  gap: 2px;
+}
+.transform-btn {
+  width: 28px;
+  height: 28px;
+  font-size: 14px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.transform-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* ── Size Slider ────────────────────────────────────────────────────────── */
+.size-group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 72px;
+}
+.size-group[hidden] { display: none; }
+
+.size-label {
+  font-size: 9px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.size-slider-wrap {
+  width: 100%;
+}
+.size-slider {
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent);
+}
+.size-output {
+  font-size: 11px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Export / Import Toggle ─────────────────────────────────────────────── */
+.top-bar-right {
+  display: flex;
+  align-items: center;
+  margin-left: 16px;
+}
+.export-import-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ei-tabs {
+  display: flex;
+  background: rgba(0,0,0,0.06);
+  border-radius: 6px;
+  padding: 2px;
+}
+.ei-tab {
+  background: transparent;
+  border: none;
+  font-size: 12px;
+  padding: 4px 12px;
+  color: var(--muted);
+  border-radius: 4px;
+}
+.ei-tab.selected {
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+}
+.ei-panel {
+  display: flex;
+  gap: 6px;
+}
+.ei-panel[hidden] { display: none; }
+
+.ei-copy-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  padding: 4px 10px;
+}
+.ei-copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.btn-submit {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.btn-submit:hover {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.ei-text-input {
+  width: 160px;
+  font-size: 12px;
+  padding: 4px 8px;
+}
