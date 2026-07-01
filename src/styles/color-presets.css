@@ -11,6 +11,19 @@
   font-weight: 700;
 }
 
+.color-preset-details summary {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  margin-top: 10px;
+  margin-bottom: 6px;
+  user-select: none;
+}
+.color-preset-details summary:hover {
+  color: var(--text);
+}
+
 .color-preset-container {
   display: flex;
   flex-direction: column;

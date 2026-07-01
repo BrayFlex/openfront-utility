@@ -1,10 +1,13 @@
 import { getCircleCells } from "./circleGeometry.js";
 
 export type DrawingTools = {
-  drawLine: (x0: number, y0: number, x1: number, y1: number) => void;
-  drawCircle: (cx: number, cy: number, r: number, fill: boolean) => void;
-  drawStar: (cx: number, cy: number, r: number) => void;
-  floodFill: (sx: number, sy: number) => void;
+  drawLine: (x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) => void;
+  drawCircle: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
+  drawStar: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
+  floodFill: (sx: number, sy: number, selection?: Set<string>) => void;
+  floodShade: (sx: number, sy: number, selection?: Set<string>) => void;
+  shadeSelection: (selection: Set<string>) => void;
+  invertSelection: (selection: Set<string>) => void;
 };
 
 type DrawingOptions = {
@@ -14,89 +17,123 @@ type DrawingOptions = {
   setCellActive: (x: number, y: number, active: boolean) => void;
 };
 
+function isInSelection(x: number, y: number, selection: Set<string> | undefined): boolean {
+  if (!selection || selection.size === 0) return true;
+  return selection.has(`${x},${y}`);
+}
+
 export function createDrawingTools(options: DrawingOptions): DrawingTools {
   const { getTileWidth, getTileHeight, isCellActive, setCellActive } = options;
 
-  function drawCircle(cx: number, cy: number, r: number, fill: boolean) {
-    const width = getTileWidth();
-    const height = getTileHeight();
-    const points = getCircleCells({ x: cx, y: cy }, r, fill, width, height);
-    points.forEach((point) => setCellActive(point.x, point.y, true));
+  function setIfAllowed(x: number, y: number, active: boolean, selection: Set<string> | undefined) {
+    if (!isInSelection(x, y, selection)) return;
+    setCellActive(x, y, active);
   }
 
-  function drawLine(x0: number, y0: number, x1: number, y1: number) {
-    let dx = Math.abs(x1 - x0),
-      sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0),
-      sy = y0 < y1 ? 1 : -1;
-    let err = dx + dy,
-      e2;
+  /** Bresenham line, respects selection constraint */
+  function drawLine(x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) {
+    let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy, e2;
     while (true) {
-      setCellActive(x0, y0, true);
+      setIfAllowed(x0, y0, true, selection);
       if (x0 === x1 && y0 === y1) break;
       e2 = 2 * err;
-      if (e2 >= dy) {
-        err += dy;
-        x0 += sx;
-      }
-      if (e2 <= dx) {
-        err += dx;
-        y0 += sy;
-      }
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
     }
   }
 
-  function drawStar(cx: number, cy: number, r: number) {
-    const points: [number, number][] = [];
-    for (let i = 0; i < 5; i++) {
-      const angle = ((Math.PI * 2) / 5) * i - Math.PI / 2;
-      points.push([
-        Math.round(cx + r * Math.cos(angle)),
-        Math.round(cy + r * Math.sin(angle)),
-      ]);
-    }
-    for (let i = 0; i < 5; i++) {
-      drawLine(cx, cy, points[i][0], points[i][1]);
-      drawLine(
-        points[i][0],
-        points[i][1],
-        points[(i + 2) % 5][0],
-        points[(i + 2) % 5][1]
-      );
-    }
-  }
-
-  function floodFill(sx: number, sy: number) {
+  /** Circle outline only (Bresenham midpoint), respects selection constraint.
+   *  r=0 → single pixel. */
+  function drawCircle(cx: number, cy: number, r: number, selection?: Set<string>) {
     const width = getTileWidth();
     const height = getTileHeight();
-    const get = (x: number, y: number) => {
-      return isCellActive(x, y) ? 1 : 0;
-    };
-    const set = (x: number, y: number, v: 0 | 1) => {
-      setCellActive(x, y, v === 1);
-    };
-    const target = get(sx, sy);
+    // Always outline only
+    const points = getCircleCells({ x: cx, y: cy }, r, false, width, height);
+    // r=0: just the center pixel
+    if (r === 0) {
+      setIfAllowed(cx, cy, true, selection);
+      return;
+    }
+    points.forEach((p) => setIfAllowed(p.x, p.y, true, selection));
+  }
+
+  /** 5-point star using the given radius (= size), respects selection constraint */
+  function drawStar(cx: number, cy: number, r: number, selection?: Set<string>) {
+    const pts: [number, number][] = [];
+    for (let i = 0; i < 5; i++) {
+      const angle = ((Math.PI * 2) / 5) * i - Math.PI / 2;
+      pts.push([Math.round(cx + r * Math.cos(angle)), Math.round(cy + r * Math.sin(angle))]);
+    }
+    for (let i = 0; i < 5; i++) {
+      drawLine(cx, cy, pts[i][0], pts[i][1], selection);
+      drawLine(pts[i][0], pts[i][1], pts[(i + 2) % 5][0], pts[(i + 2) % 5][1], selection);
+    }
+  }
+
+  /** Flood fill from (sx,sy) — respects selection constraint */
+  function floodFill(sx: number, sy: number, selection?: Set<string>) {
+    if (!isInSelection(sx, sy, selection)) return;
+    const width = getTileWidth();
+    const height = getTileHeight();
+    const target = isCellActive(sx, sy) ? 1 : 0;
     const newValue = target ? 0 : 1;
-    if (get(sx, sy) === newValue) return;
-    const visited = Array(height)
-      .fill(0)
-      .map(() => Array(width).fill(false));
+    const visited = Array.from({ length: height }, () => new Array<boolean>(width).fill(false));
     const stack: [number, number][] = [[sx, sy]];
     while (stack.length) {
       const [x, y] = stack.pop()!;
       if (x < 0 || y < 0 || x >= width || y >= height) continue;
       if (visited[y][x]) continue;
-      if (get(x, y) !== target) continue;
-      set(x, y, newValue as 0 | 1);
+      if (!isInSelection(x, y, selection)) continue;
+      const cur = isCellActive(x, y) ? 1 : 0;
+      if (cur !== target) continue;
+      setCellActive(x, y, newValue === 1);
       visited[y][x] = true;
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
     }
   }
 
-  return {
-    drawLine,
-    drawCircle,
-    drawStar,
-    floodFill,
-  };
+  /** Shade flood fill — fills connected same-state area with checkerboard */
+  function floodShade(sx: number, sy: number, selection?: Set<string>) {
+    if (!isInSelection(sx, sy, selection)) return;
+    const width = getTileWidth();
+    const height = getTileHeight();
+    const target = isCellActive(sx, sy) ? 1 : 0;
+    const visited = Array.from({ length: height }, () => new Array<boolean>(width).fill(false));
+    const stack: [number, number][] = [[sx, sy]];
+    const toApply: [number, number][] = [];
+    while (stack.length) {
+      const [x, y] = stack.pop()!;
+      if (x < 0 || y < 0 || x >= width || y >= height) continue;
+      if (visited[y][x]) continue;
+      if (!isInSelection(x, y, selection)) continue;
+      if ((isCellActive(x, y) ? 1 : 0) !== target) continue;
+      visited[y][x] = true;
+      toApply.push([x, y]);
+      stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+    }
+    toApply.forEach(([x, y]) => {
+      // Checkerboard: set if (x+y) is even
+      setCellActive(x, y, (x + y) % 2 === 0);
+    });
+  }
+
+  /** Fill an explicit selection set with checkerboard pattern */
+  function shadeSelection(selection: Set<string>) {
+    selection.forEach((key) => {
+      const [xs, ys] = key.split(",").map(Number);
+      setCellActive(xs, ys, (xs + ys) % 2 === 0);
+    });
+  }
+
+  /** Invert all pixels within an explicit selection set */
+  function invertSelection(selection: Set<string>) {
+    selection.forEach((key) => {
+      const [xs, ys] = key.split(",").map(Number);
+      setCellActive(xs, ys, !isCellActive(xs, ys));
+    });
+  }
+
+  return { drawLine, drawCircle, drawStar, floodFill, floodShade, shadeSelection, invertSelection };
 }

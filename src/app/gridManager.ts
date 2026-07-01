@@ -1,31 +1,19 @@
-import {
-  getCircleCells,
-  type GridPoint,
-} from "./circleGeometry.js";
+import { getCircleCells, type GridPoint } from "./circleGeometry.js";
+import type { ClipboardManager } from "./clipboard.js";
 import type { DrawingTools } from "./drawingTools.js";
 import type { GuideState } from "./gridGuides.js";
-import { invertPattern, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp } from "./patternTransforms.js";
+import {
+  invertPattern,
+  rotateSelection,
+  shiftPatternDown,
+  shiftPatternLeft,
+  shiftPatternRight,
+  shiftPatternUp,
+  shiftSelection,
+} from "./patternTransforms.js";
 import type { ToolState } from "./toolState.js";
 
-type GridManagerOptions = {
-  gridDiv: HTMLElement;
-  tileWidthInput: HTMLInputElement;
-  tileHeightInput: HTMLInputElement;
-  tileWidthValue: HTMLInputElement;
-  tileHeightValue: HTMLInputElement;
-  gridScaleInput?: HTMLSelectElement;
-  shiftUpBtn: HTMLButtonElement;
-  shiftDownBtn: HTMLButtonElement;
-  shiftLeftBtn: HTMLButtonElement;
-  shiftRightBtn: HTMLButtonElement;
-  invertBtn?: HTMLButtonElement;
-  rotateLeftBtn?: HTMLButtonElement;
-  rotateRightBtn?: HTMLButtonElement;
-  guideState: GuideState;
-  toolState: ToolState;
-  drawingTools?: DrawingTools;
-  onPatternChange: () => void;
-};
+// ─── Public API ───────────────────────────────────────────────────────────────
 
 export type GridManager = {
   generateGrid: (pattern?: number[][]) => void;
@@ -36,12 +24,40 @@ export type GridManager = {
   isCellActive: (x: number, y: number) => boolean;
   setCellActive: (x: number, y: number, active: boolean) => void;
   setDrawingTools: (tools: DrawingTools) => void;
-  getStampSelection: () => GridPoint[];
-  setShiftSelectionMode: (mode: "all" | "partial") => void;
-  setShiftOverwriteMode: (overwrite: boolean) => void;
-  enableShiftSelect: (enabled: boolean) => void;
-  clearShiftSelect: () => void;
+  /** Returns the active selection (shared reference — read-only externally) */
+  getActiveSelection: () => Set<string>;
+  clearSelection: () => void;
+  hasSelection: () => boolean;
+  /** Invert all cells in selection (or full canvas if no selection) */
+  invertGrid: () => void;
+  /** Cut selection to clipboard */
+  cutSelection: (clipboard: ClipboardManager) => void;
+  /** Copy selection to clipboard */
+  copySelection: (clipboard: ClipboardManager) => void;
+  /** Paste clipboard at (x,y) as top-left anchor */
+  paste: (x: number, y: number, clipboard: ClipboardManager) => void;
+  /** Shift selection (or full canvas) in direction */
+  shiftDir: (dx: number, dy: number) => void;
+  /** Rotate selection around its centroid */
+  rotateDir: (direction: "left" | "right") => void;
 };
+
+// ─── Options ──────────────────────────────────────────────────────────────────
+
+type GridManagerOptions = {
+  gridDiv: HTMLElement;
+  tileWidthInput: HTMLInputElement;
+  tileHeightInput: HTMLInputElement;
+  tileWidthValue: HTMLInputElement;
+  tileHeightValue: HTMLInputElement;
+  gridScaleInput?: HTMLSelectElement;
+  guideState: GuideState;
+  toolState: ToolState;
+  drawingTools?: DrawingTools;
+  onPatternChange: () => void;
+};
+
+// ─── Implementation ───────────────────────────────────────────────────────────
 
 export function createGridManager(options: GridManagerOptions): GridManager {
   const {
@@ -51,53 +67,57 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     tileWidthValue,
     tileHeightValue,
     gridScaleInput,
-    shiftUpBtn,
-    shiftDownBtn,
-    shiftLeftBtn,
-    shiftRightBtn,
-    invertBtn,
-    rotateLeftBtn,
-    rotateRightBtn,
     guideState,
     toolState,
     drawingTools: initialDrawingTools,
     onPatternChange,
   } = options;
 
+  // ── State ─────────────────────────────────────────────────────────────────
   let drawingTools: DrawingTools | null = initialDrawingTools ?? null;
   let tileWidth = parseInt(tileWidthInput.value);
   let tileHeight = parseInt(tileHeightInput.value);
   let isMouseDown = false;
-  let toggleState: boolean | null = null;
+  let penToggleState: boolean | null = null;
   let currentHeight = 0;
   let currentWidth = 0;
-  let lineStart: GridPoint | null = null;
-  let circlePreviewCells: GridPoint[] = [];
-  let selectionStart: GridPoint | null = null;
-  let selectionEnd: GridPoint | null = null;
-  let selectionTimeout: number | null = null;
-  let isSelectionActive = false;
-  let selectionCells: GridPoint[] = [];
-  let selectionAnchorCell: GridPoint | null = null;
-  let shiftSelectionStart: GridPoint | null = null;
-  let shiftSelectionEnd: GridPoint | null = null;
-  let shiftSelectionCells: GridPoint[] = [];
-  let shiftSelectionAnchorCell: GridPoint | null = null;
-  let shiftSelectionActive = false;
-  let shiftSelectionMode: "all" | "partial" = "all";
-  let shiftOverwriteMode = true;
-  let isShiftSelectEnabled = false;
-  let stampSelectionCells: GridPoint[] = [];
-  let stampSelectionVisited = new Set<string>();
-  let stampSelectionLastPoint: GridPoint | null = null;
   let patternState: number[][] = [];
   let cellMatrix: HTMLDivElement[][] = [];
+
+  // Circle preview
+  let circlePreviewCells: GridPoint[] = [];
+
+  // Star preview (dim overlay)
+  let starPreviewCells: GridPoint[] = [];
+
+  // Line start
+  let lineStart: GridPoint | null = null;
+  let linePreviews: GridPoint[] = [];
+
+  // ── UNIFIED SELECTION ─────────────────────────────────────────────────────
+  let activeSelection = new Set<string>();
+  // For Select Area tool: track drag rect
+  let selectAreaStart: GridPoint | null = null;
+  let selectAreaEnd: GridPoint | null = null;
+  let selectAreaAdding = true; // true = add to sel, false = remove
+  let selectAreaPreview = new Set<string>(); // visual rect preview
+  // For Select Custom tool: track drag add/remove mode
+  let selectCustomMode: "add" | "remove" | null = null;
+  // Paste preview
+  let pastePreviewCells: GridPoint[] = [];
+  let pastePreviewOrigin: { ox: number; oy: number } | null = null;
+
   const baseCellSize = 20;
-  const selectionHoldDelay = 250;
+
+  // ── Helpers ───────────────────────────────────────────────────────────────
+  const isInBounds = (x: number, y: number) =>
+    x >= 0 && y >= 0 && x < tileWidth && y < tileHeight;
+
+  const key = (x: number, y: number) => `${x},${y}`;
 
   const getGridScale = () => {
-    const nextScale = gridScaleInput ? parseFloat(gridScaleInput.value) : 1;
-    return Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1;
+    const s = gridScaleInput ? parseFloat(gridScaleInput.value) : 1;
+    return Number.isFinite(s) && s > 0 ? s : 1;
   };
 
   const applyGridSizing = () => {
@@ -106,40 +126,10 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     gridDiv.style.gridTemplateColumns = `repeat(${tileWidth}, var(--cell-size))`;
   };
 
-  document.body.onmousedown = () => (isMouseDown = true);
-  document.body.onmouseup = () => {
-    isMouseDown = false;
-    toggleState = null;
-  };
-
-  tileWidthInput.addEventListener("input", () => {
-    tileWidthValue.value = tileWidthInput.value;
-    generateGrid();
-  });
-  tileHeightInput.addEventListener("input", () => {
-    tileHeightValue.value = tileHeightInput.value;
-    generateGrid();
-  });
-  tileWidthValue.addEventListener("input", () => {
-    tileWidthInput.value = tileWidthValue.value;
-    generateGrid();
-  });
-  tileHeightValue.addEventListener("input", () => {
-    tileHeightInput.value = tileHeightValue.value;
-    generateGrid();
-  });
-  gridScaleInput?.addEventListener("change", applyGridSizing);
-
-  const isInBounds = (x: number, y: number) =>
-    x >= 0 && y >= 0 && x < tileWidth && y < tileHeight;
-
   const setCellActive = (x: number, y: number, active: boolean) => {
     if (!isInBounds(x, y)) return;
     patternState[y][x] = active ? 1 : 0;
-    const cell = cellMatrix[y]?.[x];
-    if (cell) {
-      cell.classList.toggle("active", active);
-    }
+    cellMatrix[y]?.[x]?.classList.toggle("active", active);
   };
 
   const isCellActive = (x: number, y: number) =>
@@ -147,500 +137,354 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   const setDrawingTools = (tools: DrawingTools) => (drawingTools = tools);
 
-  const clearStampSelection = () => {
-    stampSelectionCells.forEach((point) => {
-      cellMatrix[point.y]?.[point.x]?.classList.remove("stamp-selection-cell");
+  // ── Selection rendering ──────────────────────────────────────────────────
+  const applySelectionClass = (sel: Set<string>, add: boolean) => {
+    sel.forEach((k) => {
+      const [x, y] = k.split(",").map(Number);
+      cellMatrix[y]?.[x]?.classList.toggle("selection-cell", add);
     });
-    stampSelectionCells = [];
-    stampSelectionVisited = new Set<string>();
-    stampSelectionLastPoint = null;
-  };
-
-  const addStampCell = (x: number, y: number) => {
-    if (!isInBounds(x, y)) return;
-    const key = `${x},${y}`;
-    if (stampSelectionVisited.has(key)) return;
-    stampSelectionVisited.add(key);
-    stampSelectionCells.push({ x, y });
-    cellMatrix[y]?.[x]?.classList.add("stamp-selection-cell");
-  };
-
-  const addStampCircle = (center: GridPoint) => {
-    const points = getCircleCells(
-      center,
-      Math.max(0, toolState.getStampBrushRadius()),
-      true,
-      tileWidth,
-      tileHeight
-    );
-    points.forEach((point) => addStampCell(point.x, point.y));
-  };
-
-  const addStampPath = (from: GridPoint, to: GridPoint) => {
-    let x = from.x;
-    let y = from.y;
-    let dx = Math.abs(to.x - from.x);
-    let sx = from.x < to.x ? 1 : -1;
-    let dy = -Math.abs(to.y - from.y);
-    let sy = from.y < to.y ? 1 : -1;
-    let err = dx + dy;
-    while (true) {
-      addStampCircle({ x, y });
-      if (x === to.x && y === to.y) break;
-      const e2 = 2 * err;
-      if (e2 >= dy) {
-        err += dy;
-        x += sx;
-      }
-      if (e2 <= dx) {
-        err += dx;
-        y += sy;
-      }
-    }
-  };
-
-  const clearSelection = () => {
-    selectionCells.forEach((point) => {
-      cellMatrix[point.y]?.[point.x]?.classList.remove("selection-cell");
-    });
-    selectionCells = [];
-    selectionStart = null;
-    selectionEnd = null;
-    selectionAnchorCell = null;
-    isSelectionActive = false;
-    gridDiv.classList.remove("selection-active");
-  };
-
-  const clearShiftSelection = () => {
-    shiftSelectionCells.forEach((point) => {
-      cellMatrix[point.y]?.[point.x]?.classList.remove("shift-selection-cell");
-    });
-    if (shiftSelectionAnchorCell) {
-      cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.remove(
-        "shift-selection-anchor"
-      );
-    }
-    shiftSelectionCells = [];
-    shiftSelectionStart = null;
-    shiftSelectionEnd = null;
-    shiftSelectionAnchorCell = null;
-    shiftSelectionActive = false;
-    gridDiv.classList.remove("shift-selection-active");
-  };
-
-  const clearSelectionTimer = () => {
-    if (selectionTimeout !== null) {
-      window.clearTimeout(selectionTimeout);
-      selectionTimeout = null;
-    }
   };
 
   const renderSelection = () => {
-    selectionCells.forEach((point) => {
-      cellMatrix[point.y]?.[point.x]?.classList.remove("selection-cell");
-    });
-    selectionCells = [];
-    if (!selectionStart || !selectionEnd) return;
-    const rect = getSelectionCorner(selectionStart, selectionEnd);
-    for (let y = rect.y; y < rect.y + rect.size; y++) {
-      for (let x = rect.x; x < rect.x + rect.size; x++) {
-        if (!isInBounds(x, y)) continue;
-        selectionCells.push({ x, y });
-        cellMatrix[y]?.[x]?.classList.add("selection-cell");
+    // Clear all selection classes first then re-apply current selection
+    for (let y = 0; y < tileHeight; y++) {
+      for (let x = 0; x < tileWidth; x++) {
+        cellMatrix[y]?.[x]?.classList.remove("selection-cell", "select-area-preview");
       }
     }
-    selectionAnchorCell = { x: selectionStart.x, y: selectionStart.y };
-    cellMatrix[selectionAnchorCell.y]?.[selectionAnchorCell.x]?.classList.add(
-      "selection-anchor"
-    );
-    gridDiv.classList.add("selection-active");
+    applySelectionClass(activeSelection, true);
+    // show area preview
+    selectAreaPreview.forEach((k) => {
+      const [x, y] = k.split(",").map(Number);
+      cellMatrix[y]?.[x]?.classList.add("select-area-preview");
+    });
+    gridDiv.classList.toggle("selection-active", activeSelection.size > 0);
   };
 
-  const renderShiftSelection = () => {
-    shiftSelectionCells.forEach((point) => {
-      cellMatrix[point.y]?.[point.x]?.classList.remove("shift-selection-cell");
-    });
-    if (shiftSelectionAnchorCell) {
-      cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.remove(
-        "shift-selection-anchor"
-      );
-    }
-    shiftSelectionCells = [];
-    if (!shiftSelectionStart || !shiftSelectionEnd) return;
-    const x1 = Math.min(shiftSelectionStart.x, shiftSelectionEnd.x);
-    const y1 = Math.min(shiftSelectionStart.y, shiftSelectionEnd.y);
-    const x2 = Math.max(shiftSelectionStart.x, shiftSelectionEnd.x);
-    const y2 = Math.max(shiftSelectionStart.y, shiftSelectionEnd.y);
+  const clearSelection = () => {
+    activeSelection.clear();
+    selectAreaStart = null;
+    selectAreaEnd = null;
+    selectAreaPreview.clear();
+    selectCustomMode = null;
+    renderSelection();
+  };
+
+  const hasSelection = () => activeSelection.size > 0;
+
+  // ── Area preview for Select Area tool ─────────────────────────────────────
+  const buildRectSet = (start: GridPoint, end: GridPoint) => {
+    const s = new Set<string>();
+    const x1 = Math.max(0, Math.min(start.x, end.x));
+    const y1 = Math.max(0, Math.min(start.y, end.y));
+    const x2 = Math.min(tileWidth - 1, Math.max(start.x, end.x));
+    const y2 = Math.min(tileHeight - 1, Math.max(start.y, end.y));
     for (let y = y1; y <= y2; y++) {
       for (let x = x1; x <= x2; x++) {
-        if (!isInBounds(x, y)) continue;
-        shiftSelectionCells.push({ x, y });
-        cellMatrix[y]?.[x]?.classList.add("shift-selection-cell");
+        s.add(key(x, y));
       }
     }
-    shiftSelectionAnchorCell = { x: shiftSelectionStart.x, y: shiftSelectionStart.y };
-    cellMatrix[shiftSelectionAnchorCell.y]?.[shiftSelectionAnchorCell.x]?.classList.add(
-      "shift-selection-anchor"
-    );
-    gridDiv.classList.add("shift-selection-active");
+    return s;
   };
 
-  const getSelectedSquare = () => {
-    if (!selectionStart || !selectionEnd) return null;
-    const rect = getSelectionCorner(selectionStart, selectionEnd);
-    if (rect.size <= 0) return null;
-    if (rect.x + rect.size > tileWidth || rect.y + rect.size > tileHeight) return null;
-    return rect;
-  };
-
-  const getShiftSelectionRect = () => {
-    if (!shiftSelectionStart || !shiftSelectionEnd) return null;
-    return {
-      x1: Math.min(shiftSelectionStart.x, shiftSelectionEnd.x),
-      y1: Math.min(shiftSelectionStart.y, shiftSelectionEnd.y),
-      x2: Math.max(shiftSelectionStart.x, shiftSelectionEnd.x),
-      y2: Math.max(shiftSelectionStart.y, shiftSelectionEnd.y),
-    };
-  };
-
-  const shiftSelectedArea = (dx: number, dy: number) => {
-    const rect = getShiftSelectionRect();
-    if (!rect || shiftSelectionMode !== "partial") return false;
-    const source = patternState.map((row) => row.slice());
-    const next = patternState.map((row) => row.slice());
-    const isInsideSelection = (x: number, y: number) =>
-      x >= rect.x1 && x <= rect.x2 && y >= rect.y1 && y <= rect.y2;
-    const movingCells: Array<{ x: number; y: number }> = [];
-    for (let y = rect.y1; y <= rect.y2; y++) {
-      for (let x = rect.x1; x <= rect.x2; x++) {
-        if (source[y]?.[x] === 1) movingCells.push({ x, y });
-      }
-    }
-    if (!movingCells.length) return false;
-    const movedTargets = movingCells
-      .map((cell) => ({ x: cell.x + dx, y: cell.y + dy }))
-      .filter((point) => isInBounds(point.x, point.y));
-    if (!shiftOverwriteMode) {
-      const blocked = movedTargets.some(
-        (point) => !isInsideSelection(point.x, point.y) && source[point.y]?.[point.x] === 1
-      );
-      if (blocked) return false;
-    }
-    for (const cell of movingCells) {
-      next[cell.y][cell.x] = 0;
-    }
-    for (const cell of movingCells) {
-      const targetX = cell.x + dx;
-      const targetY = cell.y + dy;
-      if (!isInBounds(targetX, targetY)) continue;
-      next[targetY][targetX] = 1;
-    }
-    patternState = next;
-    shiftSelectionStart = shiftSelectionStart
-      ? { x: shiftSelectionStart.x + dx, y: shiftSelectionStart.y + dy }
-      : null;
-    shiftSelectionEnd = shiftSelectionEnd
-      ? { x: shiftSelectionEnd.x + dx, y: shiftSelectionEnd.y + dy }
-      : null;
-    applyPattern(patternState);
-    renderShiftSelection();
-    onPatternChange();
-    return true;
-  };
-
-  const rotateSelection = (direction: "left" | "right") => {
-    const rect = getSelectedSquare();
-    if (!rect) return;
-    const square = Array.from({ length: rect.size }, (_, y) =>
-      Array.from({ length: rect.size }, (_, x) => patternState[rect.y + y][rect.x + x])
-    );
-    const rotated = Array.from({ length: rect.size }, () => new Array(rect.size).fill(0));
-    for (let y = 0; y < rect.size; y++) {
-      for (let x = 0; x < rect.size; x++) {
-        if (direction === "right") {
-          rotated[x][rect.size - 1 - y] = square[y][x];
-        } else {
-          rotated[rect.size - 1 - x][y] = square[y][x];
-        }
-      }
-    }
-    for (let y = 0; y < rect.size; y++) {
-      for (let x = 0; x < rect.size; x++) {
-        setCellActive(rect.x + x, rect.y + y, rotated[y][x] === 1);
-      }
-    }
-    renderSelection();
-    onPatternChange();
-  };
-
-  const setLineStart = (point: GridPoint | null) => {
-    if (lineStart) {
-      cellMatrix[lineStart.y]?.[lineStart.x]?.classList.remove("line-start");
-    }
-    lineStart = point;
-    if (lineStart) {
-      cellMatrix[lineStart.y]?.[lineStart.x]?.classList.add("line-start");
-    }
-  };
-
+  // ── Circle preview ────────────────────────────────────────────────────────
   const clearCirclePreview = () => {
-    circlePreviewCells.forEach((point) =>
-      cellMatrix[point.y]?.[point.x]?.classList.remove("circle-hover")
+    circlePreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.remove("circle-hover")
     );
     circlePreviewCells = [];
   };
 
   const previewCircle = (center: GridPoint, radius: number) => {
     clearCirclePreview();
-    circlePreviewCells = getCircleCells(
-      center,
-      Math.max(0, radius),
-      toolState.isCircleFilled(),
-      tileWidth,
-      tileHeight
-    );
-    circlePreviewCells.forEach((cell) =>
-      cellMatrix[cell.y]?.[cell.x]?.classList.add("circle-hover")
+    circlePreviewCells =
+      radius === 0
+        ? isInBounds(center.x, center.y)
+          ? [center]
+          : []
+        : getCircleCells(center, Math.max(0, radius), false, tileWidth, tileHeight);
+    circlePreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.add("circle-hover")
     );
   };
 
-  gridDiv.onmouseleave = clearCirclePreview;
+  // ── Star preview ──────────────────────────────────────────────────────────
+  const clearStarPreview = () => {
+    starPreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.remove("star-hover")
+    );
+    starPreviewCells = [];
+  };
 
-  toolState.subscribeToToolChanges((tool) => {
-    if (tool !== "line") setLineStart(null);
-    if (tool !== "circle") clearCirclePreview();
-    if (tool !== "select") {
-      clearSelectionTimer();
-      clearSelection();
+  // ── Line preview ──────────────────────────────────────────────────────────
+  const clearLinePreview = () => {
+    linePreviews.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.remove("line-hover")
+    );
+    linePreviews = [];
+    if (lineStart) {
+      cellMatrix[lineStart.y]?.[lineStart.x]?.classList.remove("line-start");
     }
-    if (tool !== "select" && !isShiftSelectEnabled) {
-      clearShiftSelection();
-    }
-    if (tool !== "stamp") {
-      clearStampSelection();
-    }
-  });
+  };
 
-  const applyPattern = (nextPattern: number[][]) => {
-    for (let y = 0; y < tileHeight; y++) {
-      for (let x = 0; x < tileWidth; x++) {
-        setCellActive(x, y, nextPattern[y]?.[x] === 1);
+  const setLineStart = (pt: GridPoint | null) => {
+    clearLinePreview();
+    lineStart = pt;
+    if (pt) cellMatrix[pt.y]?.[pt.x]?.classList.add("line-start");
+  };
+
+  const previewLine = (x1: number, y1: number) => {
+    clearLinePreview();
+    if (!lineStart) return;
+    if (lineStart) cellMatrix[lineStart.y]?.[lineStart.x]?.classList.add("line-start");
+    // Bresenham
+    let x0 = lineStart.x, y0 = lineStart.y;
+    let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
+    let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
+    let err = dx + dy, e2;
+    const pts: GridPoint[] = [];
+    while (true) {
+      if (isInBounds(x0, y0)) pts.push({ x: x0, y: y0 });
+      if (x0 === x1 && y0 === y1) break;
+      e2 = 2 * err;
+      if (e2 >= dy) { err += dy; x0 += sx; }
+      if (e2 <= dx) { err += dx; y0 += sy; }
+    }
+    linePreviews = pts;
+    linePreviews.forEach((p) => {
+      if (p.x === lineStart!.x && p.y === lineStart!.y) return;
+      cellMatrix[p.y]?.[p.x]?.classList.add("line-hover");
+    });
+  };
+
+  // ── Paste preview ─────────────────────────────────────────────────────────
+  const clearPastePreview = () => {
+    pastePreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.remove("paste-hover")
+    );
+    pastePreviewCells = [];
+    pastePreviewOrigin = null;
+  };
+
+  const showPastePreview = (
+    anchorX: number,
+    anchorY: number,
+    entry: { cells: Array<{ x: number; y: number; active: boolean }>; originX: number; originY: number }
+  ) => {
+    clearPastePreview();
+    pastePreviewOrigin = { ox: entry.originX, oy: entry.originY };
+    const pts: GridPoint[] = [];
+    for (const c of entry.cells) {
+      if (!c.active) continue;
+      const tx = anchorX + (c.x - entry.originX);
+      const ty = anchorY + (c.y - entry.originY);
+      if (isInBounds(tx, ty)) {
+        pts.push({ x: tx, y: ty });
+        cellMatrix[ty]?.[tx]?.classList.add("paste-hover");
+      }
+    }
+    pastePreviewCells = pts;
+  };
+
+  // ── Pencil brush ──────────────────────────────────────────────────────────
+  const applyPencilBrush = (cx: number, cy: number, activate: boolean) => {
+    const size = toolState.getPencilSize();
+    const radius = Math.floor(size / 2);
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    for (let by = cy - radius; by <= cy + radius; by++) {
+      for (let bx = cx - radius; bx <= cx + radius; bx++) {
+        if (!isInBounds(bx, by)) continue;
+        if (sel && !sel.has(key(bx, by))) continue;
+        setCellActive(bx, by, activate);
       }
     }
   };
 
-  const applyPatternTransform = (transform: (pattern: number[][]) => number[][]) => {
-    setLineStart(null);
-    clearCirclePreview();
-    clearSelection();
-    clearShiftSelection();
-    clearStampSelection();
-    applyPattern(transform(patternState));
+  // ── Paste commit ──────────────────────────────────────────────────────────
+  const paste = (anchorX: number, anchorY: number, clipboard: ClipboardManager) => {
+    clearPastePreview();
+    const entry = clipboard.paste();
+    if (!entry) return;
+    for (const c of entry.cells) {
+      if (!c.active) continue;
+      const tx = anchorX + (c.x - entry.originX);
+      const ty = anchorY + (c.y - entry.originY);
+      setCellActive(tx, ty, c.active);
+    }
     onPatternChange();
   };
 
-  shiftLeftBtn.addEventListener("click", () => {
-    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
-      if (!shiftSelectedArea(-1, 0)) window.alert("No shift area selected or target area is occupied.");
-      return;
+  // ── Cut ───────────────────────────────────────────────────────────────────
+  const cutSelection = (clipboard: ClipboardManager) => {
+    if (!hasSelection()) return;
+    copySelection(clipboard);
+    activeSelection.forEach((k) => {
+      const [x, y] = k.split(",").map(Number);
+      setCellActive(x, y, false);
+    });
+    onPatternChange();
+  };
+
+  // ── Copy ──────────────────────────────────────────────────────────────────
+  const copySelection = (clipboard: ClipboardManager) => {
+    if (!hasSelection()) return;
+    // Compute bounding box
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    activeSelection.forEach((k) => {
+      const [x, y] = k.split(",").map(Number);
+      if (x < minX) minX = x;
+      if (y < minY) minY = y;
+      if (x > maxX) maxX = x;
+      if (y > maxY) maxY = y;
+    });
+    const cells = Array.from(activeSelection).map((k) => {
+      const [x, y] = k.split(",").map(Number);
+      return { x, y, active: isCellActive(x, y) };
+    });
+    clipboard.copy({
+      cells,
+      width: maxX - minX + 1,
+      height: maxY - minY + 1,
+      originX: minX,
+      originY: minY,
+    });
+  };
+
+  // ── Invert ────────────────────────────────────────────────────────────────
+  const invertGrid = () => {
+    if (hasSelection()) {
+      drawingTools?.invertSelection(activeSelection);
+    } else {
+      applyPattern(invertPattern(patternState));
     }
-    applyPatternTransform(shiftPatternLeft);
-  });
+    onPatternChange();
+  };
 
-  shiftRightBtn.addEventListener("click", () => {
-    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
-      if (!shiftSelectedArea(1, 0)) window.alert("No shift area selected or target area is occupied.");
-      return;
-    }
-    applyPatternTransform(shiftPatternRight);
-  });
-
-  shiftDownBtn.addEventListener("click", () => {
-    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
-      if (!shiftSelectedArea(0, 1)) window.alert("No shift area selected or target area is occupied.");
-      return;
-    }
-    applyPatternTransform(shiftPatternDown);
-  });
-
-  shiftUpBtn.addEventListener("click", () => {
-    if (isShiftSelectEnabled && shiftSelectionMode === "partial") {
-      if (!shiftSelectedArea(0, -1)) window.alert("No shift area selected or target area is occupied.");
-      return;
-    }
-    applyPatternTransform(shiftPatternUp);
-  });
-
-  invertBtn?.addEventListener("click", () => {
-    applyPatternTransform(invertPattern);
-  });
-
-  rotateLeftBtn?.addEventListener("click", () => rotateSelection("left"));
-  rotateRightBtn?.addEventListener("click", () => rotateSelection("right"));
-
-  const startSelection = (x: number, y: number) => {
-    clearSelectionTimer();
-    clearSelection();
-    selectionStart = { x, y };
-    selectionEnd = { x, y };
-    selectionTimeout = window.setTimeout(() => {
-      isSelectionActive = true;
+  // ── Shift ─────────────────────────────────────────────────────────────────
+  const shiftDir = (dx: number, dy: number) => {
+    if (hasSelection()) {
+      const { pattern: next, movedSelection } = shiftSelection(patternState, activeSelection, dx, dy);
+      patternState = next;
+      activeSelection = movedSelection;
+      applyPattern(patternState);
       renderSelection();
-    }, selectionHoldDelay);
-  };
-
-  const startShiftSelection = (x: number, y: number) => {
-    clearShiftSelection();
-    shiftSelectionStart = { x, y };
-    shiftSelectionEnd = { x, y };
-    shiftSelectionActive = true;
-    renderShiftSelection();
-  };
-
-  const startStampSelection = (x: number, y: number) => {
-    clearStampSelection();
-    addStampCircle({ x, y });
-    stampSelectionLastPoint = { x, y };
-  };
-
-  const updateSelection = (x: number, y: number) => {
-    if (!selectionStart) return;
-    selectionEnd = { x, y };
-    if (isSelectionActive) renderSelection();
-  };
-
-  const updateShiftSelection = (x: number, y: number) => {
-    if (!shiftSelectionStart) return;
-    shiftSelectionEnd = { x, y };
-    if (shiftSelectionActive) renderShiftSelection();
-  };
-
-  const updateStampSelection = (x: number, y: number) => {
-    if (!stampSelectionLastPoint) {
-      startStampSelection(x, y);
-      return;
+    } else {
+      if (dx === -1) applyPattern(shiftPatternLeft(patternState));
+      else if (dx === 1) applyPattern(shiftPatternRight(patternState));
+      else if (dy === 1) applyPattern(shiftPatternDown(patternState));
+      else if (dy === -1) applyPattern(shiftPatternUp(patternState));
     }
-    addStampPath(stampSelectionLastPoint, { x, y });
-    stampSelectionLastPoint = { x, y };
+    onPatternChange();
   };
 
-  const getSelectionCorner = (start: GridPoint, end: GridPoint) => {
-    const side = Math.min(Math.abs(end.x - start.x), Math.abs(end.y - start.y));
-    const x = end.x >= start.x ? start.x : start.x - side;
-    const y = end.y >= start.y ? start.y : start.y - side;
-    return {
-      x: Math.max(0, Math.min(x, tileWidth - (side + 1))),
-      y: Math.max(0, Math.min(y, tileHeight - (side + 1))),
-      size: side + 1,
-    };
-  };
-
-  const finishSelection = () => {
-    clearSelectionTimer();
-    if (!isSelectionActive) {
-      clearSelection();
-      return;
-    }
+  // ── Rotate ────────────────────────────────────────────────────────────────
+  const rotateDir = (direction: "left" | "right") => {
+    if (!hasSelection()) return;
+    const { pattern: next, rotatedSelection } = rotateSelection(patternState, activeSelection, direction);
+    patternState = next;
+    activeSelection = rotatedSelection;
+    applyPattern(patternState);
     renderSelection();
+    onPatternChange();
   };
 
-  const finishShiftSelection = () => {
-    if (!shiftSelectionStart) return;
-    if (!shiftSelectionActive) {
-      clearShiftSelection();
-      return;
+  // ── Pattern application ───────────────────────────────────────────────────
+  const applyPattern = (next: number[][]) => {
+    for (let y = 0; y < tileHeight; y++) {
+      for (let x = 0; x < tileWidth; x++) {
+        setCellActive(x, y, next[y]?.[x] === 1);
+      }
     }
-    renderShiftSelection();
   };
 
+  // ── Mouse state ───────────────────────────────────────────────────────────
+  document.body.addEventListener("mousedown", () => (isMouseDown = true));
   document.body.addEventListener("mouseup", () => {
     isMouseDown = false;
-    toggleState = null;
-    if (isShiftSelectEnabled) {
-      finishShiftSelection();
-    } else if (toolState.getCurrentTool() === "select") {
-      finishSelection();
+    penToggleState = null;
+    // Commit Select Area drag
+    if (toolState.getCurrentTool() === "selectArea" && selectAreaStart && selectAreaEnd) {
+      const rect = buildRectSet(selectAreaStart, selectAreaEnd);
+      if (selectAreaAdding) {
+        rect.forEach((k) => activeSelection.add(k));
+      } else {
+        rect.forEach((k) => activeSelection.delete(k));
+      }
+      selectAreaStart = null;
+      selectAreaEnd = null;
+      selectAreaPreview.clear();
+      selectCustomMode = null;
+      renderSelection();
+    }
+    if (toolState.getCurrentTool() === "selectCustom") {
+      selectCustomMode = null;
     }
   });
 
-  function getCurrentPattern(): number[][] {
-    return patternState;
-  }
+  gridDiv.addEventListener("mouseleave", () => {
+    clearCirclePreview();
+    clearStarPreview();
+    clearLinePreview();
+    clearPastePreview();
+  });
 
+  // ── Grid generation ───────────────────────────────────────────────────────
   function generateGrid(pattern?: number[][]) {
     tileWidth = parseInt(tileWidthInput.value);
     tileHeight = parseInt(tileHeightInput.value);
     setLineStart(null);
     clearCirclePreview();
+    clearStarPreview();
+    clearPastePreview();
     clearSelection();
-    clearShiftSelection();
-    clearStampSelection();
     applyGridSizing();
-    const basePattern = pattern ?? patternState;
+
+    const base = pattern ?? patternState;
     patternState = Array.from({ length: tileHeight }, (_, y) =>
       Array.from({ length: tileWidth }, (_, x) =>
-        basePattern[y] && basePattern[y][x] === 1 ? 1 : 0
+        base[y]?.[x] === 1 ? 1 : 0
       )
     );
 
-    const nextCellMatrix: HTMLDivElement[][] = Array.from(
-      { length: tileHeight },
-      () => []
-    );
+    const nextMatrix: HTMLDivElement[][] = Array.from({ length: tileHeight }, () => []);
 
+    // Remove extra rows
     for (let y = tileHeight; y < currentHeight; y++) {
-      const row = cellMatrix[y];
-      if (!row) continue;
-      row.forEach((cell) => cell.remove());
+      cellMatrix[y]?.forEach((c) => c.remove());
     }
-
+    // Remove extra cols from kept rows
     for (let y = 0; y < Math.min(tileHeight, currentHeight); y++) {
-      const row = cellMatrix[y];
-      if (!row) continue;
       for (let x = tileWidth; x < currentWidth; x++) {
-        row[x]?.remove();
+        cellMatrix[y]?.[x]?.remove();
       }
     }
     currentWidth = tileWidth;
     currentHeight = tileHeight;
 
-    let lastCell: HTMLDivElement | undefined;
+    // Guide columns/rows
     let centerV: number[] = [];
     let centerH: number[] = [];
     if (guideState.isCenterEnabled()) {
-      if (tileWidth % 2 === 0) {
-        centerV = [Math.floor(tileWidth / 2)];
-      } else {
-        centerV = [(tileWidth - 1) / 2, (tileWidth - 1) / 2 + 1];
-      }
-      if (tileHeight % 2 === 0) {
-        centerH = [Math.floor(tileHeight / 2)];
-      } else {
-        centerH = [(tileHeight - 1) / 2, (tileHeight - 1) / 2 + 1];
-      }
+      centerV = tileWidth % 2 === 0
+        ? [tileWidth / 2]
+        : [(tileWidth - 1) / 2, (tileWidth - 1) / 2 + 1];
+      centerH = tileHeight % 2 === 0
+        ? [tileHeight / 2]
+        : [(tileHeight - 1) / 2, (tileHeight - 1) / 2 + 1];
     }
 
-    const applyPenBrush = (cx: number, cy: number, activate: boolean) => {
-      const size = toolState.getPenSize();
-      const radius = Math.floor(size / 2);
-      for (let by = cy - radius; by <= cy + radius; by++) {
-        if (by < 0 || by >= tileHeight) continue;
-        for (let bx = cx - radius; bx <= cx + radius; bx++) {
-          if (bx < 0 || bx >= tileWidth) continue;
-          setCellActive(bx, by, activate);
-        }
-      }
-    };
+    let lastCell: HTMLDivElement | undefined;
 
     for (let y = 0; y < tileHeight; y++) {
       for (let x = 0; x < tileWidth; x++) {
-        let cell: HTMLDivElement | null = cellMatrix[y]?.[x] ?? null;
-        if (cell === null) {
-          cell = document.createElement("div");
+        let cell: HTMLDivElement = cellMatrix[y]?.[x] ?? document.createElement("div");
+        if (!cellMatrix[y]?.[x]) {
           cell.className = "cell";
           cell.dataset.x = x.toString();
           cell.dataset.y = y.toString();
         }
+
+        // DOM position
         if (lastCell !== undefined) {
           if (cell.previousSibling !== lastCell) {
             gridDiv.insertBefore(cell, lastCell.nextSibling);
@@ -648,16 +492,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         } else if (!cell.parentElement) {
           gridDiv.appendChild(cell);
         }
-        nextCellMatrix[y][x] = cell;
+
+        nextMatrix[y][x] = cell;
         lastCell = cell;
 
-        cell.classList.remove("guide-v", "guide-h", "center-v", "center-h");
-        cell.classList.remove("line-start", "circle-hover");
-        cell.classList.remove("selection-cell");
-        cell.classList.remove("selection-anchor");
-        cell.classList.remove("stamp-selection-cell");
-        cell.classList.remove("shift-selection-cell");
-        cell.classList.remove("shift-selection-anchor");
+        // Reset classes
+        cell.className = "cell";
         cell.classList.toggle("active", patternState[y][x] === 1);
 
         if (guideState.isBlackEnabled()) {
@@ -669,101 +509,180 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           if (centerH.indexOf(y) !== -1) cell.classList.add("center-h");
         }
 
-        cell.onclick = () => {
-          if (isShiftSelectEnabled) {
+        // ── Event handlers ─────────────────────────────────────────────
+        // Capture x/y in closure (re-assign to avoid stale capture issue)
+        const cx = x, cy = y;
+
+        cell.onmousedown = () => {
+          const tool = toolState.getCurrentTool();
+
+          if (tool === "selectArea") {
+            selectAreaStart = { x: cx, y: cy };
+            selectAreaEnd = { x: cx, y: cy };
+            // If starting on a selected cell, we're removing
+            selectAreaAdding = !activeSelection.has(key(cx, cy));
+            selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
+            renderSelection();
             return;
           }
+
+          if (tool === "selectCustom") {
+            selectCustomMode = activeSelection.has(key(cx, cy)) ? "remove" : "add";
+            if (selectCustomMode === "add") activeSelection.add(key(cx, cy));
+            else activeSelection.delete(key(cx, cy));
+            renderSelection();
+            return;
+          }
+        };
+
+        cell.onmouseup = () => {
+          // (commit handled on document body mouseup)
+        };
+
+        cell.onclick = () => {
           const tool = toolState.getCurrentTool();
-          if (tool === "pen") {
-            const shouldActivate = !isCellActive(x, y);
-            applyPenBrush(x, y, shouldActivate);
+          const sel = activeSelection.size > 0 ? activeSelection : undefined;
+
+          if (tool === "pencil") {
+            const shouldActivate = !isCellActive(cx, cy);
+            applyPencilBrush(cx, cy, shouldActivate);
+            onPatternChange();
           } else if (tool === "line") {
             if (!lineStart) {
-              setLineStart({ x, y });
+              setLineStart({ x: cx, y: cy });
               return;
             }
-            drawingTools?.drawLine(lineStart.x, lineStart.y, x, y);
+            drawingTools?.drawLine(lineStart.x, lineStart.y, cx, cy, sel);
             setLineStart(null);
+            onPatternChange();
           } else if (tool === "fill") {
-            drawingTools?.floodFill(x, y);
+            if (hasSelection()) {
+              drawingTools?.invertSelection(activeSelection);
+            } else {
+              drawingTools?.floodFill(cx, cy, sel);
+            }
+            onPatternChange();
+          } else if (tool === "shade") {
+            if (hasSelection()) {
+              drawingTools?.shadeSelection(activeSelection);
+            } else {
+              drawingTools?.floodShade(cx, cy, sel);
+            }
+            onPatternChange();
           } else if (tool === "star") {
-            const r = toolState.getStarRadius();
-            drawingTools?.drawStar(x, y, r);
+            drawingTools?.drawStar(cx, cy, toolState.getStarRadius(), sel);
+            clearStarPreview();
+            onPatternChange();
           } else if (tool === "circle") {
+            drawingTools?.drawCircle(cx, cy, toolState.getCircleRadius(), sel);
             clearCirclePreview();
-            drawingTools?.drawCircle(
-              x,
-              y,
-              toolState.getCircleRadius(),
-              toolState.isCircleFilled()
-            );
-          } else if (tool === "stamp") {
-            return;
-          } else {
-            return;
+            onPatternChange();
+          } else if (tool === "paste") {
+            // paste handled in app.ts via clipboard
           }
-          onPatternChange();
         };
 
         cell.onmouseover = () => {
-          if (isShiftSelectEnabled) {
-            if (isMouseDown) updateShiftSelection(x, y);
+          const tool = toolState.getCurrentTool();
+          const sel = activeSelection.size > 0 ? activeSelection : undefined;
+
+          if (tool === "selectArea" && isMouseDown && selectAreaStart) {
+            selectAreaEnd = { x: cx, y: cy };
+            selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
+            renderSelection();
             return;
           }
-          const tool = toolState.getCurrentTool();
-          if (isMouseDown && tool === "pen") {
-            if (toggleState === null) {
-              toggleState = !isCellActive(x, y);
-            }
-            applyPenBrush(x, y, toggleState);
-            onPatternChange();
-          } else if (!isMouseDown && tool === "circle") {
-            previewCircle({ x, y }, toolState.getCircleRadius());
-          } else if (isMouseDown && tool === "select") {
-            updateSelection(x, y);
-          } else if (isMouseDown && isShiftSelectEnabled) {
-            updateShiftSelection(x, y);
-          } else if (isMouseDown && tool === "stamp") {
-            updateStampSelection(x, y);
-          }
-        };
 
-        cell.onmousedown = () => {
-          if (isShiftSelectEnabled) {
-            startShiftSelection(x, y);
-          } else if (toolState.getCurrentTool() === "select") {
-            startSelection(x, y);
-          } else if (toolState.getCurrentTool() === "stamp") {
-            startStampSelection(x, y);
+          if (tool === "selectCustom" && isMouseDown && selectCustomMode) {
+            if (selectCustomMode === "add") activeSelection.add(key(cx, cy));
+            else activeSelection.delete(key(cx, cy));
+            renderSelection();
+            return;
           }
-        };
-        cell.onmouseup = () => {
-          if (isShiftSelectEnabled) {
-            finishShiftSelection();
-          } else if (toolState.getCurrentTool() === "select") {
-            finishSelection();
-          } else if (toolState.getCurrentTool() === "stamp") {
-            stampSelectionLastPoint = null;
+
+          if (isMouseDown && tool === "pencil") {
+            if (penToggleState === null) penToggleState = !isCellActive(cx, cy);
+            applyPencilBrush(cx, cy, penToggleState);
+            onPatternChange();
+            return;
+          }
+
+          if (!isMouseDown && tool === "circle") {
+            previewCircle({ x: cx, y: cy }, toolState.getCircleRadius());
+            return;
+          }
+
+          if (!isMouseDown && tool === "line" && lineStart) {
+            previewLine(cx, cy);
+            return;
+          }
+
+          if (isMouseDown && tool === "line" && lineStart) {
+            previewLine(cx, cy);
+            return;
+          }
+
+          if (!isMouseDown && tool === "paste") {
+            // paste preview handled externally via app.ts clipboard ref
           }
         };
       }
     }
-    cellMatrix = nextCellMatrix;
+
+    cellMatrix = nextMatrix;
     onPatternChange();
   }
 
+  // ── Input listeners ───────────────────────────────────────────────────────
+  tileWidthInput.addEventListener("input", () => {
+    tileWidthValue.value = tileWidthInput.value;
+    generateGrid();
+  });
+  tileHeightInput.addEventListener("input", () => {
+    tileHeightValue.value = tileHeightInput.value;
+    generateGrid();
+  });
+  tileWidthValue.addEventListener("change", () => {
+    tileWidthInput.value = tileWidthValue.value;
+    generateGrid();
+  });
+  tileHeightValue.addEventListener("change", () => {
+    tileHeightInput.value = tileHeightValue.value;
+    generateGrid();
+  });
+  gridScaleInput?.addEventListener("change", applyGridSizing);
+
+  // ── Tool change listener ──────────────────────────────────────────────────
+  toolState.subscribeToToolChanges((tool) => {
+    if (tool !== "line") setLineStart(null);
+    if (tool !== "circle") clearCirclePreview();
+    if (tool !== "star") clearStarPreview();
+    if (tool !== "paste") clearPastePreview();
+    if (tool !== "selectArea" && tool !== "selectCustom") {
+      selectAreaStart = null;
+      selectAreaEnd = null;
+      selectAreaPreview.clear();
+      selectCustomMode = null;
+    }
+  });
+
+  // ── Clear grid ────────────────────────────────────────────────────────────
   function clearGrid() {
     setLineStart(null);
     clearCirclePreview();
+    clearStarPreview();
+    clearPastePreview();
     clearSelection();
-    clearShiftSelection();
-    clearStampSelection();
     for (let y = 0; y < tileHeight; y++) {
       for (let x = 0; x < tileWidth; x++) {
         setCellActive(x, y, false);
       }
     }
     onPatternChange();
+  }
+
+  function getCurrentPattern() {
+    return patternState;
   }
 
   return {
@@ -775,21 +694,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     isCellActive,
     setCellActive,
     setDrawingTools,
-    getStampSelection: () => stampSelectionCells,
-    setShiftSelectionMode: (mode) => {
-      shiftSelectionMode = mode;
-      if (mode === "all") clearShiftSelection();
-    },
-    setShiftOverwriteMode: (overwrite) => {
-      shiftOverwriteMode = overwrite;
-    },
-    enableShiftSelect: (enabled) => {
-      isShiftSelectEnabled = enabled;
-      if (!enabled) clearShiftSelection();
-    },
-    clearShiftSelect: () => {
-      isShiftSelectEnabled = false;
-      clearShiftSelection();
-    },
+    getActiveSelection: () => activeSelection,
+    clearSelection,
+    hasSelection,
+    invertGrid,
+    cutSelection,
+    copySelection,
+    paste,
+    shiftDir,
+    rotateDir,
   };
 }
