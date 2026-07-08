@@ -46,23 +46,20 @@
                 <span class="tool-icon">○</span>
                 <span class="tool-label">Circle</span>
               </button>
-              <div style="display: flex; flex-direction: column; gap: 2px;">
-                <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
-                  <span class="tool-icon" id="shapeIcon">★</span>
-                  <span class="tool-label">Shape</span>
-                </button>
-                <select id="shapeType" class="ctrl-select" style="font-size: 9px; padding: 0 12px 0 2px; height: 14px; margin-top: -2px;">
-                  <option value="star" selected>Star</option>
-                  <option value="cube">Cube</option>
+              <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
+                <select id="shapeType" class="ctrl-select" onclick="event.stopPropagation()" style="font-size: 10px; padding: 0 14px 0 2px; height: 16px; margin-bottom: 2px; cursor: pointer; background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 2px;">
+                  <option value="star" selected>★</option>
+                  <option value="cube">⬡</option>
                 </select>
-              </div>
+                <span class="tool-label">Shape</span>
+              </button>
               <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
                 <span class="tool-icon">╱</span>
                 <span class="tool-label">Line</span>
               </button>
             </div>
             <!-- Size Slider -->
-            <div class="size-slider-wrap" style="display: flex; align-items: center; gap: 6px; width: 100%;">
+            <div id="toolSizeGroup" class="size-slider-wrap" style="display: flex; align-items: center; gap: 6px; width: 100%;">
               <span class="size-label">Size</span>
               <input
                 type="range"
