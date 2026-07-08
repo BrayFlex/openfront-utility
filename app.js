@@ -118,10 +118,9 @@ document.addEventListener("DOMContentLoaded", () => {
     canvasTabScrap.addEventListener("click", () => switchCanvas(true));
     const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
     const shapeTypeSelect = document.getElementById("shapeType");
-    const shapeIcon = document.getElementById("shapeIcon");
-    if (shapeTypeSelect && shapeIcon) {
+    if (shapeTypeSelect) {
         shapeTypeSelect.addEventListener("change", () => {
-            shapeIcon.textContent = shapeTypeSelect.value === "cube" ? "⬡" : "★";
+            toolState.selectTool("shape");
         });
     }
     // ── Guide state ───────────────────────────────────────────────────────────
