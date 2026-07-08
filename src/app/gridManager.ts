@@ -53,6 +53,7 @@ type GridManagerOptions = {
   gridScaleInput?: HTMLSelectElement;
   guideState: GuideState;
   toolState: ToolState;
+  clipboard?: ClipboardManager;
   drawingTools?: DrawingTools;
   onPatternChange: () => void;
 };
@@ -69,6 +70,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     gridScaleInput,
     guideState,
     toolState,
+    clipboard,
     drawingTools: initialDrawingTools,
     onPatternChange,
   } = options;
@@ -101,8 +103,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   let selectAreaEnd: GridPoint | null = null;
   let selectAreaAdding = true; // true = add to sel, false = remove
   let selectAreaPreview = new Set<string>(); // visual rect preview
-  // For Select Custom tool: track drag add/remove mode
-  let selectCustomMode: "add" | "remove" | null = null;
   // Paste preview
   let pastePreviewCells: GridPoint[] = [];
   let pastePreviewOrigin: { ox: number; oy: number } | null = null;
@@ -166,7 +166,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     selectAreaStart = null;
     selectAreaEnd = null;
     selectAreaPreview.clear();
-    selectCustomMode = null;
     renderSelection();
   };
 
@@ -208,7 +207,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     );
   };
 
-  // ── Star preview ──────────────────────────────────────────────────────────
   const clearStarPreview = () => {
     starPreviewCells.forEach((p) =>
       cellMatrix[p.y]?.[p.x]?.classList.remove("star-hover")
@@ -311,6 +309,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       const ty = anchorY + (c.y - entry.originY);
       setCellActive(tx, ty, c.active);
     }
+    clearSelection();
     onPatternChange();
   };
 
@@ -322,6 +321,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       const [x, y] = k.split(",").map(Number);
       setCellActive(x, y, false);
     });
+    clearSelection();
     onPatternChange();
   };
 
@@ -348,6 +348,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       originX: minX,
       originY: minY,
     });
+    clearSelection();
   };
 
   // ── Invert ────────────────────────────────────────────────────────────────
@@ -397,7 +398,21 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     }
   };
 
-  // ── Mouse state ───────────────────────────────────────────────────────────
+  // ── Mouse & Key state ─────────────────────────────────────────────────────
+  let isShiftDown = false;
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Shift") isShiftDown = true;
+  });
+  document.addEventListener("keyup", (e) => {
+    if (e.key === "Shift") {
+      isShiftDown = false;
+      // if tool is overridden via shift, release drag
+      if (selectAreaStart && !isMouseDown) {
+         // handle release
+      }
+    }
+  });
+
   document.body.addEventListener("mousedown", () => (isMouseDown = true));
   document.body.addEventListener("mouseup", () => {
     isMouseDown = false;
@@ -413,11 +428,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       selectAreaStart = null;
       selectAreaEnd = null;
       selectAreaPreview.clear();
-      selectCustomMode = null;
       renderSelection();
-    }
-    if (toolState.getCurrentTool() === "selectCustom") {
-      selectCustomMode = null;
     }
   });
 
@@ -514,7 +525,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         const cx = x, cy = y;
 
         cell.onmousedown = () => {
-          const tool = toolState.getCurrentTool();
+          const actualTool = toolState.getCurrentTool();
+          const tool = isShiftDown ? "selectArea" : actualTool;
 
           if (tool === "selectArea") {
             selectAreaStart = { x: cx, y: cy };
@@ -522,14 +534,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             // If starting on a selected cell, we're removing
             selectAreaAdding = !activeSelection.has(key(cx, cy));
             selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
-            renderSelection();
-            return;
-          }
-
-          if (tool === "selectCustom") {
-            selectCustomMode = activeSelection.has(key(cx, cy)) ? "remove" : "add";
-            if (selectCustomMode === "add") activeSelection.add(key(cx, cy));
-            else activeSelection.delete(key(cx, cy));
             renderSelection();
             return;
           }
@@ -569,9 +573,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
               drawingTools?.floodShade(cx, cy, sel);
             }
             onPatternChange();
-          } else if (tool === "star") {
-            drawingTools?.drawStar(cx, cy, toolState.getStarRadius(), sel);
-            clearStarPreview();
+          } else if (tool === "shape") {
+            drawingTools?.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), sel);
+            clearStarPreview(); // using same dim overlay for shape if added later
             onPatternChange();
           } else if (tool === "circle") {
             drawingTools?.drawCircle(cx, cy, toolState.getCircleRadius(), sel);
@@ -583,19 +587,13 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         };
 
         cell.onmouseover = () => {
-          const tool = toolState.getCurrentTool();
+          const actualTool = toolState.getCurrentTool();
+          const tool = isShiftDown ? "selectArea" : actualTool;
           const sel = activeSelection.size > 0 ? activeSelection : undefined;
 
           if (tool === "selectArea" && isMouseDown && selectAreaStart) {
             selectAreaEnd = { x: cx, y: cy };
             selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
-            renderSelection();
-            return;
-          }
-
-          if (tool === "selectCustom" && isMouseDown && selectCustomMode) {
-            if (selectCustomMode === "add") activeSelection.add(key(cx, cy));
-            else activeSelection.delete(key(cx, cy));
             renderSelection();
             return;
           }
@@ -622,8 +620,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             return;
           }
 
-          if (!isMouseDown && tool === "paste") {
-            // paste preview handled externally via app.ts clipboard ref
+          if (!isMouseDown && tool === "paste" && clipboard?.hasContent()) {
+            const entry = clipboard.paste();
+            if (entry) showPastePreview(cx, cy, entry);
           }
         };
       }
@@ -656,13 +655,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   toolState.subscribeToToolChanges((tool) => {
     if (tool !== "line") setLineStart(null);
     if (tool !== "circle") clearCirclePreview();
-    if (tool !== "star") clearStarPreview();
+    if (tool !== "star" && tool !== "shape") clearStarPreview();
     if (tool !== "paste") clearPastePreview();
-    if (tool !== "selectArea" && tool !== "selectCustom") {
+    if (tool !== "selectArea") {
       selectAreaStart = null;
       selectAreaEnd = null;
       selectAreaPreview.clear();
-      selectCustomMode = null;
     }
   });
 
@@ -672,10 +670,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     clearCirclePreview();
     clearStarPreview();
     clearPastePreview();
-    clearSelection();
-    for (let y = 0; y < tileHeight; y++) {
-      for (let x = 0; x < tileWidth; x++) {
-        setCellActive(x, y, false);
+    
+    if (hasSelection() && drawingTools) {
+      drawingTools.clearSelection(activeSelection);
+    } else {
+      for (let y = 0; y < tileHeight; y++) {
+        for (let x = 0; x < tileWidth; x++) {
+          setCellActive(x, y, false);
+        }
       }
     }
     onPatternChange();

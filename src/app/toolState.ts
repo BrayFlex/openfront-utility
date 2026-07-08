@@ -1,12 +1,11 @@
 export type ToolKind =
   | "pencil"
+  | "circle"
+  | "shape"
   | "line"
   | "fill"
   | "shade"
-  | "star"
-  | "circle"
   | "selectArea"
-  | "selectCustom"
   | "paste";
 
 /** Maps each tool to its slider config, or null if the tool has no size slider */
@@ -21,7 +20,7 @@ export type ToolSizeConfig = {
 const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
   pencil: { min: 1, max: 9, step: 2, defaultValue: 1, label: "Size" },
   circle: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
-  star: { min: 1, max: 8, step: 1, defaultValue: 3, label: "Size" },
+  shape: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
 };
 
 type ToolStateOptions = {
@@ -35,7 +34,8 @@ export type ToolState = {
   getCurrentTool: () => ToolKind;
   selectTool: (tool: ToolKind) => void;
   getPencilSize: () => number;
-  getStarRadius: () => number;
+  getShapeRadius: () => number;
+  getShapeType: () => string;
   getCircleRadius: () => number;
   subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
   /** Returns the current slider value for any sized tool */
@@ -44,6 +44,7 @@ export type ToolState = {
 
 export function createToolState(options: ToolStateOptions): ToolState {
   const { toolButtons, sizeSlider, sizeOutput, sizeGroup } = options;
+  const shapeTypeSelect = document.getElementById("shapeType") as HTMLSelectElement;
 
   let currentTool: ToolKind = "pencil";
   // Per-tool remembered sizes
@@ -104,12 +105,13 @@ export function createToolState(options: ToolStateOptions): ToolState {
       if (currentTool === "pencil") return parseInt(sizeSlider.value);
       return rememberedSizes["pencil"] ?? 1;
     },
-    getStarRadius: () => {
-      const size = currentTool === "star"
+    getShapeRadius: () => {
+      const size = currentTool === "shape"
         ? parseInt(sizeSlider.value)
-        : (rememberedSizes["star"] ?? 3);
+        : (rememberedSizes["shape"] ?? 3);
       return size;
     },
+    getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
     getCircleRadius: () => {
       const size = currentTool === "circle"
         ? parseInt(sizeSlider.value)

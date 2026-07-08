@@ -99,8 +99,9 @@
 }
 .action-btn .tool-label { font-size: 9px; }
 
-.transform-btns {
-  display: flex;
+.transform-btns-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 28px);
   gap: 2px;
 }
 .transform-btn {
@@ -178,6 +179,10 @@
   display: flex;
   gap: 6px;
 }
+.ei-panel.export-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
 .ei-panel[hidden] { display: none; }
 
 .ei-copy-btn {
@@ -194,6 +199,16 @@
   color: #fff;
 }
 .btn-submit:hover {
+  background: var(--accent-dark);
+  color: #fff;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.btn-primary:hover {
   background: var(--accent-dark);
   color: #fff;
 }
