@@ -1,10 +1,11 @@
 const TOOL_SIZE_CONFIGS = {
     pencil: { min: 1, max: 9, step: 2, defaultValue: 1, label: "Size" },
     circle: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
-    star: { min: 1, max: 8, step: 1, defaultValue: 3, label: "Size" },
+    shape: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
 };
 export function createToolState(options) {
     const { toolButtons, sizeSlider, sizeOutput, sizeGroup } = options;
+    const shapeTypeSelect = document.getElementById("shapeType");
     let currentTool = "pencil";
     // Per-tool remembered sizes
     const rememberedSizes = {};
@@ -62,13 +63,14 @@ export function createToolState(options) {
                 return parseInt(sizeSlider.value);
             return (_a = rememberedSizes["pencil"]) !== null && _a !== void 0 ? _a : 1;
         },
-        getStarRadius: () => {
+        getShapeRadius: () => {
             var _a;
-            const size = currentTool === "star"
+            const size = currentTool === "shape"
                 ? parseInt(sizeSlider.value)
-                : ((_a = rememberedSizes["star"]) !== null && _a !== void 0 ? _a : 3);
+                : ((_a = rememberedSizes["shape"]) !== null && _a !== void 0 ? _a : 3);
             return size;
         },
+        getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
         getCircleRadius: () => {
             var _a;
             const size = currentTool === "circle"

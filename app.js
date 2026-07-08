@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const tileHeightUpBtn = document.getElementById("tileHeightUp");
     const tileHeightDownBtn = document.getElementById("tileHeightDown");
     const scaleSelect = document.getElementById("scaleSelect");
-    const gridZoomSelect = document.getElementById("gridZoomSelect");
     const invertBtn = document.getElementById("invertBtn");
     const clearBtn = document.getElementById("clearBtn");
     // Canvas tab switcher
@@ -117,18 +116,23 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     canvasTabMain.addEventListener("click", () => switchCanvas(false));
     canvasTabScrap.addEventListener("click", () => switchCanvas(true));
-    // ── Tool state (shared between both canvases) ─────────────────────────────
     const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
+    const shapeTypeSelect = document.getElementById("shapeType");
+    const shapeIcon = document.getElementById("shapeIcon");
+    if (shapeTypeSelect && shapeIcon) {
+        shapeTypeSelect.addEventListener("change", () => {
+            shapeIcon.textContent = shapeTypeSelect.value === "cube" ? "⬡" : "★";
+        });
+    }
     // ── Guide state ───────────────────────────────────────────────────────────
     let handleGuideChange = () => { };
     const guideState = setupGridGuides(toolbox, () => handleGuideChange());
     // ── Grid Scale (visual) ───────────────────────────────────────────────────
+    // Visual zoom is handled by workspaceControls now, so internal scale factor is 1
     const makeGridScaleSelect = () => {
-        // gridZoomSelect drives visual cell size.
-        // We proxy it to the internal scale via a fake <select> adapter.
         return {
-            get value() { return gridZoomSelect.value; },
-            addEventListener: (ev, fn) => gridZoomSelect.addEventListener(ev, fn),
+            get value() { return "1"; },
+            addEventListener: (ev, fn) => { },
         };
     };
     // ── MAIN grid manager ─────────────────────────────────────────────────────
@@ -141,6 +145,7 @@ document.addEventListener("DOMContentLoaded", () => {
         gridScaleInput: makeGridScaleSelect(),
         guideState,
         toolState,
+        clipboard,
         onPatternChange: () => { if (!isScrapActive)
             updateOutput(); },
     });
@@ -163,6 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
         gridScaleInput: makeGridScaleSelect(),
         guideState,
         toolState,
+        clipboard,
         onPatternChange: () => { if (isScrapActive)
             updateOutput(); },
     });
@@ -340,6 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // Poll selection state (simple approach — could be event-driven)
     setInterval(updateTransformButtons, 200);
     // ── Cut / Copy / Paste ─────────────────────────────────────────────────────
+    let prePasteTool = null;
     cutBtn.addEventListener("click", () => {
         activeGrid().cutSelection(clipboard);
     });
@@ -348,6 +355,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     pasteBtn.addEventListener("click", () => {
         if (clipboard.hasContent()) {
+            prePasteTool = toolState.getCurrentTool();
             toolState.selectTool("paste");
         }
     });
@@ -368,7 +376,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 const x = parseInt((_a = target.dataset.x) !== null && _a !== void 0 ? _a : "0");
                 const y = parseInt((_b = target.dataset.y) !== null && _b !== void 0 ? _b : "0");
                 grid.paste(x, y, clipboard);
-                toolState.selectTool("pencil");
+                // Switch back to previous tool after single paste
+                toolState.selectTool(prePasteTool || "selectArea");
+                prePasteTool = null;
                 gridEl.removeEventListener("click", onGridClick);
             };
             gridEl.addEventListener("click", onGridClick);
@@ -538,8 +548,10 @@ document.addEventListener("DOMContentLoaded", () => {
         onCopy: () => activeGrid().copySelection(clipboard),
         onCut: () => activeGrid().cutSelection(clipboard),
         onPaste: () => {
-            if (clipboard.hasContent())
+            if (clipboard.hasContent()) {
+                prePasteTool = toolState.getCurrentTool();
                 toolState.selectTool("paste");
+            }
         },
     });
     // ── Submission modal ──────────────────────────────────────────────────────
@@ -547,6 +559,10 @@ document.addEventListener("DOMContentLoaded", () => {
         getBase64: getOutputBase64,
         getPrimaryColor: () => previewPrimaryColor.value,
         getSecondaryColor: () => previewSecondaryColor.value,
+        getPatternUrl: () => {
+            const b64 = getOutputBase64();
+            return buildPreviewLink(window.location.href, b64, previewPrimaryColor.value, previewSecondaryColor.value);
+        }
     });
     submitPatternBtn.addEventListener("click", () => submissionModal.open());
     // ── URL hash load + initial state ─────────────────────────────────────────

@@ -35,41 +35,50 @@
         <!-- ── Tool strip ── -->
         <div class="tool-strip" id="toolbox" role="toolbar" aria-label="Drawing tools">
 
-          <!-- Drawing tools -->
-          <div class="tool-strip-group">
-            <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil — click to draw/erase; drag erases/draws consistently">
-              <span class="tool-icon">✏</span>
-              <span class="tool-label">Pencil</span>
-            </button>
-            <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle — outline only; hover shows preview">
-              <span class="tool-icon">○</span>
-              <span class="tool-label">Circle</span>
-            </button>
-            <button id="tool-star" class="tool-btn" data-tool="star" title="Star — 5-pointed star">
-              <span class="tool-icon">★</span>
-              <span class="tool-label">Star</span>
-            </button>
-            <button id="tool-line" class="tool-btn" data-tool="line" title="Line — click start point then end point">
-              <span class="tool-icon">╱</span>
-              <span class="tool-label">Line</span>
-            </button>
-          </div>
-
-          <!-- Adaptive size slider -->
-          <div class="tool-strip-group size-group" id="toolSizeGroup">
-            <label class="size-label" for="toolSizeSlider">Size</label>
-            <div class="size-slider-wrap">
+          <!-- Drawing tools & Size -->
+          <div class="tool-strip-group" style="flex-direction: column; gap: 4px;">
+            <div style="display: flex; gap: 4px;">
+              <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
+                <span class="tool-icon">✏</span>
+                <span class="tool-label">Pencil</span>
+              </button>
+              <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
+                <span class="tool-icon">○</span>
+                <span class="tool-label">Circle</span>
+              </button>
+              <div style="display: flex; flex-direction: column; gap: 2px;">
+                <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
+                  <span class="tool-icon" id="shapeIcon">★</span>
+                  <span class="tool-label">Shape</span>
+                </button>
+                <select id="shapeType" class="ctrl-select" style="font-size: 9px; padding: 0 12px 0 2px; height: 14px; margin-top: -2px;">
+                  <option value="star" selected>Star</option>
+                  <option value="cube">Cube</option>
+                </select>
+              </div>
+              <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
+                <span class="tool-icon">╱</span>
+                <span class="tool-label">Line</span>
+              </button>
+            </div>
+            <!-- Size Slider -->
+            <div class="size-slider-wrap" style="display: flex; align-items: center; gap: 6px; width: 100%;">
+              <span class="size-label">Size</span>
               <input
                 type="range"
                 id="toolSizeSlider"
                 class="size-slider"
-                min="1" max="9" step="1" value="1"
+                min="1" max="30" step="1" value="1"
                 list="toolSizeNotches"
-                aria-label="Tool size"
               />
-              <datalist id="toolSizeNotches"></datalist>
+              <datalist id="toolSizeNotches">
+                <option value="1"></option>
+                <option value="10"></option>
+                <option value="20"></option>
+                <option value="30"></option>
+              </datalist>
+              <output id="toolSizeOutput" class="size-output">1</output>
             </div>
-            <output id="toolSizeOutput" class="size-output">1</output>
           </div>
 
           <div class="tool-strip-separator"></div>
@@ -131,13 +140,9 @@
 
           <!-- Selection tools -->
           <div class="tool-strip-group">
-            <button id="tool-selectArea" class="tool-btn" data-tool="selectArea" title="Select Area — drag rect to add/subtract from selection">
+            <button id="tool-selectArea" class="tool-btn" data-tool="selectArea" title="Select (Shift)">
               <span class="tool-icon">⬚</span>
-              <span class="tool-label">Sel. Area</span>
-            </button>
-            <button id="tool-selectCustom" class="tool-btn" data-tool="selectCustom" title="Select Custom — click/drag pixels to add/remove from selection">
-              <span class="tool-icon">⬦</span>
-              <span class="tool-label">Sel. Custom</span>
+              <span class="tool-label">Select</span>
             </button>
             <button id="deselectBtn" class="tool-btn action-btn" disabled title="Deselect all (Ctrl+D)">
               <span class="tool-icon">⊡</span>
@@ -147,16 +152,15 @@
 
           <div class="tool-strip-separator"></div>
 
-          <!-- Transformations (only enabled with selection) -->
+          <!-- Transformations -->
           <div class="tool-strip-group transform-group">
-            <span class="tool-group-label">Transforms</span>
-            <div class="transform-btns">
-              <button id="shiftUpBtn" class="tool-btn transform-btn" disabled title="Shift selection Up">↑</button>
-              <button id="shiftDownBtn" class="tool-btn transform-btn" disabled title="Shift selection Down">↓</button>
-              <button id="shiftLeftBtn" class="tool-btn transform-btn" disabled title="Shift selection Left">←</button>
-              <button id="shiftRightBtn" class="tool-btn transform-btn" disabled title="Shift selection Right">→</button>
-              <button id="rotateLeftBtn" class="tool-btn transform-btn" disabled title="Rotate selection Left (90° CCW)">↺</button>
-              <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate selection Right (90° CW)">↻</button>
+            <div class="transform-btns-grid">
+              <button id="rotateLeftBtn" class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
+              <button id="shiftUpBtn" class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
+              <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate Right">↻</button>
+              <button id="shiftLeftBtn" class="tool-btn transform-btn" disabled title="Shift Left">←</button>
+              <button id="shiftDownBtn" class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
+              <button id="shiftRightBtn" class="tool-btn transform-btn" disabled title="Shift Right">→</button>
             </div>
           </div>
 
@@ -171,11 +175,10 @@
               <button id="importTabBtn" class="ei-tab" type="button">Import</button>
             </div>
             <!-- Export panel -->
-            <div id="exportPanel" class="ei-panel">
+            <div id="exportPanel" class="ei-panel export-grid">
               <button id="copyJsonBtn" class="ei-copy-btn" title="Copy JSON / Base64">JSON</button>
               <button id="copyDiscordBtn" class="ei-copy-btn" title="Copy Discord-formatted output">Discord</button>
               <button id="copyPreviewBtn" class="ei-copy-btn" title="Copy preview link">Preview</button>
-              <button id="copyConsoleBtn" class="ei-copy-btn" title="Copy dev localStorage command">Console</button>
               <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
             </div>
             <!-- Import panel -->
@@ -198,9 +201,9 @@
           <!-- Canvas tabs + controls bar -->
           <div class="canvas-controls-bar">
             <!-- Tab switcher -->
-            <div class="canvas-tabs" role="tablist">
-              <button id="canvasTabMain" class="canvas-tab selected" role="tab" aria-selected="true">Pattern Canvas</button>
-              <button id="canvasTabScrap" class="canvas-tab" role="tab" aria-selected="false">Scrap Canvas</button>
+            <div class="canvas-tabs ei-tabs" role="tablist">
+              <button id="canvasTabMain" class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
+              <button id="canvasTabScrap" class="canvas-tab ei-tab" role="tab" aria-selected="false">Test Canvas</button>
             </div>
 
             <div class="canvas-controls-divider"></div>
@@ -214,9 +217,9 @@
             <!-- Width -->
             <label class="ctrl-label" for="tileWidthValue">W</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileWidthValue" class="ctrl-number" value="66" min="2" max="129" />
+              <input type="number" id="tileWidthValue" class="ctrl-number" value="129" min="2" max="129" />
               <!-- hidden range synced by JS -->
-              <input type="range" id="tileWidth" value="66" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="range" id="tileWidth" value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileWidthUp" class="stepper-btn" aria-label="Increase width">▲</button>
                 <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
@@ -226,8 +229,8 @@
             <!-- Height -->
             <label class="ctrl-label" for="tileHeightValue">H</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileHeightValue" class="ctrl-number" value="10" min="2" max="129" />
-              <input type="range" id="tileHeight" value="10" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="number" id="tileHeightValue" class="ctrl-number" value="63" min="2" max="63" />
+              <input type="range" id="tileHeight" value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileHeightUp" class="stepper-btn" aria-label="Increase height">▲</button>
                 <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
@@ -244,19 +247,6 @@
               <option value="2">4×</option>
               <option value="3">8×</option>
               <option value="4">16×</option>
-            </select>
-
-            <!-- Grid Zoom dropdown -->
-            <label class="ctrl-label" for="gridZoomSelect">Grid Zoom</label>
-            <select id="gridZoomSelect" class="ctrl-select">
-              <option value="0.25">25%</option>
-              <option value="0.5">50%</option>
-              <option value="0.75">75%</option>
-              <option value="1" selected>100%</option>
-              <option value="1.25">125%</option>
-              <option value="1.5">150%</option>
-              <option value="1.75">175%</option>
-              <option value="2">200%</option>
             </select>
 
             <div class="canvas-controls-divider"></div>
@@ -292,7 +282,7 @@
         <aside class="preview-panel" aria-label="Pattern preview">
           <!-- Preview header -->
           <div class="preview-header">
-            <button id="hidePreviewBtn" class="preview-hide-btn" title="Hide preview" aria-label="Hide preview">‹</button>
+            <button id="hidePreviewBtn" class="preview-hide-btn" title="Hide preview" aria-label="Hide preview">›</button>
             <span class="panel-title">Preview</span>
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview" aria-label="Float preview">⤢</button>
             <button id="dockPreviewBtn" class="preview-float-btn" title="Dock preview" aria-label="Dock preview" hidden>⤡</button>
@@ -329,7 +319,7 @@
         </aside>
 
         <!-- Show-preview button (visible when preview is collapsed) -->
-        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">›</button>
+        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">‹</button>
 
         <!-- Toolbar resize handle (left edge of preview sidebar) -->
         <div id="toolbarResizeHandle" class="resize-handle toolbar-resize-handle" role="separator" aria-label="Resize toolbar" style="display:none"></div>

@@ -45,8 +45,26 @@ export function createDrawingTools(options) {
         }
         points.forEach((p) => setIfAllowed(p.x, p.y, true, selection));
     }
-    /** 5-point star using the given radius (= size), respects selection constraint */
-    function drawStar(cx, cy, r, selection) {
+    /** Shape tool: draws star or isometric cube */
+    function drawShape(type, cx, cy, r, selection) {
+        if (type === "cube") {
+            const h = r;
+            const w = Math.round(r * 1.732); // approx sqrt(3)
+            // Top face
+            drawLine(cx, cy - h, cx + w, cy - h / 2, selection);
+            drawLine(cx + w, cy - h / 2, cx, cy, selection);
+            drawLine(cx, cy, cx - w, cy - h / 2, selection);
+            drawLine(cx - w, cy - h / 2, cx, cy - h, selection);
+            // Bottom edges
+            drawLine(cx - w, cy - h / 2, cx - w, cy + h / 2, selection);
+            drawLine(cx + w, cy - h / 2, cx + w, cy + h / 2, selection);
+            drawLine(cx - w, cy + h / 2, cx, cy + h, selection);
+            drawLine(cx + w, cy + h / 2, cx, cy + h, selection);
+            // Center vertical
+            drawLine(cx, cy, cx, cy + h, selection);
+            return;
+        }
+        // Default: Star
         const pts = [];
         for (let i = 0; i < 5; i++) {
             const angle = ((Math.PI * 2) / 5) * i - Math.PI / 2;
@@ -107,15 +125,17 @@ export function createDrawingTools(options) {
             toApply.push([x, y]);
             stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
         }
+        const anchorParity = (sx + sy) % 2;
         toApply.forEach(([x, y]) => {
-            // Checkerboard: set if (x+y) is even
-            setCellActive(x, y, (x + y) % 2 === 0);
+            // Checkerboard aligned with click anchor
+            setCellActive(x, y, (x + y) % 2 === anchorParity);
         });
     }
     /** Fill an explicit selection set with checkerboard pattern */
     function shadeSelection(selection) {
         selection.forEach((key) => {
             const [xs, ys] = key.split(",").map(Number);
+            // Without an anchor, just use even parity
             setCellActive(xs, ys, (xs + ys) % 2 === 0);
         });
     }
@@ -126,5 +146,12 @@ export function createDrawingTools(options) {
             setCellActive(xs, ys, !isCellActive(xs, ys));
         });
     }
-    return { drawLine, drawCircle, drawStar, floodFill, floodShade, shadeSelection, invertSelection };
+    /** Clear all pixels within an explicit selection set */
+    function clearSelectionPixels(selection) {
+        selection.forEach((key) => {
+            const [xs, ys] = key.split(",").map(Number);
+            setCellActive(xs, ys, false);
+        });
+    }
+    return { drawLine, drawCircle, drawShape, floodFill, floodShade, shadeSelection, invertSelection, clearSelection: clearSelectionPixels };
 }

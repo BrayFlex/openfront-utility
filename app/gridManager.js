@@ -2,7 +2,7 @@ import { getCircleCells } from "./circleGeometry.js";
 import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, } from "./patternTransforms.js";
 // ─── Implementation ───────────────────────────────────────────────────────────
 export function createGridManager(options) {
-    const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, drawingTools: initialDrawingTools, onPatternChange, } = options;
+    const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, clipboard, drawingTools: initialDrawingTools, onPatternChange, } = options;
     // ── State ─────────────────────────────────────────────────────────────────
     let drawingTools = initialDrawingTools !== null && initialDrawingTools !== void 0 ? initialDrawingTools : null;
     let tileWidth = parseInt(tileWidthInput.value);
@@ -27,8 +27,6 @@ export function createGridManager(options) {
     let selectAreaEnd = null;
     let selectAreaAdding = true; // true = add to sel, false = remove
     let selectAreaPreview = new Set(); // visual rect preview
-    // For Select Custom tool: track drag add/remove mode
-    let selectCustomMode = null;
     // Paste preview
     let pastePreviewCells = [];
     let pastePreviewOrigin = null;
@@ -84,7 +82,6 @@ export function createGridManager(options) {
         selectAreaStart = null;
         selectAreaEnd = null;
         selectAreaPreview.clear();
-        selectCustomMode = null;
         renderSelection();
     };
     const hasSelection = () => activeSelection.size > 0;
@@ -117,7 +114,6 @@ export function createGridManager(options) {
                 : getCircleCells(center, Math.max(0, radius), false, tileWidth, tileHeight);
         circlePreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.add("circle-hover"); });
     };
-    // ── Star preview ──────────────────────────────────────────────────────────
     const clearStarPreview = () => {
         starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("star-hover"); });
         starPreviewCells = [];
@@ -225,6 +221,7 @@ export function createGridManager(options) {
             const ty = anchorY + (c.y - entry.originY);
             setCellActive(tx, ty, c.active);
         }
+        clearSelection();
         onPatternChange();
     };
     // ── Cut ───────────────────────────────────────────────────────────────────
@@ -236,6 +233,7 @@ export function createGridManager(options) {
             const [x, y] = k.split(",").map(Number);
             setCellActive(x, y, false);
         });
+        clearSelection();
         onPatternChange();
     };
     // ── Copy ──────────────────────────────────────────────────────────────────
@@ -266,6 +264,7 @@ export function createGridManager(options) {
             originX: minX,
             originY: minY,
         });
+        clearSelection();
     };
     // ── Invert ────────────────────────────────────────────────────────────────
     const invertGrid = () => {
@@ -318,7 +317,21 @@ export function createGridManager(options) {
             }
         }
     };
-    // ── Mouse state ───────────────────────────────────────────────────────────
+    // ── Mouse & Key state ─────────────────────────────────────────────────────
+    let isShiftDown = false;
+    document.addEventListener("keydown", (e) => {
+        if (e.key === "Shift")
+            isShiftDown = true;
+    });
+    document.addEventListener("keyup", (e) => {
+        if (e.key === "Shift") {
+            isShiftDown = false;
+            // if tool is overridden via shift, release drag
+            if (selectAreaStart && !isMouseDown) {
+                // handle release
+            }
+        }
+    });
     document.body.addEventListener("mousedown", () => (isMouseDown = true));
     document.body.addEventListener("mouseup", () => {
         isMouseDown = false;
@@ -335,11 +348,7 @@ export function createGridManager(options) {
             selectAreaStart = null;
             selectAreaEnd = null;
             selectAreaPreview.clear();
-            selectCustomMode = null;
             renderSelection();
-        }
-        if (toolState.getCurrentTool() === "selectCustom") {
-            selectCustomMode = null;
         }
     });
     gridDiv.addEventListener("mouseleave", () => {
@@ -424,22 +433,14 @@ export function createGridManager(options) {
                 // Capture x/y in closure (re-assign to avoid stale capture issue)
                 const cx = x, cy = y;
                 cell.onmousedown = () => {
-                    const tool = toolState.getCurrentTool();
+                    const actualTool = toolState.getCurrentTool();
+                    const tool = isShiftDown ? "selectArea" : actualTool;
                     if (tool === "selectArea") {
                         selectAreaStart = { x: cx, y: cy };
                         selectAreaEnd = { x: cx, y: cy };
                         // If starting on a selected cell, we're removing
                         selectAreaAdding = !activeSelection.has(key(cx, cy));
                         selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
-                        renderSelection();
-                        return;
-                    }
-                    if (tool === "selectCustom") {
-                        selectCustomMode = activeSelection.has(key(cx, cy)) ? "remove" : "add";
-                        if (selectCustomMode === "add")
-                            activeSelection.add(key(cx, cy));
-                        else
-                            activeSelection.delete(key(cx, cy));
                         renderSelection();
                         return;
                     }
@@ -482,9 +483,9 @@ export function createGridManager(options) {
                         }
                         onPatternChange();
                     }
-                    else if (tool === "star") {
-                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawStar(cx, cy, toolState.getStarRadius(), sel);
-                        clearStarPreview();
+                    else if (tool === "shape") {
+                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), sel);
+                        clearStarPreview(); // using same dim overlay for shape if added later
                         onPatternChange();
                     }
                     else if (tool === "circle") {
@@ -497,19 +498,12 @@ export function createGridManager(options) {
                     }
                 };
                 cell.onmouseover = () => {
-                    const tool = toolState.getCurrentTool();
+                    const actualTool = toolState.getCurrentTool();
+                    const tool = isShiftDown ? "selectArea" : actualTool;
                     const sel = activeSelection.size > 0 ? activeSelection : undefined;
                     if (tool === "selectArea" && isMouseDown && selectAreaStart) {
                         selectAreaEnd = { x: cx, y: cy };
                         selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
-                        renderSelection();
-                        return;
-                    }
-                    if (tool === "selectCustom" && isMouseDown && selectCustomMode) {
-                        if (selectCustomMode === "add")
-                            activeSelection.add(key(cx, cy));
-                        else
-                            activeSelection.delete(key(cx, cy));
                         renderSelection();
                         return;
                     }
@@ -532,8 +526,10 @@ export function createGridManager(options) {
                         previewLine(cx, cy);
                         return;
                     }
-                    if (!isMouseDown && tool === "paste") {
-                        // paste preview handled externally via app.ts clipboard ref
+                    if (!isMouseDown && tool === "paste" && (clipboard === null || clipboard === void 0 ? void 0 : clipboard.hasContent())) {
+                        const entry = clipboard.paste();
+                        if (entry)
+                            showPastePreview(cx, cy, entry);
                     }
                 };
             }
@@ -565,15 +561,14 @@ export function createGridManager(options) {
             setLineStart(null);
         if (tool !== "circle")
             clearCirclePreview();
-        if (tool !== "star")
+        if (tool !== "shape")
             clearStarPreview();
         if (tool !== "paste")
             clearPastePreview();
-        if (tool !== "selectArea" && tool !== "selectCustom") {
+        if (tool !== "selectArea") {
             selectAreaStart = null;
             selectAreaEnd = null;
             selectAreaPreview.clear();
-            selectCustomMode = null;
         }
     });
     // ── Clear grid ────────────────────────────────────────────────────────────
@@ -582,10 +577,14 @@ export function createGridManager(options) {
         clearCirclePreview();
         clearStarPreview();
         clearPastePreview();
-        clearSelection();
-        for (let y = 0; y < tileHeight; y++) {
-            for (let x = 0; x < tileWidth; x++) {
-                setCellActive(x, y, false);
+        if (hasSelection() && drawingTools) {
+            drawingTools.clearSelection(activeSelection);
+        }
+        else {
+            for (let y = 0; y < tileHeight; y++) {
+                for (let x = 0; x < tileWidth; x++) {
+                    setCellActive(x, y, false);
+                }
             }
         }
         onPatternChange();
