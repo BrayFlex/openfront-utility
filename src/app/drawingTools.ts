@@ -3,11 +3,12 @@ import { getCircleCells } from "./circleGeometry.js";
 export type DrawingTools = {
   drawLine: (x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) => void;
   drawCircle: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
-  drawStar: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
+  drawShape: (type: string, cx: number, cy: number, r: number, selection?: Set<string>) => void;
   floodFill: (sx: number, sy: number, selection?: Set<string>) => void;
   floodShade: (sx: number, sy: number, selection?: Set<string>) => void;
   shadeSelection: (selection: Set<string>) => void;
   invertSelection: (selection: Set<string>) => void;
+  clearSelection: (selection: Set<string>) => void;
 };
 
 type DrawingOptions = {
@@ -59,8 +60,27 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     points.forEach((p) => setIfAllowed(p.x, p.y, true, selection));
   }
 
-  /** 5-point star using the given radius (= size), respects selection constraint */
-  function drawStar(cx: number, cy: number, r: number, selection?: Set<string>) {
+  /** Shape tool: draws star or isometric cube */
+  function drawShape(type: string, cx: number, cy: number, r: number, selection?: Set<string>) {
+    if (type === "cube") {
+      const h = r;
+      const w = Math.round(r * 1.732); // approx sqrt(3)
+      // Top face
+      drawLine(cx, cy - h, cx + w, cy - h/2, selection);
+      drawLine(cx + w, cy - h/2, cx, cy, selection);
+      drawLine(cx, cy, cx - w, cy - h/2, selection);
+      drawLine(cx - w, cy - h/2, cx, cy - h, selection);
+      // Bottom edges
+      drawLine(cx - w, cy - h/2, cx - w, cy + h/2, selection);
+      drawLine(cx + w, cy - h/2, cx + w, cy + h/2, selection);
+      drawLine(cx - w, cy + h/2, cx, cy + h, selection);
+      drawLine(cx + w, cy + h/2, cx, cy + h, selection);
+      // Center vertical
+      drawLine(cx, cy, cx, cy + h, selection);
+      return;
+    }
+    
+    // Default: Star
     const pts: [number, number][] = [];
     for (let i = 0; i < 5; i++) {
       const angle = ((Math.PI * 2) / 5) * i - Math.PI / 2;
@@ -113,9 +133,10 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
       toApply.push([x, y]);
       stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
     }
+    const anchorParity = (sx + sy) % 2;
     toApply.forEach(([x, y]) => {
-      // Checkerboard: set if (x+y) is even
-      setCellActive(x, y, (x + y) % 2 === 0);
+      // Checkerboard aligned with click anchor
+      setCellActive(x, y, (x + y) % 2 === anchorParity);
     });
   }
 
@@ -123,6 +144,7 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
   function shadeSelection(selection: Set<string>) {
     selection.forEach((key) => {
       const [xs, ys] = key.split(",").map(Number);
+      // Without an anchor, just use even parity
       setCellActive(xs, ys, (xs + ys) % 2 === 0);
     });
   }
@@ -135,5 +157,13 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     });
   }
 
-  return { drawLine, drawCircle, drawStar, floodFill, floodShade, shadeSelection, invertSelection };
+  /** Clear all pixels within an explicit selection set */
+  function clearSelectionPixels(selection: Set<string>) {
+    selection.forEach((key) => {
+      const [xs, ys] = key.split(",").map(Number);
+      setCellActive(xs, ys, false);
+    });
+  }
+
+  return { drawLine, drawCircle, drawShape, floodFill, floodShade, shadeSelection, invertSelection, clearSelection: clearSelectionPixels };
 }

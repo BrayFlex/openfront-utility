@@ -10,7 +10,7 @@
 .workspace-split {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 8px minmax(220px, 320px);
+  grid-template-columns: minmax(0, 2fr) 8px minmax(220px, 1fr);
   min-height: 0;
 }
 
