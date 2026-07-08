@@ -2,7 +2,7 @@ import { createClipboardManager } from "./app/clipboard.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
-import { buildDevStorageOutput, buildDiscordOutput, buildPreviewLink, } from "./app/exportOutputs.js";
+import { buildDiscordOutput, buildPreviewLink, } from "./app/exportOutputs.js";
 import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
@@ -71,7 +71,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const copyJsonBtn = document.getElementById("copyJsonBtn");
     const copyDiscordBtn = document.getElementById("copyDiscordBtn");
     const copyPreviewBtn = document.getElementById("copyPreviewBtn");
-    const copyConsoleBtn = document.getElementById("copyConsoleBtn");
     // Preview panel
     const previewCanvas = document.getElementById("preview");
     const previewPrimaryColor = document.getElementById("previewPrimaryColor");
@@ -407,10 +406,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const b64 = getOutputBase64();
         const link = buildPreviewLink(window.location.href, b64, previewPrimaryColor.value, previewSecondaryColor.value);
         copyText(link);
-    });
-    copyConsoleBtn.addEventListener("click", () => {
-        const b64 = getOutputBase64();
-        copyText(buildDevStorageOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
     });
     // ── Import ────────────────────────────────────────────────────────────────
     const loadFromBase64 = createPatternLoader({
