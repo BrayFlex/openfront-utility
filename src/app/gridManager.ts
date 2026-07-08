@@ -655,7 +655,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   toolState.subscribeToToolChanges((tool) => {
     if (tool !== "line") setLineStart(null);
     if (tool !== "circle") clearCirclePreview();
-    if (tool !== "star" && tool !== "shape") clearStarPreview();
+    if (tool !== "shape") clearStarPreview();
     if (tool !== "paste") clearPastePreview();
     if (tool !== "selectArea") {
       selectAreaStart = null;
