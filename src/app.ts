@@ -87,7 +87,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const copyJsonBtn = document.getElementById("copyJsonBtn") as HTMLButtonElement;
   const copyDiscordBtn = document.getElementById("copyDiscordBtn") as HTMLButtonElement;
   const copyPreviewBtn = document.getElementById("copyPreviewBtn") as HTMLButtonElement;
-  const copyConsoleBtn = document.getElementById("copyConsoleBtn") as HTMLButtonElement;
 
   // Preview panel
   const previewCanvas = document.getElementById("preview") as HTMLCanvasElement;
@@ -444,10 +443,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const b64 = getOutputBase64();
     const link = buildPreviewLink(window.location.href, b64, previewPrimaryColor.value, previewSecondaryColor.value);
     copyText(link);
-  });
-  copyConsoleBtn.addEventListener("click", () => {
-    const b64 = getOutputBase64();
-    copyText(buildDevStorageOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
   });
 
   // ── Import ────────────────────────────────────────────────────────────────
