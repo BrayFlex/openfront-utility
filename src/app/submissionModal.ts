@@ -91,7 +91,7 @@ export function initSubmissionModal(options: {
     // Build URL parameters (replace entry.X with actual form fields once known)
     // For now, this is a placeholder structure
     const patternUrl = getPatternUrl();
-    const formUrl = new URL("https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/viewform");
+    const formUrl = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdLM4XkX7nUfBzPP2-HcD3tTNbCP-Mxkh9ZlIdqFrMxvgsMYw/viewform");
     formUrl.searchParams.set("usp", "pp_url");
     formUrl.searchParams.set("entry.1", playerName);
     formUrl.searchParams.set("entry.2", playerId);
