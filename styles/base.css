@@ -6,12 +6,26 @@
   --muted: #5d6870;
   --border: #cfd6da;
   --border-strong: #9aa8b0;
-  --accent: #0b6f6d;
-  --accent-dark: #064f4e;
-  --accent-light: #e9f4f3;
+  --accent: #0c7cc9;
+  --accent-dark: #095a94;
+  --accent-light: #e6f2fa;
   --danger: #9a3412;
   --top-bar-height: 56px;
   --canvas-controls-height: 42px;
+}
+
+:root[data-theme="dark"] {
+  --bg: #1a1a1a;
+  --surface: #242424;
+  --surface-muted: #303030;
+  --text: #e0e0e0;
+  --muted: #9aa8b0;
+  --border: #404040;
+  --border-strong: #5a5a5a;
+  --accent: #0c7cc9;
+  --accent-dark: #379ee6;
+  --accent-light: #074775;
+  --danger: #e25a36;
 }
 
 /* ── Reset ──────────────────────────────────────────────────────────────── */
@@ -93,8 +107,17 @@ input[type="color"] {
   padding: 2px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--surface);
+  color: var(--text);
   cursor: pointer;
+}
+
+input[type="color"]::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+input[type="color"]::-webkit-color-swatch {
+  border: none;
+  border-radius: 4px;
 }
 
 textarea {

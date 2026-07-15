@@ -1,5 +1,5 @@
 import { getCircleCells } from "./circleGeometry.js";
-import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, } from "./patternTransforms.js";
+import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, flipSelectionH, flipSelectionV, } from "./patternTransforms.js";
 // ─── Implementation ───────────────────────────────────────────────────────────
 export function createGridManager(options) {
     const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, clipboard, drawingTools: initialDrawingTools, onPatternChange, } = options;
@@ -117,6 +117,23 @@ export function createGridManager(options) {
     const clearStarPreview = () => {
         starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("star-hover"); });
         starPreviewCells = [];
+    };
+    const previewShape = (type, center, radius) => {
+        clearStarPreview();
+        if (!drawingTools)
+            return;
+        const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, activeSelection.size > 0 ? activeSelection : undefined);
+        // Deduplicate and filter bounds
+        const unique = new Set();
+        pts.forEach(p => {
+            if (isInBounds(p.x, p.y))
+                unique.add(`${p.x},${p.y}`);
+        });
+        starPreviewCells = Array.from(unique).map(k => {
+            const [x, y] = k.split(',').map(Number);
+            return { x, y };
+        });
+        starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.add("star-hover"); });
     };
     // ── Line preview ──────────────────────────────────────────────────────────
     const clearLinePreview = () => {
@@ -308,6 +325,19 @@ export function createGridManager(options) {
         renderSelection();
         onPatternChange();
     };
+    // ── Flip ──────────────────────────────────────────────────────────────────
+    const flipDir = (direction) => {
+        if (!hasSelection())
+            return;
+        const { pattern: next, flippedSelection } = direction === "h"
+            ? flipSelectionH(patternState, activeSelection)
+            : flipSelectionV(patternState, activeSelection);
+        patternState = next;
+        activeSelection = flippedSelection;
+        applyPattern(patternState);
+        renderSelection();
+        onPatternChange();
+    };
     // ── Pattern application ───────────────────────────────────────────────────
     const applyPattern = (next) => {
         var _a;
@@ -336,8 +366,8 @@ export function createGridManager(options) {
     document.body.addEventListener("mouseup", () => {
         isMouseDown = false;
         penToggleState = null;
-        // Commit Select Area drag
-        if (toolState.getCurrentTool() === "selectArea" && selectAreaStart && selectAreaEnd) {
+        // Commit Select Area drag regardless of current tool if we started one
+        if (selectAreaStart && selectAreaEnd) {
             const rect = buildRectSet(selectAreaStart, selectAreaEnd);
             if (selectAreaAdding) {
                 rect.forEach((k) => activeSelection.add(k));
@@ -383,16 +413,19 @@ export function createGridManager(options) {
         }
         currentWidth = tileWidth;
         currentHeight = tileHeight;
-        // Guide columns/rows
-        let centerV = [];
-        let centerH = [];
+        let centerCross = gridDiv.querySelector('.center-cross-overlay');
+        if (!centerCross) {
+            centerCross = document.createElement("div");
+            centerCross.className = "center-cross-overlay";
+            gridDiv.appendChild(centerCross);
+        }
         if (guideState.isCenterEnabled()) {
-            centerV = tileWidth % 2 === 0
-                ? [tileWidth / 2]
-                : [(tileWidth - 1) / 2, (tileWidth - 1) / 2 + 1];
-            centerH = tileHeight % 2 === 0
-                ? [tileHeight / 2]
-                : [(tileHeight - 1) / 2, (tileHeight - 1) / 2 + 1];
+            centerCross.style.display = "block";
+            centerCross.style.top = "50%";
+            centerCross.style.left = "50%";
+        }
+        else {
+            centerCross.style.display = "none";
         }
         let lastCell;
         for (let y = 0; y < tileHeight; y++) {
@@ -422,12 +455,6 @@ export function createGridManager(options) {
                         cell.classList.add("guide-v");
                     if (y !== 0 && y % 5 === 0)
                         cell.classList.add("guide-h");
-                }
-                if (guideState.isCenterEnabled()) {
-                    if (centerV.indexOf(x) !== -1)
-                        cell.classList.add("center-v");
-                    if (centerH.indexOf(y) !== -1)
-                        cell.classList.add("center-h");
                 }
                 // ── Event handlers ─────────────────────────────────────────────
                 // Capture x/y in closure (re-assign to avoid stale capture issue)
@@ -516,6 +543,10 @@ export function createGridManager(options) {
                     }
                     if (!isMouseDown && tool === "circle") {
                         previewCircle({ x: cx, y: cy }, toolState.getCircleRadius());
+                        return;
+                    }
+                    if (!isMouseDown && tool === "shape") {
+                        previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius());
                         return;
                     }
                     if (!isMouseDown && tool === "line" && lineStart) {
@@ -610,5 +641,6 @@ export function createGridManager(options) {
         paste,
         shiftDir,
         rotateDir,
+        flipDir,
     };
 }

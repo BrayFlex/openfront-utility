@@ -125,3 +125,71 @@ export function rotateSelection(pattern, selection, direction) {
     });
     return { pattern: next, rotatedSelection: newSel };
 }
+/** Flip selected pixels horizontally (mirror left/right within bounding box). */
+export function flipSelectionH(pattern, selection) {
+    var _a, _b;
+    if (selection.size === 0)
+        return { pattern, flippedSelection: selection };
+    const height = pattern.length;
+    const width = (_b = (_a = pattern[0]) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0;
+    // Compute bounding box
+    let minX = Infinity, maxX = -Infinity;
+    const cells = [];
+    selection.forEach((key) => {
+        const [x, y] = key.split(",").map(Number);
+        cells.push({ x, y });
+        if (x < minX)
+            minX = x;
+        if (x > maxX)
+            maxX = x;
+    });
+    const next = pattern.map((row) => row.slice());
+    const newSel = new Set();
+    // Clear source positions
+    cells.forEach(({ x, y }) => { next[y][x] = 0; });
+    // Place at mirrored positions
+    cells.forEach(({ x, y }) => {
+        var _a;
+        const nx = minX + (maxX - x);
+        if (nx >= 0 && nx < width && y >= 0 && y < height) {
+            if (((_a = pattern[y]) === null || _a === void 0 ? void 0 : _a[x]) === 1)
+                next[y][nx] = 1;
+            newSel.add(`${nx},${y}`);
+        }
+    });
+    return { pattern: next, flippedSelection: newSel };
+}
+/** Flip selected pixels vertically (mirror top/bottom within bounding box). */
+export function flipSelectionV(pattern, selection) {
+    var _a, _b;
+    if (selection.size === 0)
+        return { pattern, flippedSelection: selection };
+    const height = pattern.length;
+    const width = (_b = (_a = pattern[0]) === null || _a === void 0 ? void 0 : _a.length) !== null && _b !== void 0 ? _b : 0;
+    // Compute bounding box
+    let minY = Infinity, maxY = -Infinity;
+    const cells = [];
+    selection.forEach((key) => {
+        const [x, y] = key.split(",").map(Number);
+        cells.push({ x, y });
+        if (y < minY)
+            minY = y;
+        if (y > maxY)
+            maxY = y;
+    });
+    const next = pattern.map((row) => row.slice());
+    const newSel = new Set();
+    // Clear source positions
+    cells.forEach(({ x, y }) => { next[y][x] = 0; });
+    // Place at mirrored positions
+    cells.forEach(({ x, y }) => {
+        var _a;
+        const ny = minY + (maxY - y);
+        if (ny >= 0 && ny < height && x >= 0 && x < width) {
+            if (((_a = pattern[y]) === null || _a === void 0 ? void 0 : _a[x]) === 1)
+                next[ny][x] = 1;
+            newSel.add(`${x},${ny}`);
+        }
+    });
+    return { pattern: next, flippedSelection: newSel };
+}

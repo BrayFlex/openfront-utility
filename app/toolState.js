@@ -7,30 +7,41 @@ export function createToolState(options) {
     const { toolButtons, sizeSlider, sizeOutput, sizeGroup } = options;
     const shapeTypeSelect = document.getElementById("shapeType");
     let currentTool = "pencil";
+    let previousTool = "pencil";
+    let lastNonSelectTool = "pencil";
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
     const updateSizeSlider = (tool) => {
-        var _a;
+        var _a, _b;
         const config = TOOL_SIZE_CONFIGS[tool];
         if (!config) {
-            sizeGroup.hidden = true;
+            if (sizeGroup)
+                sizeGroup.hidden = true;
             return;
         }
-        sizeGroup.hidden = false;
-        sizeSlider.min = String(config.min);
-        sizeSlider.max = String(config.max);
-        sizeSlider.step = String(config.step);
-        // Restore remembered size or use default
-        sizeSlider.value = String((_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue);
-        sizeOutput.textContent = sizeSlider.value;
+        if (sizeGroup)
+            sizeGroup.hidden = false;
+        if (sizeSlider) {
+            sizeSlider.min = String(config.min);
+            sizeSlider.max = String(config.max);
+            sizeSlider.step = String(config.step);
+            // Restore remembered size or use default
+            sizeSlider.value = String((_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue);
+        }
+        if (sizeOutput)
+            sizeOutput.textContent = (_b = sizeSlider === null || sizeSlider === void 0 ? void 0 : sizeSlider.value) !== null && _b !== void 0 ? _b : "1";
     };
     function selectTool(tool) {
         // Save current size before switching
         if (TOOL_SIZE_CONFIGS[currentTool]) {
             rememberedSizes[currentTool] = parseInt(sizeSlider.value);
         }
+        previousTool = currentTool;
         currentTool = tool;
+        if (tool !== "selectArea") {
+            lastNonSelectTool = tool;
+        }
         toolButtons.forEach((btn) => {
             btn.classList.toggle("selected", btn.dataset.tool === tool);
         });
@@ -46,17 +57,22 @@ export function createToolState(options) {
         });
     });
     // Wire up size slider
-    sizeSlider.addEventListener("input", () => {
-        sizeOutput.textContent = sizeSlider.value;
-        if (TOOL_SIZE_CONFIGS[currentTool]) {
-            rememberedSizes[currentTool] = parseInt(sizeSlider.value);
-        }
-    });
+    if (sizeSlider) {
+        sizeSlider.addEventListener("input", () => {
+            if (sizeOutput)
+                sizeOutput.textContent = sizeSlider.value;
+            if (TOOL_SIZE_CONFIGS[currentTool]) {
+                rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+            }
+        });
+    }
     // Initialize
     selectTool("pencil");
     return {
         getCurrentTool: () => currentTool,
+        getPreviousTool: () => previousTool,
         selectTool,
+        restoreTool: () => selectTool(lastNonSelectTool),
         getPencilSize: () => {
             var _a;
             if (currentTool === "pencil")

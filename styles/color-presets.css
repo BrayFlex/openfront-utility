@@ -25,8 +25,8 @@
 }
 
 .color-preset-container {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
   gap: 6px;
   max-height: 230px;
   overflow-y: auto;
@@ -52,14 +52,14 @@
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
-  background: #ffffff;
+  background: var(--surface);
   color: var(--text);
   font-size: 12px;
 }
 
 .color-preset-item.selected {
   border-color: var(--accent);
-  background: #e9f4f3;
+  background: var(--accent-light);
 }
 
 .color-preset-swatches {

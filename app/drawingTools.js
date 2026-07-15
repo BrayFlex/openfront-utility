@@ -6,10 +6,12 @@ function isInSelection(x, y, selection) {
 }
 export function createDrawingTools(options) {
     const { getTileWidth, getTileHeight, isCellActive, setCellActive } = options;
+    // Allow intercepting setIfAllowed for previews
+    let currentSetCellActive = setCellActive;
     function setIfAllowed(x, y, active, selection) {
         if (!isInSelection(x, y, selection))
             return;
-        setCellActive(x, y, active);
+        currentSetCellActive(x, y, active);
     }
     /** Bresenham line, respects selection constraint */
     function drawLine(x0, y0, x1, y1, selection) {
@@ -74,6 +76,14 @@ export function createDrawingTools(options) {
             drawLine(cx, cy, pts[i][0], pts[i][1], selection);
             drawLine(pts[i][0], pts[i][1], pts[(i + 2) % 5][0], pts[(i + 2) % 5][1], selection);
         }
+    }
+    function getShapeCells(type, cx, cy, r, selection) {
+        const pts = [];
+        const originalSet = currentSetCellActive;
+        currentSetCellActive = (x, y) => pts.push({ x, y });
+        drawShape(type, cx, cy, r, selection);
+        currentSetCellActive = originalSet;
+        return pts;
     }
     /** Flood fill from (sx,sy) — respects selection constraint */
     function floodFill(sx, sy, selection) {
@@ -153,5 +163,15 @@ export function createDrawingTools(options) {
             setCellActive(xs, ys, false);
         });
     }
-    return { drawLine, drawCircle, drawShape, floodFill, floodShade, shadeSelection, invertSelection, clearSelection: clearSelectionPixels };
+    return {
+        drawLine,
+        drawCircle,
+        drawShape,
+        floodFill,
+        floodShade,
+        shadeSelection,
+        invertSelection,
+        clearSelection: clearSelectionPixels,
+        getShapeCells
+    };
 }
