@@ -35,33 +35,30 @@
         <div class="tool-strip" id="toolbox" role="toolbar" aria-label="Drawing tools">
 
           <!-- Drawing tools & Size -->
-          <div class="tool-strip-group" style="flex-direction: column; gap: 4px;">
-            <div style="display: flex; gap: 4px;">
-              <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
-                <span class="tool-icon">✏</span>
-                <span class="tool-label">Pencil</span>
-              </button>
-              <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
-                <span class="tool-icon">○</span>
-                <span class="tool-label">Circle</span>
-              </button>
-              <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
-                <select id="shapeType" class="ctrl-select" onclick="event.stopPropagation()" style="font-size: 10px; padding: 0 14px 0 2px; height: 16px; margin-bottom: 2px; cursor: pointer; background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 2px;">
-                  <option value="star" selected>Star</option>
-                  <option value="cube">Cube</option>
-                </select>
-                <span class="tool-label">Shape</span>
-              </button>
-              <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
-                <span class="tool-icon">╱</span>
-                <span class="tool-label">Line</span>
-              </button>
-            </div>
-              <button id="toolSizeBtn" class="tool-btn" title="Size">
-                <span class="tool-icon">⚯</span>
-                <span class="tool-label">Size</span>
-              </button>
-            </div>
+          <div class="tool-strip-group">
+            <button id="toolSizeBtn" class="tool-btn" title="Size" style="width: auto; padding: 0 6px; display: flex; flex-direction: row; align-items: center; gap: 4px;">
+              <span class="tool-icon" style="font-size: 16px; transform: rotate(45deg);">⚲</span>
+              <span style="font-size: 10px; color: var(--muted);">▼</span>
+            </button>
+            <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
+              <span class="tool-icon">✏</span>
+              <span class="tool-label">Pencil</span>
+            </button>
+            <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
+              <span class="tool-icon">○</span>
+              <span class="tool-label">Circle</span>
+            </button>
+            <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
+              <select id="shapeType" class="ctrl-select" onclick="event.stopPropagation()" style="font-size: 10px; padding: 0 14px 0 2px; height: 16px; margin-bottom: 2px; cursor: pointer; background-color: var(--surface-muted); color: var(--text); border: 1px solid var(--border); border-radius: 2px;">
+                <option value="star" selected>Star</option>
+                <option value="cube">Cube</option>
+              </select>
+              <span class="tool-label">Shape</span>
+            </button>
+            <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
+              <span class="tool-icon">╱</span>
+              <span class="tool-label">Line</span>
+            </button>
           </div>
 
           <div class="tool-strip-separator"></div>
