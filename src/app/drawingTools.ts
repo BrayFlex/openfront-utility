@@ -9,6 +9,7 @@ export type DrawingTools = {
   shadeSelection: (selection: Set<string>) => void;
   invertSelection: (selection: Set<string>) => void;
   clearSelection: (selection: Set<string>) => void;
+  getShapeCells: (type: string, cx: number, cy: number, r: number, selection?: Set<string>) => {x: number, y: number}[];
 };
 
 type DrawingOptions = {
@@ -26,9 +27,12 @@ function isInSelection(x: number, y: number, selection: Set<string> | undefined)
 export function createDrawingTools(options: DrawingOptions): DrawingTools {
   const { getTileWidth, getTileHeight, isCellActive, setCellActive } = options;
 
+  // Allow intercepting setIfAllowed for previews
+  let currentSetCellActive = setCellActive;
+
   function setIfAllowed(x: number, y: number, active: boolean, selection: Set<string> | undefined) {
     if (!isInSelection(x, y, selection)) return;
-    setCellActive(x, y, active);
+    currentSetCellActive(x, y, active);
   }
 
   /** Bresenham line, respects selection constraint */
@@ -90,6 +94,15 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
       drawLine(cx, cy, pts[i][0], pts[i][1], selection);
       drawLine(pts[i][0], pts[i][1], pts[(i + 2) % 5][0], pts[(i + 2) % 5][1], selection);
     }
+  }
+
+  function getShapeCells(type: string, cx: number, cy: number, r: number, selection?: Set<string>): {x: number, y: number}[] {
+    const pts: {x: number, y: number}[] = [];
+    const originalSet = currentSetCellActive;
+    currentSetCellActive = (x, y) => pts.push({x, y});
+    drawShape(type, cx, cy, r, selection);
+    currentSetCellActive = originalSet;
+    return pts;
   }
 
   /** Flood fill from (sx,sy) — respects selection constraint */
@@ -165,5 +178,15 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     });
   }
 
-  return { drawLine, drawCircle, drawShape, floodFill, floodShade, shadeSelection, invertSelection, clearSelection: clearSelectionPixels };
+  return { 
+    drawLine, 
+    drawCircle, 
+    drawShape, 
+    floodFill, 
+    floodShade, 
+    shadeSelection, 
+    invertSelection, 
+    clearSelection: clearSelectionPixels,
+    getShapeCells
+  };
 }

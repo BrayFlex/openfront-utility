@@ -93,10 +93,10 @@ export function initSubmissionModal(options: {
     const patternUrl = getPatternUrl();
     const formUrl = new URL("https://docs.google.com/forms/d/e/1FAIpQLSdLM4XkX7nUfBzPP2-HcD3tTNbCP-Mxkh9ZlIdqFrMxvgsMYw/viewform");
     formUrl.searchParams.set("usp", "pp_url");
-    formUrl.searchParams.set("entry.1", playerName);
-    formUrl.searchParams.set("entry.2", playerId);
-    formUrl.searchParams.set("entry.3", patternName);
-    formUrl.searchParams.set("entry.4", patternUrl);
+    formUrl.searchParams.set("entry.1988213389", playerName);
+    formUrl.searchParams.set("entry.1054945945", playerId);
+    formUrl.searchParams.set("entry.625728051", patternName);
+    formUrl.searchParams.set("entry.907386368", patternUrl);
 
     window.open(formUrl.toString(), "_blank");
     close();

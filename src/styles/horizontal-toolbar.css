@@ -31,6 +31,48 @@
   line-height: 1;
 }
 
+/* Theme Toggle */
+.theme-toggle {
+  position: relative;
+  display: inline-block;
+  width: 32px;
+  height: 18px;
+  margin-top: 4px;
+}
+.theme-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.theme-toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--border-strong);
+  transition: .2s;
+  border-radius: 18px;
+}
+.theme-toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 12px;
+  width: 12px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: .2s;
+  border-radius: 50%;
+}
+.theme-toggle input:checked + .theme-toggle-slider {
+  background-color: var(--accent);
+}
+.theme-toggle input:checked + .theme-toggle-slider:before {
+  transform: translateX(14px);
+}
+
 /* ── Tool Strip ─────────────────────────────────────────────────────────── */
 .tool-strip {
   display: flex;
@@ -101,7 +143,7 @@
 
 .transform-btns-grid {
   display: grid;
-  grid-template-columns: repeat(3, 28px);
+  grid-template-columns: repeat(4, 28px);
   gap: 2px;
 }
 .transform-btn {
@@ -116,33 +158,37 @@
   color: var(--accent);
 }
 
-/* ── Size Slider ────────────────────────────────────────────────────────── */
-.size-group {
+/* ── Size Popover ───────────────────────────────────────────────────────── */
+.size-popover {
+  position: absolute;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  padding: 12px;
+  z-index: 100;
+}
+.size-popover-content {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
-  width: 72px;
+  gap: 8px;
 }
-.size-group[hidden] { display: none; }
-
-.size-label {
-  font-size: 9px;
-  font-weight: 600;
-  color: var(--muted);
-}
-.size-slider-wrap {
-  width: 100%;
-}
-.size-slider {
-  width: 100%;
+.size-slider.vertical {
+  writing-mode: vertical-lr; /* IE/Edge */
+  direction: rtl; /* Flip direction if needed */
+  appearance: slider-vertical; /* WebKit */
+  width: 16px;
+  height: 120px;
   margin: 0;
-  accent-color: var(--accent);
 }
 .size-output {
   font-size: 11px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
+  background: var(--surface-muted);
+  padding: 2px 6px;
+  border-radius: 4px;
 }
 
 /* ── Export / Import Toggle ─────────────────────────────────────────────── */
