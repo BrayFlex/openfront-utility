@@ -214,6 +214,24 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     starPreviewCells = [];
   };
 
+  const previewShape = (type: string, center: GridPoint, radius: number) => {
+    clearStarPreview();
+    if (!drawingTools) return;
+    const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, activeSelection.size > 0 ? activeSelection : undefined);
+    // Deduplicate and filter bounds
+    const unique = new Set<string>();
+    pts.forEach(p => {
+      if (isInBounds(p.x, p.y)) unique.add(`${p.x},${p.y}`);
+    });
+    starPreviewCells = Array.from(unique).map(k => {
+      const [x, y] = k.split(',').map(Number);
+      return {x, y};
+    });
+    starPreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.add("star-hover")
+    );
+  };
+
   // ── Line preview ──────────────────────────────────────────────────────────
   const clearLinePreview = () => {
     linePreviews.forEach((p) =>
@@ -417,8 +435,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   document.body.addEventListener("mouseup", () => {
     isMouseDown = false;
     penToggleState = null;
-    // Commit Select Area drag
-    if (toolState.getCurrentTool() === "selectArea" && selectAreaStart && selectAreaEnd) {
+    // Commit Select Area drag regardless of current tool if we started one
+    if (selectAreaStart && selectAreaEnd) {
       const rect = buildRectSet(selectAreaStart, selectAreaEnd);
       if (selectAreaAdding) {
         rect.forEach((k) => activeSelection.add(k));
@@ -472,16 +490,19 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     currentWidth = tileWidth;
     currentHeight = tileHeight;
 
-    // Guide columns/rows
-    let centerV: number[] = [];
-    let centerH: number[] = [];
+    let centerCross = gridDiv.querySelector('.center-cross-overlay') as HTMLDivElement | null;
+    if (!centerCross) {
+      centerCross = document.createElement("div");
+      centerCross.className = "center-cross-overlay";
+      gridDiv.appendChild(centerCross);
+    }
+    
     if (guideState.isCenterEnabled()) {
-      centerV = tileWidth % 2 === 0
-        ? [tileWidth / 2]
-        : [(tileWidth - 1) / 2, (tileWidth - 1) / 2 + 1];
-      centerH = tileHeight % 2 === 0
-        ? [tileHeight / 2]
-        : [(tileHeight - 1) / 2, (tileHeight - 1) / 2 + 1];
+      centerCross.style.display = "block";
+      centerCross.style.top = "50%";
+      centerCross.style.left = "50%";
+    } else {
+      centerCross.style.display = "none";
     }
 
     let lastCell: HTMLDivElement | undefined;
@@ -514,10 +535,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         if (guideState.isBlackEnabled()) {
           if (x !== 0 && x % 5 === 0) cell.classList.add("guide-v");
           if (y !== 0 && y % 5 === 0) cell.classList.add("guide-h");
-        }
-        if (guideState.isCenterEnabled()) {
-          if (centerV.indexOf(x) !== -1) cell.classList.add("center-v");
-          if (centerH.indexOf(y) !== -1) cell.classList.add("center-h");
         }
 
         // ── Event handlers ─────────────────────────────────────────────
@@ -607,6 +624,11 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
           if (!isMouseDown && tool === "circle") {
             previewCircle({ x: cx, y: cy }, toolState.getCircleRadius());
+            return;
+          }
+
+          if (!isMouseDown && tool === "shape") {
+            previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius());
             return;
           }
 

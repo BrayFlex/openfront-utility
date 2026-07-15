@@ -25,11 +25,10 @@
         <!-- Logo + help -->
         <div class="logo-block">
           <span class="logo-eyebrow">Pattern Utility</span>
-          <h1 class="logo-title">Pattern Editor</h1>
-          <!-- help link placeholder -->
-          <a href="#" class="help-link" aria-label="Video guide / Help" title="Video guide / Help" hidden>
-            ▶ Guide
-          </a>
+          <label class="theme-toggle" aria-label="Toggle dark mode">
+            <input type="checkbox" id="themeToggle" />
+            <span class="theme-toggle-slider"></span>
+          </label>
         </div>
 
         <!-- ── Tool strip ── -->
@@ -48,8 +47,8 @@
               </button>
               <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
                 <select id="shapeType" class="ctrl-select" onclick="event.stopPropagation()" style="font-size: 10px; padding: 0 14px 0 2px; height: 16px; margin-bottom: 2px; cursor: pointer; background-color: var(--bg-tertiary); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 2px;">
-                  <option value="star" selected>★</option>
-                  <option value="cube">⬡</option>
+                  <option value="star" selected>Star</option>
+                  <option value="cube">Cube</option>
                 </select>
                 <span class="tool-label">Shape</span>
               </button>
@@ -58,23 +57,10 @@
                 <span class="tool-label">Line</span>
               </button>
             </div>
-            <!-- Size Slider -->
-            <div id="toolSizeGroup" class="size-slider-wrap" style="display: flex; align-items: center; gap: 6px; width: 100%;">
-              <span class="size-label">Size</span>
-              <input
-                type="range"
-                id="toolSizeSlider"
-                class="size-slider"
-                min="1" max="30" step="1" value="1"
-                list="toolSizeNotches"
-              />
-              <datalist id="toolSizeNotches">
-                <option value="1"></option>
-                <option value="10"></option>
-                <option value="20"></option>
-                <option value="30"></option>
-              </datalist>
-              <output id="toolSizeOutput" class="size-output">1</output>
+              <button id="toolSizeBtn" class="tool-btn" title="Size">
+                <span class="tool-icon">⚯</span>
+                <span class="tool-label">Size</span>
+              </button>
             </div>
           </div>
 
@@ -158,6 +144,8 @@
               <button id="shiftLeftBtn" class="tool-btn transform-btn" disabled title="Shift Left">←</button>
               <button id="shiftDownBtn" class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
               <button id="shiftRightBtn" class="tool-btn transform-btn" disabled title="Shift Right">→</button>
+              <button id="flipHBtn" class="tool-btn transform-btn" disabled title="Flip Horizontal">↔</button>
+              <button id="flipVBtn" class="tool-btn transform-btn" disabled title="Flip Vertical">↕</button>
             </div>
           </div>
 
@@ -267,6 +255,8 @@
               <div id="scrapGridWrap" hidden>
                 <div id="scrapGrid" class="grid scrap-grid"></div>
               </div>
+              <!-- Watermark -->
+              <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
             </div>
           </div>
 
@@ -324,6 +314,28 @@
       </main>
 
     </div><!-- end .page -->
+
+    <!-- Size Popover -->
+    <div id="sizePopover" class="size-popover" hidden>
+      <div class="size-popover-content">
+        <label for="toolSizeSlider" class="sr-only">Size</label>
+        <input
+          type="range"
+          id="toolSizeSlider"
+          class="size-slider vertical"
+          min="1" max="30" step="1" value="1"
+          list="toolSizeNotches"
+          orient="vertical"
+        />
+        <datalist id="toolSizeNotches">
+          <option value="1"></option>
+          <option value="10"></option>
+          <option value="20"></option>
+          <option value="30"></option>
+        </datalist>
+        <output id="toolSizeOutput" class="size-output">1</output>
+      </div>
+    </div>
 
     <script type="module" src="app.js"></script>
   </body>

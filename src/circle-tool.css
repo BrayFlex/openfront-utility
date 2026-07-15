@@ -2,10 +2,13 @@
   position: relative;
 }
 
-.cell.circle-hover::after {
+.cell.circle-hover::after,
+.cell.star-hover::after,
+.cell.line-hover::after,
+.cell.paste-hover::after {
   content: "";
   position: absolute;
   inset: 0;
-  background: rgba(214, 82, 57, 0.24);
+  background: rgba(12, 124, 201, 0.24); /* Blue accent with opacity */
   pointer-events: none;
 }

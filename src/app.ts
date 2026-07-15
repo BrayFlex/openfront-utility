@@ -22,8 +22,12 @@ import { initSubmissionModal } from "./app/submissionModal.js";
 import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
+import { initThemeToggle } from "./app/themeToggle.js";
 
 document.addEventListener("DOMContentLoaded", () => {
+  const themeToggleEl = document.getElementById("themeToggle") as HTMLInputElement;
+  if (themeToggleEl) initThemeToggle(themeToggleEl);
+
   // ── Element references ───────────────────────────────────────────────────
   const gridDiv = document.getElementById("grid")!;
   const scrapGridDiv = document.getElementById("scrapGrid")!;
@@ -31,7 +35,26 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tool strip
   const toolButtons = document.querySelectorAll<HTMLButtonElement>("[data-tool]");
   const sizeSlider = document.getElementById("toolSizeSlider") as HTMLInputElement;
-  const sizeOutput = document.getElementById("toolSizeOutput") as HTMLElement;
+  const sizeOutput = document.getElementById("toolSizeOutput")!;
+  const toolSizeBtn = document.getElementById("toolSizeBtn") as HTMLButtonElement;
+  const sizePopover = document.getElementById("sizePopover") as HTMLDivElement;
+
+  if (toolSizeBtn && sizePopover) {
+    toolSizeBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      sizePopover.hidden = !sizePopover.hidden;
+      if (!sizePopover.hidden) {
+        const rect = toolSizeBtn.getBoundingClientRect();
+        sizePopover.style.top = `${rect.bottom + 8}px`;
+        sizePopover.style.left = `${rect.left}px`;
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!sizePopover.contains(e.target as Node) && e.target !== toolSizeBtn) {
+        sizePopover.hidden = true;
+      }
+    });
+  }
   const sizeGroup = document.getElementById("toolSizeGroup") as HTMLElement;
 
   // Undo / Redo
@@ -50,6 +73,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const shiftDownBtn = document.getElementById("shiftDownBtn") as HTMLButtonElement;
   const shiftLeftBtn = document.getElementById("shiftLeftBtn") as HTMLButtonElement;
   const shiftRightBtn = document.getElementById("shiftRightBtn") as HTMLButtonElement;
+  const flipHBtn = document.getElementById("flipHBtn") as HTMLButtonElement;
+  const flipVBtn = document.getElementById("flipVBtn") as HTMLButtonElement;
   const rotateLeftBtn = document.getElementById("rotateLeftBtn") as HTMLButtonElement;
   const rotateRightBtn = document.getElementById("rotateRightBtn") as HTMLButtonElement;
   const deselectBtn = document.getElementById("deselectBtn") as HTMLButtonElement;
@@ -308,7 +333,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Canvas size steppers ──────────────────────────────────────────────────
   const clampW = (v: number) => Math.max(2, Math.min(129, v));
-  const clampH = (v: number) => Math.max(2, Math.min(129, v));
+  const clampH = (v: number) => Math.max(2, Math.min(63, v));
 
   tileWidthUpBtn.addEventListener("click", () => {
     const v = clampW(parseInt(tileWidthInput.value) + 1);
@@ -356,22 +381,24 @@ document.addEventListener("DOMContentLoaded", () => {
   invertBtn.addEventListener("click", () => activeGrid().invertGrid());
   clearBtn.addEventListener("click", () => activeGrid().clearGrid());
 
-  // ── Shift / Rotate buttons ────────────────────────────────────────────────
+  // ── Shift / Rotate / Flip buttons ─────────────────────────────────────────
   shiftUpBtn.addEventListener("click", () => activeGrid().shiftDir(0, -1));
   shiftDownBtn.addEventListener("click", () => activeGrid().shiftDir(0, 1));
   shiftLeftBtn.addEventListener("click", () => activeGrid().shiftDir(-1, 0));
   shiftRightBtn.addEventListener("click", () => activeGrid().shiftDir(1, 0));
   rotateLeftBtn.addEventListener("click", () => activeGrid().rotateDir("left"));
   rotateRightBtn.addEventListener("click", () => activeGrid().rotateDir("right"));
+  flipHBtn.addEventListener("click", () => activeGrid().flipDir("h"));
+  flipVBtn.addEventListener("click", () => activeGrid().flipDir("v"));
   deselectBtn.addEventListener("click", () => {
     activeGrid().clearSelection();
-    toolState.selectTool("pencil");
+    toolState.restoreTool();
   });
 
   // Enable/disable transform buttons based on selection
   const updateTransformButtons = () => {
     const hasSel = activeGrid().hasSelection();
-    [shiftUpBtn, shiftDownBtn, shiftLeftBtn, shiftRightBtn, rotateLeftBtn, rotateRightBtn, deselectBtn]
+    [shiftUpBtn, shiftDownBtn, shiftLeftBtn, shiftRightBtn, rotateLeftBtn, rotateRightBtn, flipHBtn, flipVBtn, deselectBtn]
       .forEach((btn) => (btn.disabled = !hasSel));
   };
   // Poll selection state (simple approach — could be event-driven)
@@ -510,15 +537,27 @@ document.addEventListener("DOMContentLoaded", () => {
 
   floatPreviewBtn.addEventListener("click", () => {
     previewPanel.classList.add("floating");
+    document.querySelector(".editor-shell")?.classList.add("preview-floating");
     dockPreviewBtn.hidden = false;
     floatPreviewBtn.hidden = true;
+    
+    // Also collapse sidebar so canvas gets full width
+    previewPanel.classList.add("collapsed");
+    showPreviewBtn.hidden = false;
   });
   dockPreviewBtn.addEventListener("click", () => {
     previewPanel.classList.remove("floating");
+    document.querySelector(".editor-shell")?.classList.remove("preview-floating");
     previewPanel.style.left = "";
     previewPanel.style.top = "";
+    previewPanel.style.width = "";
+    previewPanel.style.height = "";
     dockPreviewBtn.hidden = true;
     floatPreviewBtn.hidden = false;
+    
+    // Expand sidebar again
+    previewPanel.classList.remove("collapsed");
+    showPreviewBtn.hidden = true;
   });
   dockPreviewBtn.hidden = true;
 
@@ -582,6 +621,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onRedo: handleRedo,
     onDeselect: () => {
       activeGrid().clearSelection();
+      toolState.restoreTool();
     },
     onCopy: () => activeGrid().copySelection(clipboard),
     onCut: () => activeGrid().cutSelection(clipboard),
@@ -612,14 +652,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!/^[0-9a-fA-F]{6}$/.test(c)) return null;
     return `#${c.toLowerCase()}`;
   };
-
-  if (!window.location.hash) {
-    const isEasterEgg = Math.random() < 0.25;
-    const injectedHash = isEasterEgg
-      ? "#AFlhAAAAAADg______8DAAAAAAA4sbvhzgBRIVFEBGBOZIaZA0SRRBFRgKuRK-4MAAAAAADg______8DAAAAAADgAHAAOAAiABGACCAIMAQIAgICi4GAQECgIBAQBBCCCAGEqsIooaqwaggirBoCCAmGAEJVoaJQVVg1JBhWDQICIYGAgCBAGiAI4APwAfgAAAAAAAAA?primary=fedd67&secondary=000000"
-      : "#AAEiAAAAAAAAAAAAAAAAAAAAAIDD8YnweTiiD5FIYEIgEpkIRCKBCoFIpCIQeTwyPB6RjEAkEIgQKEQiApFAIEIgEYkIOAKfCIGIIyIAAAAAAAAAAAA?primary=ffffff&secondary=000000";
-    window.history.replaceState(null, "", injectedHash);
-  }
 
   const hashValue = window.location.hash.startsWith("#")
     ? window.location.hash.slice(1)
