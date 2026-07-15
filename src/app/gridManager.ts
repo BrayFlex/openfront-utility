@@ -10,6 +10,8 @@ import {
   shiftPatternRight,
   shiftPatternUp,
   shiftSelection,
+  flipSelectionH,
+  flipSelectionV,
 } from "./patternTransforms.js";
 import type { ToolState } from "./toolState.js";
 
@@ -40,6 +42,8 @@ export type GridManager = {
   shiftDir: (dx: number, dy: number) => void;
   /** Rotate selection around its centroid */
   rotateDir: (direction: "left" | "right") => void;
+  /** Flip selection along horizontal or vertical axis */
+  flipDir: (direction: "h" | "v") => void;
 };
 
 // ─── Options ──────────────────────────────────────────────────────────────────
@@ -407,6 +411,19 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     onPatternChange();
   };
 
+  // ── Flip ──────────────────────────────────────────────────────────────────
+  const flipDir = (direction: "h" | "v") => {
+    if (!hasSelection()) return;
+    const { pattern: next, flippedSelection } = direction === "h"
+      ? flipSelectionH(patternState, activeSelection)
+      : flipSelectionV(patternState, activeSelection);
+    patternState = next;
+    activeSelection = flippedSelection;
+    applyPattern(patternState);
+    renderSelection();
+    onPatternChange();
+  };
+
   // ── Pattern application ───────────────────────────────────────────────────
   const applyPattern = (next: number[][]) => {
     for (let y = 0; y < tileHeight; y++) {
@@ -727,5 +744,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     paste,
     shiftDir,
     rotateDir,
+    flipDir,
   };
 }
