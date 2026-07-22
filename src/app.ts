@@ -533,10 +533,12 @@ document.addEventListener("DOMContentLoaded", () => {
   hidePreviewBtn.addEventListener("click", () => {
     previewPanel.classList.add("collapsed");
     showPreviewBtn.hidden = false;
+    document.getElementById("previewResizeHandle")!.hidden = true;
   });
   showPreviewBtn.addEventListener("click", () => {
     previewPanel.classList.remove("collapsed");
     showPreviewBtn.hidden = true;
+    document.getElementById("previewResizeHandle")!.hidden = false;
   });
   showPreviewBtn.hidden = true;
 

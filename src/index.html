@@ -263,6 +263,8 @@
                 <div id="scrapGrid" class="grid scrap-grid"></div>
               </div>
             </div>
+            <!-- Watermark -->
+            <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
           </div>
 
         </section>
@@ -279,9 +281,6 @@
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">⤢</button>
             <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>⤡</button>
           </div>
-
-          <!-- Watermark lives in the PANEL, not the canvas viewport -->
-          <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
 
           <!-- Preview canvas -->
           <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
@@ -302,7 +301,7 @@
               </div>
               <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
               <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
-              <details class="color-preset-details">
+              <details class="color-preset-details" open>
                 <summary>Color Presets</summary>
                 <div id="colorPresetContainer" class="color-preset-container loading">
                   <div class="color-preset-placeholder">Loading presets…</div>

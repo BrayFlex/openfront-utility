@@ -10,7 +10,7 @@
 .workspace-split {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6px var(--preview-width, 240px);
+  grid-template-columns: minmax(0, 1fr) 6px var(--preview-width, 33vw);
   min-height: 0;
 }
 
@@ -147,7 +147,7 @@
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  background: #dfe4e7;
+  background: var(--bg);
   touch-action: none;
   cursor: grab;
 }
@@ -190,14 +190,16 @@
   height: 21px;
 }
 
-/* Watermark is now inside .preview-panel, not .grid-viewport */
+/* Watermark is at the bottom of the canvas workspace panel */
 .canvas-credit {
-  padding: 6px 14px;
-  font-size: 10px;
+  position: absolute;
+  bottom: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  font-size: 11px;
   color: var(--muted);
-  text-align: center;
-  border-bottom: 1px solid var(--border);
-  background: var(--surface-muted);
+  opacity: 0.6;
 }
 
 .grid {
@@ -206,7 +208,7 @@
   user-select: none;
   --cell-size: 20px;
   grid-auto-rows: var(--cell-size);
-  background: var(--surface);
+  background: #ffffff;
   border: 1px solid var(--border-strong);
   box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
@@ -387,6 +389,9 @@
 .preview-resize-handle {
   /* always visible as the divider */
   display: block !important;
+}
+.preview-resize-handle[hidden] {
+  display: none !important;
 }
 .resize-handle:hover, .resize-handle:active {
   background: var(--accent);
