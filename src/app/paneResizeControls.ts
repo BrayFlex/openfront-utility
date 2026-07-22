@@ -9,23 +9,8 @@ const clamp = (value: number, min: number, max: number) =>
   Math.min(max, Math.max(min, value));
 
 export function initPaneResizeControls(options: PaneResizeControlsOptions) {
-  const { shell, workspaceSplit, toolbarHandle, previewHandle } = options;
+  const { workspaceSplit, previewHandle } = options;
   let activePointerId: number | null = null;
-  let isMouseResizing = false;
-
-  const startResize = (
-    onMove: (clientX: number) => void,
-    endResize: () => void
-  ) => {
-    document.body.classList.add("is-resizing-pane");
-    return {
-      move: (clientX: number) => onMove(clientX),
-      stop: () => {
-        document.body.classList.remove("is-resizing-pane");
-        endResize();
-      },
-    };
-  };
 
   const beginPointerResize = (
     event: PointerEvent,
@@ -35,22 +20,22 @@ export function initPaneResizeControls(options: PaneResizeControlsOptions) {
     event.preventDefault();
     activePointerId = event.pointerId;
     handle.setPointerCapture(event.pointerId);
-    const resize = startResize(onMove, () => {
-      handle.removeEventListener("pointermove", move);
-      handle.removeEventListener("pointerup", stop);
-      handle.removeEventListener("pointercancel", stop);
-    });
+
+    document.body.classList.add("is-resizing-pane");
 
     const move = (nextEvent: PointerEvent) => {
       if (nextEvent.pointerId !== activePointerId) return;
-      resize.move(nextEvent.clientX);
+      onMove(nextEvent.clientX);
     };
 
     const stop = (nextEvent: PointerEvent) => {
       if (nextEvent.pointerId !== activePointerId) return;
       activePointerId = null;
       handle.releasePointerCapture(nextEvent.pointerId);
-      resize.stop();
+      document.body.classList.remove("is-resizing-pane");
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", stop);
+      handle.removeEventListener("pointercancel", stop);
     };
 
     handle.addEventListener("pointermove", move);
@@ -64,57 +49,36 @@ export function initPaneResizeControls(options: PaneResizeControlsOptions) {
   ) => {
     if (event.button !== 0) return;
     event.preventDefault();
-    isMouseResizing = true;
-    const resize = startResize(onMove, () => {
-      document.removeEventListener("mousemove", move);
-      document.removeEventListener("mouseup", stop);
-    });
+    document.body.classList.add("is-resizing-pane");
+
     const move = (nextEvent: MouseEvent) => {
-      if (!isMouseResizing) return;
-      resize.move(nextEvent.clientX);
+      onMove(nextEvent.clientX);
     };
     const stop = () => {
-      isMouseResizing = false;
-      resize.stop();
+      document.body.classList.remove("is-resizing-pane");
+      document.removeEventListener("mousemove", move);
+      document.removeEventListener("mouseup", stop);
     };
     document.addEventListener("mousemove", move);
     document.addEventListener("mouseup", stop);
   };
 
-  const resizeToolbar = (clientX: number, shellRect: DOMRect) => {
-    const maxWidth = Math.min(560, shellRect.width * 0.55);
-    const width = clamp(shellRect.right - clientX, 220, maxWidth);
-    shell.style.setProperty("--toolbar-width", `${Math.round(width)}px`);
-  };
-
-  const resizePreview = (clientX: number, splitRect: DOMRect) => {
-    const maxWidth = Math.max(220, splitRect.width - 340);
-    const width = clamp(splitRect.right - clientX, 220, maxWidth);
+  const resizePreview = (clientX: number) => {
+    const splitRect = workspaceSplit.getBoundingClientRect();
+    // Minimum 180px preview, maximum is half the workspace
+    const maxWidth = Math.max(180, splitRect.width * 0.55);
+    const width = clamp(splitRect.right - clientX, 180, maxWidth);
     workspaceSplit.style.setProperty("--preview-width", `${Math.round(width)}px`);
   };
 
-  const startToolbarResize = (event: PointerEvent | MouseEvent) => {
-    if (shell.classList.contains("toolbar-collapsed")) return;
-    const shellRect = shell.getBoundingClientRect();
-    if (event instanceof PointerEvent) {
-      beginPointerResize(event, toolbarHandle, (x) => resizeToolbar(x, shellRect));
-      return;
-    }
-    beginMouseResize(event, (x) => resizeToolbar(x, shellRect));
-  };
-
   const startPreviewResize = (event: PointerEvent | MouseEvent) => {
-    if (shell.dataset.viewMode !== "both") return;
-    const splitRect = workspaceSplit.getBoundingClientRect();
     if (event instanceof PointerEvent) {
-      beginPointerResize(event, previewHandle, (x) => resizePreview(x, splitRect));
+      beginPointerResize(event, previewHandle, resizePreview);
       return;
     }
-    beginMouseResize(event, (x) => resizePreview(x, splitRect));
+    beginMouseResize(event, resizePreview);
   };
 
-  toolbarHandle.addEventListener("pointerdown", startToolbarResize);
-  toolbarHandle.addEventListener("mousedown", startToolbarResize);
   previewHandle.addEventListener("pointerdown", startPreviewResize);
   previewHandle.addEventListener("mousedown", startPreviewResize);
 }

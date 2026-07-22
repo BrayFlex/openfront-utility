@@ -22,12 +22,15 @@
       <!-- ═══ TOP BAR ═══ -->
       <header class="top-bar" aria-label="Toolbar">
 
-        <!-- Logo + help -->
+        <!-- Logo + theme toggle -->
         <div class="logo-block">
           <span class="logo-eyebrow">Pattern Utility</span>
           <label class="theme-toggle" aria-label="Toggle dark mode">
             <input type="checkbox" id="themeToggle" />
-            <span class="theme-toggle-slider"></span>
+            <span class="theme-toggle-slider">
+              <span class="theme-toggle-icon theme-toggle-sun">☀</span>
+              <span class="theme-toggle-icon theme-toggle-moon">☽</span>
+            </span>
           </label>
         </div>
 
@@ -36,9 +39,10 @@
 
           <!-- Drawing tools & Size -->
           <div class="tool-strip-group">
-            <button id="toolSizeBtn" class="tool-btn" title="Size" style="width: auto; padding: 0 6px; display: flex; flex-direction: row; align-items: center; gap: 4px;">
-              <span class="tool-icon" style="font-size: 16px; transform: rotate(45deg);">⚲</span>
-              <span style="font-size: 10px; color: var(--muted);">▼</span>
+            <!-- Size button: shows current size value + dropdown arrow -->
+            <button id="toolSizeBtn" class="tool-btn size-btn" title="Tool size">
+              <span id="toolSizeBtnValue" class="size-btn-value">1</span>
+              <span class="size-btn-arrow">▾</span>
             </button>
             <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
               <span class="tool-icon">✏</span>
@@ -49,7 +53,7 @@
               <span class="tool-label">Circle</span>
             </button>
             <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
-              <select id="shapeType" class="ctrl-select" onclick="event.stopPropagation()" style="font-size: 10px; padding: 0 14px 0 2px; height: 16px; margin-bottom: 2px; cursor: pointer; background-color: var(--surface-muted); color: var(--text); border: 1px solid var(--border); border-radius: 2px;">
+              <select id="shapeType" class="shape-select" onclick="event.stopPropagation()">
                 <option value="star" selected>Star</option>
                 <option value="cube">Cube</option>
               </select>
@@ -88,7 +92,7 @@
               <span class="tool-label">Copy</span>
             </button>
             <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (Ctrl+V) — then click top-left position">
-              <span class="tool-icon">📋</span>
+              <span class="tool-icon">⎘</span>
               <span class="tool-label">Paste</span>
             </button>
           </div>
@@ -125,32 +129,38 @@
               <span class="tool-label">Select</span>
             </button>
             <button id="deselectBtn" class="tool-btn action-btn" disabled title="Deselect all (Ctrl+D)">
-              <span class="tool-icon">⊡</span>
+              <span class="tool-icon">⌧</span>
               <span class="tool-label">Deselect</span>
             </button>
           </div>
 
           <div class="tool-strip-separator"></div>
 
-          <!-- Transformations -->
+          <!-- Transformations:
+               Col 1: RotateL, ShiftL
+               Col 2: ShiftUp, ShiftDown
+               Col 3: RotateR, ShiftR
+               Col 4: FlipV, FlipH
+          -->
           <div class="tool-strip-group transform-group">
             <div class="transform-btns-grid">
-              <button id="rotateLeftBtn" class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
-              <button id="shiftUpBtn" class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
+              <button id="rotateLeftBtn"  class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
+              <button id="shiftUpBtn"     class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
               <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate Right">↻</button>
-              <button id="shiftLeftBtn" class="tool-btn transform-btn" disabled title="Shift Left">←</button>
-              <button id="shiftDownBtn" class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
-              <button id="shiftRightBtn" class="tool-btn transform-btn" disabled title="Shift Right">→</button>
-              <button id="flipHBtn" class="tool-btn transform-btn" disabled title="Flip Horizontal">↔</button>
-              <button id="flipVBtn" class="tool-btn transform-btn" disabled title="Flip Vertical">↕</button>
+              <button id="flipVBtn"       class="tool-btn transform-btn" disabled title="Flip Vertical">↕</button>
+              <button id="shiftLeftBtn"   class="tool-btn transform-btn" disabled title="Shift Left">←</button>
+              <button id="shiftDownBtn"   class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
+              <button id="shiftRightBtn"  class="tool-btn transform-btn" disabled title="Shift Right">→</button>
+              <button id="flipHBtn"       class="tool-btn transform-btn" disabled title="Flip Horizontal">↔</button>
             </div>
           </div>
 
+          <!-- Guide buttons injected here by gridGuides.ts -->
+
         </div><!-- end .tool-strip -->
 
-        <!-- Export / Import toggle + Pattern Utility title -->
+        <!-- Export / Import -->
         <div class="top-bar-right">
-          <!-- Export / Import toggle -->
           <div class="export-import-wrap">
             <div class="ei-tabs">
               <button id="exportTabBtn" class="ei-tab selected" type="button">Export</button>
@@ -158,14 +168,14 @@
             </div>
             <!-- Export panel -->
             <div id="exportPanel" class="ei-panel export-grid">
-              <button id="copyJsonBtn" class="ei-copy-btn" title="Copy JSON / Base64">JSON</button>
-              <button id="copyDiscordBtn" class="ei-copy-btn" title="Copy Discord-formatted output">Discord</button>
-              <button id="copyPreviewBtn" class="ei-copy-btn" title="Copy preview link">Preview</button>
+              <button id="copyJsonBtn"      class="ei-copy-btn" title="Copy JSON / Base64">JSON</button>
+              <button id="copyDiscordBtn"   class="ei-copy-btn" title="Copy Discord-formatted output">Discord</button>
+              <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy preview link">Preview</button>
               <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
             </div>
             <!-- Import panel -->
             <div id="importPanel" class="ei-panel" hidden>
-              <input type="text" id="base64Input" class="ei-text-input" placeholder="Paste Base64 / pattern code" />
+              <input type="text" id="base64Input" class="ei-text-input" placeholder="Paste Base64 / pattern code" value="" />
               <button id="loadBtn" class="ei-copy-btn btn-primary">Load</button>
               <div id="imageImportEntry"></div>
             </div>
@@ -184,15 +194,15 @@
           <div class="canvas-controls-bar">
             <!-- Tab switcher -->
             <div class="canvas-tabs ei-tabs" role="tablist">
-              <button id="canvasTabMain" class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
-              <button id="canvasTabScrap" class="canvas-tab ei-tab" role="tab" aria-selected="false">Test Canvas</button>
+              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
+              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test Canvas</button>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
-            <!-- Invert -->
+            <!-- Invert / Clear -->
             <button id="invertBtn" class="ctrl-btn" title="Invert canvas (or selection)">Invert</button>
-            <button id="clearBtn" class="ctrl-btn" title="Clear canvas">Clear</button>
+            <button id="clearBtn"  class="ctrl-btn" title="Clear canvas">Clear</button>
 
             <div class="canvas-controls-divider"></div>
 
@@ -201,9 +211,9 @@
             <div class="ctrl-stepper">
               <input type="number" id="tileWidthValue" class="ctrl-number" value="129" min="2" max="129" />
               <!-- hidden range synced by JS -->
-              <input type="range" id="tileWidth" value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="range"  id="tileWidth"      value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
-                <button id="tileWidthUp" class="stepper-btn" aria-label="Increase width">▲</button>
+                <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
                 <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
               </div>
             </div>
@@ -212,20 +222,20 @@
             <label class="ctrl-label" for="tileHeightValue">H</label>
             <div class="ctrl-stepper">
               <input type="number" id="tileHeightValue" class="ctrl-number" value="63" min="2" max="63" />
-              <input type="range" id="tileHeight" value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="range"  id="tileHeight"      value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
-                <button id="tileHeightUp" class="stepper-btn" aria-label="Increase height">▲</button>
+                <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
                 <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
               </div>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
-            <!-- Scale dropdown -->
+            <!-- Scale dropdown — default 1× (value="0") -->
             <label class="ctrl-label" for="scaleSelect">Scale</label>
             <select id="scaleSelect" class="ctrl-select">
-              <option value="0">1×</option>
-              <option value="1" selected>2×</option>
+              <option value="0" selected>1×</option>
+              <option value="1">2×</option>
               <option value="2">4×</option>
               <option value="3">8×</option>
               <option value="4">16×</option>
@@ -234,9 +244,9 @@
             <div class="canvas-controls-divider"></div>
 
             <!-- Zoom control -->
-            <button id="zoomOutBtn" class="ctrl-btn" aria-label="Zoom out">−</button>
-            <output id="zoomValue" class="ctrl-zoom">100%</output>
-            <button id="zoomInBtn" class="ctrl-btn" aria-label="Zoom in">+</button>
+            <button id="zoomOutBtn"  class="ctrl-btn" aria-label="Zoom out">−</button>
+            <output  id="zoomValue"  class="ctrl-zoom">100%</output>
+            <button id="zoomInBtn"   class="ctrl-btn" aria-label="Zoom in">+</button>
             <button id="resetViewBtn" class="ctrl-btn">Reset</button>
 
           </div>
@@ -252,8 +262,6 @@
               <div id="scrapGridWrap" hidden>
                 <div id="scrapGrid" class="grid scrap-grid"></div>
               </div>
-              <!-- Watermark -->
-              <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
             </div>
           </div>
 
@@ -266,11 +274,14 @@
         <aside class="preview-panel" aria-label="Pattern preview">
           <!-- Preview header -->
           <div class="preview-header">
-            <button id="hidePreviewBtn" class="preview-hide-btn" title="Hide preview" aria-label="Hide preview">›</button>
+            <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">›</button>
             <span class="panel-title">Preview</span>
-            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview" aria-label="Float preview">⤢</button>
-            <button id="dockPreviewBtn" class="preview-float-btn" title="Dock preview" aria-label="Dock preview" hidden>⤡</button>
+            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">⤢</button>
+            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>⤡</button>
           </div>
+
+          <!-- Watermark lives in the PANEL, not the canvas viewport -->
+          <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
 
           <!-- Preview canvas -->
           <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
@@ -320,15 +331,21 @@
           type="range"
           id="toolSizeSlider"
           class="size-slider vertical"
-          min="1" max="30" step="1" value="1"
+          min="1" max="10" step="1" value="1"
           list="toolSizeNotches"
           orient="vertical"
         />
         <datalist id="toolSizeNotches">
           <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="5"></option>
+          <option value="6"></option>
+          <option value="7"></option>
+          <option value="8"></option>
+          <option value="9"></option>
           <option value="10"></option>
-          <option value="20"></option>
-          <option value="30"></option>
         </datalist>
         <output id="toolSizeOutput" class="size-output">1</output>
       </div>
