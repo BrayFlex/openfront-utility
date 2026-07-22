@@ -13,7 +13,9 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 140px;
+  min-width: 0;
+  white-space: nowrap;
+  gap: 4px;
 }
 .logo-eyebrow {
   font-size: 10px;
@@ -35,9 +37,8 @@
 .theme-toggle {
   position: relative;
   display: inline-block;
-  width: 32px;
-  height: 18px;
-  margin-top: 4px;
+  width: 46px;
+  height: 22px;
 }
 .theme-toggle input {
   opacity: 0;
@@ -47,38 +48,52 @@
 .theme-toggle-slider {
   position: absolute;
   cursor: pointer;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: var(--border-strong);
-  transition: .2s;
-  border-radius: 18px;
+  inset: 0;
+  background-color: #4a5568;
+  transition: .25s;
+  border-radius: 22px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
 }
+.theme-toggle-icon {
+  position: absolute;
+  font-size: 11px;
+  line-height: 1;
+  transition: opacity .2s, transform .2s;
+  user-select: none;
+}
+.theme-toggle-sun  { left: 4px;  opacity: 1; }
+.theme-toggle-moon { right: 3px; opacity: 0; }
 .theme-toggle-slider:before {
   position: absolute;
   content: "";
-  height: 12px;
-  width: 12px;
+  height: 16px;
+  width: 16px;
   left: 3px;
   bottom: 3px;
   background-color: white;
-  transition: .2s;
+  transition: .25s;
   border-radius: 50%;
+  z-index: 1;
 }
 .theme-toggle input:checked + .theme-toggle-slider {
-  background-color: var(--accent);
+  background-color: #1e3a5f;
 }
 .theme-toggle input:checked + .theme-toggle-slider:before {
-  transform: translateX(14px);
+  transform: translateX(24px);
 }
+.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-sun  { opacity: 0; }
+.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-moon { opacity: 1; }
 
 /* ── Tool Strip ─────────────────────────────────────────────────────────── */
 .tool-strip {
   display: flex;
   align-items: center;
-  gap: 12px;
+  flex: 1;
+  gap: 6px;
   overflow-x: auto;
+  padding: 0 8px;
 }
 .tool-strip::-webkit-scrollbar { display: none; }
 
@@ -143,19 +158,81 @@
 
 .transform-btns-grid {
   display: grid;
-  grid-template-columns: repeat(4, 28px);
+  grid-template-columns: repeat(4, 26px);
+  grid-template-rows: repeat(2, 24px);
   gap: 2px;
 }
 .transform-btn {
-  width: 28px;
-  height: 28px;
-  font-size: 14px;
+  width: 26px;
+  height: 24px;
+  font-size: 13px;
   border: 1px solid var(--border);
   background: var(--surface);
+  padding: 0;
 }
 .transform-btn:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+/* ── Size Button ────────────────────────────────────────────────────────── */
+.size-btn {
+  flex-direction: row !important;
+  gap: 3px !important;
+  width: auto !important;
+  padding: 0 8px !important;
+  min-width: 36px;
+}
+.size-btn-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  min-width: 14px;
+  text-align: right;
+}
+.size-btn-arrow {
+  font-size: 9px;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* ── Shape select inside tool btn ───────────────────────────────────────── */
+.shape-select {
+  font-size: 10px;
+  padding: 1px 14px 1px 3px;
+  height: 16px;
+  margin-bottom: 2px;
+  cursor: pointer;
+  background-color: var(--surface-muted);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  appearance: auto;
+}
+
+/* ── Guide buttons (appended by gridGuides.ts) ──────────────────────────── */
+.guide-btn {
+  font-size: 10px !important;
+  padding: 2px 7px !important;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 600;
+  white-space: nowrap;
+  transition: border-color .12s, background .12s, color .12s;
+}
+.guide-btn:hover { border-color: var(--accent); color: var(--accent); }
+.guide-btn.guide-btn-on {
+  background: var(--accent);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.guide-btn.guide-btn-off {
+  background: var(--surface);
+  color: var(--muted);
 }
 
 /* ── Size Popover ───────────────────────────────────────────────────────── */
