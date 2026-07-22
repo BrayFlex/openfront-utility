@@ -1,6 +1,6 @@
 export function setupGridGuides(toolbox, onChange) {
     const container = document.createElement("div");
-    container.style.cssText = "display:flex;align-items:center;gap:6px;margin-left:4px;";
+    container.style.cssText = "display:flex;flex-direction:column;gap:4px;margin-left:4px;";
     const blackGuideBtn = document.createElement("button");
     blackGuideBtn.textContent = "Grid Guide";
     blackGuideBtn.id = "gridGuideBlackBtn";
