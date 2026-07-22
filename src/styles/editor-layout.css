@@ -10,7 +10,7 @@
 .workspace-split {
   flex: 1;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 6px var(--preview-width, 33vw);
+  grid-template-columns: minmax(0, 2fr) 6px var(--preview-width, 33.33vw);
   min-height: 0;
 }
 
@@ -164,8 +164,8 @@
 /* Center guide cross — larger and theme-aware */
 .center-cross-overlay {
   position: absolute;
-  width: 21px;
-  height: 21px;
+  width: 31px;
+  height: 31px;
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 10;
@@ -175,31 +175,30 @@
   content: "";
   position: absolute;
   background: var(--accent);
-  opacity: 0.85;
+  opacity: 1;
 }
 .center-cross-overlay::before {
-  top: 10px;
+  top: 14px;
   left: 0;
-  width: 21px;
-  height: 1px;
+  width: 31px;
+  height: 3px;
 }
 .center-cross-overlay::after {
   top: 0;
-  left: 10px;
-  width: 1px;
-  height: 21px;
+  left: 14px;
+  width: 3px;
+  height: 31px;
 }
 
 /* Watermark is at the bottom of the canvas workspace panel */
 .canvas-credit {
-  position: absolute;
-  bottom: 12px;
-  left: 50%;
-  transform: translateX(-50%);
-  pointer-events: none;
+  text-align: center;
+  padding: 8px;
   font-size: 11px;
   color: var(--muted);
   opacity: 0.6;
+  background: var(--surface-muted);
+  border-top: 1px solid var(--border);
 }
 
 .grid {
