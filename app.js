@@ -31,6 +31,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const toolSizeBtn = document.getElementById("toolSizeBtn");
     const sizePopover = document.getElementById("sizePopover");
     if (toolSizeBtn && sizePopover) {
+        const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
+        const syncSizeDisplay = () => {
+            if (toolSizeBtnValue && sizeSlider)
+                toolSizeBtnValue.textContent = sizeSlider.value;
+        };
+        if (sizeSlider)
+            sizeSlider.addEventListener("input", syncSizeDisplay);
+        syncSizeDisplay();
         toolSizeBtn.addEventListener("click", (e) => {
             e.stopPropagation();
             sizePopover.hidden = !sizePopover.hidden;
@@ -271,6 +279,8 @@ document.addEventListener("DOMContentLoaded", () => {
         tileHeightValue.value = tileHeightInput.value;
         // Update scale select
         scaleSelect.value = scale.toString();
+        // Clear any active selection so it doesn't mask the restored pattern
+        grid.clearSelection();
         isApplyingHistory = true;
         grid.generateGrid(pattern);
         isApplyingHistory = false;
@@ -497,9 +507,39 @@ document.addEventListener("DOMContentLoaded", () => {
         (_a = document.querySelector(".editor-shell")) === null || _a === void 0 ? void 0 : _a.classList.add("preview-floating");
         dockPreviewBtn.hidden = false;
         floatPreviewBtn.hidden = true;
-        // Also collapse sidebar so canvas gets full width
-        previewPanel.classList.add("collapsed");
-        showPreviewBtn.hidden = false;
+        // Add a resize handle to the floating panel if not already there
+        if (!previewPanel.querySelector(".floating-resize-handle")) {
+            const resizeHandle = document.createElement("div");
+            resizeHandle.className = "floating-resize-handle";
+            resizeHandle.textContent = "⇲";
+            previewPanel.appendChild(resizeHandle);
+            let rPtr = null;
+            let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
+            resizeHandle.addEventListener("pointerdown", (ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                rPtr = ev.pointerId;
+                resizeHandle.setPointerCapture(ev.pointerId);
+                rStartW = previewPanel.offsetWidth;
+                rStartH = previewPanel.offsetHeight;
+                rStartX = ev.clientX;
+                rStartY = ev.clientY;
+            });
+            resizeHandle.addEventListener("pointermove", (ev) => {
+                if (rPtr !== ev.pointerId)
+                    return;
+                const w = Math.max(180, rStartW + (ev.clientX - rStartX));
+                const h = Math.max(200, rStartH + (ev.clientY - rStartY));
+                previewPanel.style.width = `${w}px`;
+                previewPanel.style.height = `${h}px`;
+            });
+            ["pointerup", "pointercancel"].forEach(evt => resizeHandle.addEventListener(evt, (ev) => {
+                if (rPtr !== ev.pointerId)
+                    return;
+                rPtr = null;
+                resizeHandle.releasePointerCapture(ev.pointerId);
+            }));
+        }
     });
     dockPreviewBtn.addEventListener("click", () => {
         var _a;

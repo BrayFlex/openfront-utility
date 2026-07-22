@@ -49,19 +49,24 @@ export function createDrawingTools(options) {
     }
     /** Shape tool: draws star or isometric cube */
     function drawShape(type, cx, cy, r, selection) {
+        if (r <= 0) {
+            // r=0: just place the center pixel
+            setIfAllowed(cx, cy, true, selection);
+            return;
+        }
         if (type === "cube") {
             const h = r;
-            const w = Math.round(r * 1.732); // approx sqrt(3)
+            const w = Math.max(1, Math.round(r * 1.732)); // approx sqrt(3)
             // Top face
-            drawLine(cx, cy - h, cx + w, cy - h / 2, selection);
-            drawLine(cx + w, cy - h / 2, cx, cy, selection);
-            drawLine(cx, cy, cx - w, cy - h / 2, selection);
-            drawLine(cx - w, cy - h / 2, cx, cy - h, selection);
+            drawLine(cx, cy - h, cx + w, cy - Math.round(h / 2), selection);
+            drawLine(cx + w, cy - Math.round(h / 2), cx, cy, selection);
+            drawLine(cx, cy, cx - w, cy - Math.round(h / 2), selection);
+            drawLine(cx - w, cy - Math.round(h / 2), cx, cy - h, selection);
             // Bottom edges
-            drawLine(cx - w, cy - h / 2, cx - w, cy + h / 2, selection);
-            drawLine(cx + w, cy - h / 2, cx + w, cy + h / 2, selection);
-            drawLine(cx - w, cy + h / 2, cx, cy + h, selection);
-            drawLine(cx + w, cy + h / 2, cx, cy + h, selection);
+            drawLine(cx - w, cy - Math.round(h / 2), cx - w, cy + Math.round(h / 2), selection);
+            drawLine(cx + w, cy - Math.round(h / 2), cx + w, cy + Math.round(h / 2), selection);
+            drawLine(cx - w, cy + Math.round(h / 2), cx, cy + h, selection);
+            drawLine(cx + w, cy + Math.round(h / 2), cx, cy + h, selection);
             // Center vertical
             drawLine(cx, cy, cx, cy + h, selection);
             return;
@@ -78,11 +83,21 @@ export function createDrawingTools(options) {
         }
     }
     function getShapeCells(type, cx, cy, r, selection) {
+        const width = getTileWidth();
+        const height = getTileHeight();
         const pts = [];
         const originalSet = currentSetCellActive;
-        currentSetCellActive = (x, y) => pts.push({ x, y });
-        drawShape(type, cx, cy, r, selection);
-        currentSetCellActive = originalSet;
+        // Intercept setCellActive, filter out-of-bounds
+        currentSetCellActive = (x, y) => {
+            if (x >= 0 && y >= 0 && x < width && y < height)
+                pts.push({ x, y });
+        };
+        try {
+            drawShape(type, cx, cy, r, selection);
+        }
+        finally {
+            currentSetCellActive = originalSet;
+        }
         return pts;
     }
     /** Flood fill from (sx,sy) — respects selection constraint */
