@@ -1,9 +1,9 @@
-export function buildDiscordOutput(
+export function buildDevTestOutput(
   patternCode: string,
   primary: string,
   secondary: string
 ) {
-  return `\`\`\`${patternCode}\`\`\`\nPrimary ${primary}\nSecondary ${secondary}`;
+  return `localStorage.setItem("dev-pattern", "${patternCode}");\nlocalStorage.setItem("dev-primary", "${primary}");\nlocalStorage.setItem("dev-secondary", "${secondary}");`;
 }
 
 export function buildPreviewLink(
