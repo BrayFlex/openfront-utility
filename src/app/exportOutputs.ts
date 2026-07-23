@@ -1,10 +1,4 @@
-export function buildDevTestOutput(
-  patternCode: string,
-  primary: string,
-  secondary: string
-) {
-  return `localStorage.setItem("dev-pattern", "${patternCode}");\nlocalStorage.setItem("dev-primary", "${primary}");\nlocalStorage.setItem("dev-secondary", "${secondary}");`;
-}
+
 
 export function buildPreviewLink(
   currentHref: string,
