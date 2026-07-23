@@ -1,29 +1,15 @@
-# Pattern JSON Generator + Preview (TypeScript)
+<a href='https://ko-fi.com/U7U41CZ5QZ' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi2.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
+
+# 1-Bit Pattern JSON Generator & Preview, intended for https://OpenFront.io Artists
 
 This project is a tool for generating and previewing Openfront.io patterns in Base64 format.
 
-- Implemented in TypeScript  
-- GitHub Pages ready (build outputs to the `docs` directory)  
-- Use `npm run build` to build, `npm start` to launch a local server  
+It runs a workflow to deploy to GitHub Pages: https://brayflex.github.io/openfront-utility/
 
-## Setup
+Forked from: https://github.com/Aotumuri/openfront-utility
 
-```sh
-npm install
-```
+It currently exists as a separate fork because I wanted to make changes and improvements based soley on my own vision.
 
-## Build
+It is in beta and will likely have issues & bugs.
 
-```sh
-npm run build
-```
-
-## Local Server
-
-```sh
-npm start
-```
-
-## Deployment
-
-Publish the contents of the docs directory with GitHub Pages.
+You can create an issue in this repo or reach out to me on the OpenFront Discord (BrayFlex / [OO] Flex) with any questions or concerns.
