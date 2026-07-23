@@ -117,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Copy buttons
   const copyJsonBtn = document.getElementById("copyJsonBtn") as HTMLButtonElement;
-  const copyDiscordBtn = document.getElementById("copyDiscordBtn") as HTMLButtonElement;
+  const copyDevTestBtn = document.getElementById("copyDevTestBtn") as HTMLButtonElement;
   const copyPreviewBtn = document.getElementById("copyPreviewBtn") as HTMLButtonElement;
 
   // Preview panel
@@ -471,9 +471,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   copyJsonBtn.addEventListener("click", () => copyText(getOutputBase64()));
-  copyDiscordBtn.addEventListener("click", () => {
+  copyDevTestBtn.addEventListener("click", () => {
     const b64 = getOutputBase64();
-    copyText(buildDiscordOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
+    copyText(buildDevTestOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
   });
   copyPreviewBtn.addEventListener("click", () => {
     const b64 = getOutputBase64();
@@ -635,6 +635,18 @@ document.addEventListener("DOMContentLoaded", () => {
     resetButton: resetViewBtn,
     zoomValue: zoomValueEl,
   });
+
+  // ── Info Modal ────────────────────────────────────────────────────────────
+  const infoModal = document.getElementById("infoModal");
+  const infoModalBtn = document.getElementById("infoModalBtn");
+  const closeInfoModalBtn = document.getElementById("closeInfoModalBtn");
+  if (infoModal && infoModalBtn && closeInfoModalBtn) {
+    infoModalBtn.addEventListener("click", () => infoModal.hidden = false);
+    closeInfoModalBtn.addEventListener("click", () => infoModal.hidden = true);
+    infoModal.addEventListener("click", (e) => {
+      if (e.target === infoModal) (infoModal as HTMLElement).hidden = true;
+    });
+  }
 
   // ── Pane resize ────────────────────────────────────────────────────────────
   initPaneResizeControls({
