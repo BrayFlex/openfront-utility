@@ -1,6 +1,3 @@
-export function buildDiscordOutput(patternCode, primary, secondary) {
-    return `\`\`\`${patternCode}\`\`\`\nPrimary ${primary}\nSecondary ${secondary}`;
-}
 export function buildPreviewLink(currentHref, patternCode, primary, secondary) {
     const params = new URLSearchParams({
         primary: primary.replace("#", ""),

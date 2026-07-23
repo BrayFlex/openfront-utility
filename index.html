@@ -25,6 +25,7 @@
               <span class="theme-toggle-icon theme-toggle-moon">☽</span>
             </span>
           </label>
+          <button id="infoModalBtn" class="info-btn" aria-label="Helpful Information" title="Helpful Information">ℹ️</button>
         </div>
 
         <!-- ── Tool strip ── -->
@@ -161,9 +162,12 @@
             </div>
             <!-- Export panel -->
             <div id="exportPanel" class="ei-panel export-grid">
-              <button id="copyJsonBtn"      class="ei-copy-btn" title="Copy JSON / Base64">JSON</button>
-              <button id="copyDiscordBtn"   class="ei-copy-btn" title="Copy Discord-formatted output">Discord</button>
-              <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy preview link">Preview</button>
+              <div class="ei-panel-section">
+                <h4>Copy Output</h4>
+                <button id="copyJsonBtn"      class="ei-copy-btn" title="Copy Raw JSON">JSON</button>
+                <button id="copyDevStorageBtn"   class="ei-copy-btn" title="Copy Dev Storage for Console">Console</button>
+                <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy Preview Link">Preview Link</button>
+              </div>
               <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
             </div>
             <!-- Import panel -->
@@ -342,6 +346,46 @@
         <output id="toolSizeOutput" class="size-output">1</output>
       </div>
     </div>
+
+  <!-- Information Modal -->
+  <div id="infoModal" class="modal-overlay" hidden>
+    <div class="modal-panel" style="max-width: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Helpful Information</h2>
+        <button id="closeInfoModalBtn" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; user-select: text;">
+        <h3>Links:</h3>
+        <p>🖊️ <strong>Submit a Pattern</strong><br>
+        Use this form to submit your pattern for review:<br>
+        👉 <a href="https://forms.gle/e2kH8eBUd7Zho4rYA" target="_blank">https://forms.gle/e2kH8eBUd7Zho4rYA</a></p>
+
+        <p>📊 <strong>Submission Status Tracker</strong><br>
+        Check here to see if your submission has been reviewed, accepted, or rejected:<br>
+        👉 <a href="https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing" target="_blank">https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing</a></p>
+
+        <p>🎨 <strong>Pattern Preview Tool</strong><br>
+        Use these tools to preview how your pattern looks in-game before submitting:<br>
+        👉 <a href="https://aotumuri.github.io/openfront-utility/" target="_blank">https://aotumuri.github.io/openfront-utility/</a><br>
+        👉 <a href="https://brayflex.github.io/openfront-utility/" target="_blank">https://brayflex.github.io/openfront-utility/</a></p>
+
+        <p>💻 <strong>Converter for normal images and other drawing apps</strong><br>
+        <a href="https://niconacho2020.github.io/projects/pattern/" target="_blank">https://niconacho2020.github.io/projects/pattern/</a></p>
+
+        <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
+        
+        <h3>To do final testing and preview in-game:</h3>
+        <ol style="padding-left: 20px; margin-top: 8px;">
+          <li>In the pattern preview tool press <strong>Dev Test</strong> (Copy Dev localStorage)</li>
+          <li>Go to <a href="https://main.openfront.dev/" target="_blank">https://main.openfront.dev/</a></li>
+          <li>Right click on the page and select "Inspect"</li>
+          <li>In the side menu click the Console tab</li>
+          <li>Directly paste into the console</li>
+          <li>Open a solo game and see how the pattern looks</li>
+        </ol>
+      </div>
+    </div>
+  </div>
 
     <script type="module" src="app.js"></script>
   </body>

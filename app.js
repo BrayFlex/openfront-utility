@@ -2,7 +2,7 @@ import { createClipboardManager } from "./app/clipboard.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
-import { buildDiscordOutput, buildPreviewLink, } from "./app/exportOutputs.js";
+import { buildDevStorageOutput, buildPreviewLink, } from "./app/exportOutputs.js";
 import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
@@ -101,7 +101,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const importPanel = document.getElementById("importPanel");
     // Copy buttons
     const copyJsonBtn = document.getElementById("copyJsonBtn");
-    const copyDiscordBtn = document.getElementById("copyDiscordBtn");
+    const copyDevStorageBtn = document.getElementById("copyDevStorageBtn");
     const copyPreviewBtn = document.getElementById("copyPreviewBtn");
     // Preview panel
     const previewCanvas = document.getElementById("preview");
@@ -434,9 +434,9 @@ document.addEventListener("DOMContentLoaded", () => {
         return generatePatternBase64(pattern, mainGrid.getTileWidth(), mainGrid.getTileHeight(), scaleExponent());
     };
     copyJsonBtn.addEventListener("click", () => copyText(getOutputBase64()));
-    copyDiscordBtn.addEventListener("click", () => {
+    copyDevStorageBtn.addEventListener("click", () => {
         const b64 = getOutputBase64();
-        copyText(buildDiscordOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
+        copyText(buildDevStorageOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
     });
     copyPreviewBtn.addEventListener("click", () => {
         const b64 = getOutputBase64();
@@ -595,6 +595,18 @@ document.addEventListener("DOMContentLoaded", () => {
         resetButton: resetViewBtn,
         zoomValue: zoomValueEl,
     });
+    // ── Info Modal ────────────────────────────────────────────────────────────
+    const infoModal = document.getElementById("infoModal");
+    const infoModalBtn = document.getElementById("infoModalBtn");
+    const closeInfoModalBtn = document.getElementById("closeInfoModalBtn");
+    if (infoModal && infoModalBtn && closeInfoModalBtn) {
+        infoModalBtn.addEventListener("click", () => infoModal.hidden = false);
+        closeInfoModalBtn.addEventListener("click", () => infoModal.hidden = true);
+        infoModal.addEventListener("click", (e) => {
+            if (e.target === infoModal)
+                infoModal.hidden = true;
+        });
+    }
     // ── Pane resize ────────────────────────────────────────────────────────────
     initPaneResizeControls({
         shell: document.querySelector(".editor-shell"),
