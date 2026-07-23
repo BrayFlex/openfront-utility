@@ -4,7 +4,6 @@ import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
 import {
   buildDevStorageOutput,
-  buildDiscordOutput,
   buildPreviewLink,
 } from "./app/exportOutputs.js";
 import { setupGridGuides } from "./app/gridGuides.js";
@@ -117,7 +116,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Copy buttons
   const copyJsonBtn = document.getElementById("copyJsonBtn") as HTMLButtonElement;
-  const copyDevTestBtn = document.getElementById("copyDevTestBtn") as HTMLButtonElement;
+  const copyDevStorageBtn = document.getElementById("copyDevStorageBtn") as HTMLButtonElement;
   const copyPreviewBtn = document.getElementById("copyPreviewBtn") as HTMLButtonElement;
 
   // Preview panel
@@ -471,9 +470,9 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   copyJsonBtn.addEventListener("click", () => copyText(getOutputBase64()));
-  copyDevTestBtn.addEventListener("click", () => {
+  copyDevStorageBtn.addEventListener("click", () => {
     const b64 = getOutputBase64();
-    copyText(buildDevTestOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
+    copyText(buildDevStorageOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
   });
   copyPreviewBtn.addEventListener("click", () => {
     const b64 = getOutputBase64();
