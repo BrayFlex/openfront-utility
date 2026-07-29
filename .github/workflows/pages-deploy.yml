@@ -4,15 +4,11 @@ on:
   push:
     branches: [main, dev]
 
-concurrency:
-  group: pages-${{ github.ref }}
-  cancel-in-progress: true
-
 permissions:
   contents: write
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -22,8 +18,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      
-      - name: Deploy main to gh-pages root
+
+      - name: Deploy main to root
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -31,8 +27,10 @@ jobs:
           publish_branch: gh-pages
           publish_dir: ./docs
           keep_files: true
+          force_orphan: false
+          allow_empty_commit: false
 
-      - name: Deploy dev to gh-pages/dev
+      - name: Deploy dev to /dev
         if: github.ref == 'refs/heads/dev'
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -41,18 +39,8 @@ jobs:
           publish_dir: ./docs
           destination_dir: dev
           keep_files: true
-      
-      - name: Create root redirect for dev
-        if: github.ref == 'refs/heads/dev'
-        run: |
-          # Create redirect at root of gh-pages
-          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=./dev/"></head><body><a href="./dev/">Go to dev</a></body></html>' > ./dev-redirect.html
-          # Commit it directly to gh-pages
-          git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/BrayFlex/openfront-utility.git gh-pages-repo
-          cp ./dev-redirect.html gh-pages-repo/index.html
-          cd gh-pages-repo
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add index.html
-          git commit -m "Add root redirect to dev" || echo "No changes to commit"
-          git push
+          force_orphan: false
+          allow_empty_commit: false
+          # This is the key - disable Jekyll processing
+          user: |
+            .nojekyll
