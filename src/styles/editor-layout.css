@@ -307,9 +307,9 @@
 #preview {
   --preview-width: 100cqw
   display: block;
-  width: round(down, --preview-width, 1px);
+  width: round(down, --preview-width, 64px);
   /* width: 100%; */
-  height: var(--preview-width);
+  height: round(down, --preview-width, 64px);
   aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
