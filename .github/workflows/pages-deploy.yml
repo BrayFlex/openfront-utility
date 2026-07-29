@@ -37,54 +37,109 @@ jobs:
           # Create deployment directory
           mkdir -p deploy
           
-          # Determine the base path based on branch
           if [ "${{ github.ref_name }}" = "main" ]; then
-            DEPLOY_PATH="deploy"
-            BASE_URL="/openfront-utility/"
+            echo "Building for production (main branch)"
+            
+            # Copy built files for production
+            if [ -d "dist" ]; then
+              cp -r dist/* deploy/
+            elif [ -d "build" ]; then
+              cp -r build/* deploy/
+            elif [ -d "public" ]; then
+              cp -r public/* deploy/
+            fi
+            
+            # Copy source files
+            cp -r src/*.html deploy/ 2>/dev/null || true
+            cp -r src/*.css deploy/ 2>/dev/null || true
+            cp -r src/*.ico deploy/ 2>/dev/null || true
+            cp -r src/*.png deploy/ 2>/dev/null || true
+            cp -r src/*.json deploy/ 2>/dev/null || true
+            cp -r src/*.js deploy/ 2>/dev/null || true
+            cp -r src/*.ts deploy/ 2>/dev/null || true
+            
+            # Copy app directory
+            if [ -d "src/app" ]; then
+              mkdir -p deploy/app
+              cp -r src/app/* deploy/app/
+            fi
+            
+            # Copy styles
+            if [ -d "styles" ]; then
+              mkdir -p deploy/styles
+              cp -r styles/* deploy/styles/
+            fi
+            
+            # Copy scripts
+            if [ -d "scripts" ]; then
+              mkdir -p deploy/scripts
+              cp -r scripts/* deploy/scripts/
+            fi
+            
           else
-            DEPLOY_PATH="deploy/staging"
-            BASE_URL="/openfront-utility/staging/"
-          fi
-          
-          mkdir -p $DEPLOY_PATH
-          
-          # Copy built files
-          cp -r dist/* $DEPLOY_PATH/ 2>/dev/null || cp -r build/* $DEPLOY_PATH/ 2>/dev/null || cp -r public/* $DEPLOY_PATH/ 2>/dev/null || true
-          
-          # Copy source files (for development setup)
-          cp -r src/*.html $DEPLOY_PATH/ 2>/dev/null || true
-          cp -r src/*.css $DEPLOY_PATH/ 2>/dev/null || true
-          cp -r src/*.ico $DEPLOY_PATH/ 2>/dev/null || true
-          cp -r src/*.png $DEPLOY_PATH/ 2>/dev/null || true
-          cp -r src/*.json $DEPLOY_PATH/ 2>/dev/null || true
-          
-          # Copy scripts
-          mkdir -p $DEPLOY_PATH/scripts
-          cp -r scripts/*.js $DEPLOY_PATH/scripts/ 2>/dev/null || true
-          
-          # Copy app directory if it exists
-          if [ -d "src/app" ]; then
-            mkdir -p $DEPLOY_PATH/app
-            cp -r src/app/* $DEPLOY_PATH/app/ 2>/dev/null || true
-          fi
-          
-          # Copy styles
-          if [ -d "styles" ]; then
-            mkdir -p $DEPLOY_PATH/styles
-            cp -r styles/* $DEPLOY_PATH/styles/ 2>/dev/null || true
-          fi
-          
-          # If staging, create a redirect index.html
-          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo "Building for staging (dev branch)"
+            
+            # Create staging directory
+            mkdir -p deploy/staging
+            
+            # Copy built files for staging
+            if [ -d "dist" ]; then
+              cp -r dist/* deploy/staging/
+            elif [ -d "build" ]; then
+              cp -r build/* deploy/staging/
+            elif [ -d "public" ]; then
+              cp -r public/* deploy/staging/
+            fi
+            
+            # Copy source files
+            cp -r src/*.html deploy/staging/ 2>/dev/null || true
+            cp -r src/*.css deploy/staging/ 2>/dev/null || true
+            cp -r src/*.ico deploy/staging/ 2>/dev/null || true
+            cp -r src/*.png deploy/staging/ 2>/dev/null || true
+            cp -r src/*.json deploy/staging/ 2>/dev/null || true
+            cp -r src/*.js deploy/staging/ 2>/dev/null || true
+            cp -r src/*.ts deploy/staging/ 2>/dev/null || true
+            
+            # Copy app directory
+            if [ -d "src/app" ]; then
+              mkdir -p deploy/staging/app
+              cp -r src/app/* deploy/staging/app/
+            fi
+            
+            # Copy styles
+            if [ -d "styles" ]; then
+              mkdir -p deploy/staging/styles
+              cp -r styles/* deploy/staging/styles/
+            fi
+            
+            # Copy scripts
+            if [ -d "scripts" ]; then
+              mkdir -p deploy/staging/scripts
+              cp -r scripts/* deploy/staging/scripts/
+            fi
+            
+            # Create a root index.html that redirects to staging
             echo '<!DOCTYPE html>
             <html>
               <head>
-                <meta http-equiv="refresh" content="0; url=/openfront-utility/staging/index.html" />
+                <meta charset="UTF-8">
+                <meta http-equiv="refresh" content="0; url=/openfront-utility/staging/">
+                <title>Redirecting to Staging</title>
+                <style>
+                  body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
+                  .container { text-align: center; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+                  .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
+                  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+                </style>
               </head>
               <body>
-                <p>Redirecting to staging...</p>
+                <div class="container">
+                  <h2>Redirecting to Staging Environment...</h2>
+                  <div class="loader"></div>
+                  <p><a href="/openfront-utility/staging/">Click here if you are not redirected</a></p>
+                </div>
               </body>
-            </html>' > deploy/staging-redirect.html
+            </html>' > deploy/index.html
           fi
 
       - name: Deploy to gh-pages branch
@@ -94,7 +149,8 @@ jobs:
           publish_dir: ./deploy
           publish_branch: gh-pages
           destination_dir: .
-          keep_files: true
+          keep_files: false
           user_name: 'github-actions[bot]'
           user_email: 'github-actions[bot]@users.noreply.github.com'
           commit_message: 'Deploy ${{ github.ref_name }} to GitHub Pages'
+          force_orphan: true
