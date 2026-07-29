@@ -1,5 +1,6 @@
 import { cp, mkdir, readdir } from "node:fs/promises";
 import path from "node:path";
+import fs from "node:fs";
 import { fileURLToPath } from "node:url";
 
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -30,8 +31,7 @@ await mkdir(outDir, { recursive: true });
 await copyStaticFiles(srcDir);
 
 
-const fs = require('fs');
-const path2 = require('path');
+// new dev staging
 
 const basePath = process.env.BASE_PATH || '/openfront-utility/';
 
@@ -40,7 +40,7 @@ function updateHtmlFiles(dir) {
   const files = fs.readdirSync(dir);
   
   files.forEach(file => {
-    const fullPath = path2.join(dir, file);
+    const fullPath = path.join(dir, file);
     const stat = fs.statSync(fullPath);
     
     if (stat.isDirectory()) {
