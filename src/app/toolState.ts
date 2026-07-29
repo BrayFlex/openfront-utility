@@ -18,8 +18,8 @@ export type ToolSizeConfig = {
 };
 
 const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
-  pencil: { min: 1, max: 9, step: 2, defaultValue: 1, label: "Size" },
-  circle: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
+  pencil: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
+  circle: { min: 1, max: 30, step: 1, defaultValue: 7, label: "Size" },
   shape: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
 };
 
@@ -125,14 +125,14 @@ export function createToolState(options: ToolStateOptions): ToolState {
     getShapeRadius: () => {
       const size = currentTool === "shape"
         ? parseInt(sizeSlider.value)
-        : (rememberedSizes["shape"] ?? 3);
+        : (rememberedSizes["shape"] ?? 5);
       return size;
     },
     getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
     getCircleRadius: () => {
       const size = currentTool === "circle"
         ? parseInt(sizeSlider.value)
-        : (rememberedSizes["circle"] ?? 5);
+        : (rememberedSizes["circle"] ?? 7);
       return Math.max(0, Math.floor(size / 2));
     },
     subscribeToToolChanges: (listener) => {
