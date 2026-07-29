@@ -28,3 +28,36 @@ const copyStaticFiles = async (dir) => {
 
 await mkdir(outDir, { recursive: true });
 await copyStaticFiles(srcDir);
+
+
+const fs = require('fs');
+const path = require('path');
+
+const basePath = process.env.BASE_PATH || '/openfront-utility/';
+
+// Function to update HTML files with correct base path
+function updateHtmlFiles(dir) {
+  const files = fs.readdirSync(dir);
+  
+  files.forEach(file => {
+    const fullPath = path.join(dir, file);
+    const stat = fs.statSync(fullPath);
+    
+    if (stat.isDirectory()) {
+      updateHtmlFiles(fullPath);
+    } else if (file.endsWith('.html')) {
+      let content = fs.readFileSync(fullPath, 'utf8');
+      
+      // Add or update base tag
+      if (content.includes('<base')) {
+        content = content.replace(/<base[^>]*>/, `<base href="${basePath}">`);
+      } else {
+        content = content.replace('<head>', `<head>\n  <base href="${basePath}">`);
+      }
+      
+      fs.writeFileSync(fullPath, content);
+    }
+  });
+}
+
+// Your copy logic here...
