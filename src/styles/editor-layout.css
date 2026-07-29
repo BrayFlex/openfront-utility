@@ -305,15 +305,15 @@
 }
 
 #preview {
-  --preview-width: 100cqw
+  --preview-width: 100cqw;
   display: block;
-  width: round(down, --preview-width, 64px);
+  width: round(down, var(--preview-width), 64px);
   /* width: 100%; */
-  height: round(down, --preview-width, 64px);
+  height: auto;
   aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
-  border-bottom: 1px solid var(--border);
+  /* border-bottom: 1px solid var(--border); */
 }
 
 /* Colors Section */
