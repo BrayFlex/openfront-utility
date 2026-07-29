@@ -305,11 +305,12 @@
 }
 
 #preview {
+  --preview-width: 100cqw
   display: block;
-  width: round(down, 100cqw, 1px);
+  width: round(down, --preview-width, 1px);
   /* width: 100%; */
-  /* height: auto; */
-  aspect-ratio: 1 / 1;
+  height: var(--preview-width);
+  aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
   border-bottom: 1px solid var(--border);
