@@ -93,7 +93,7 @@
   padding: 4px 6px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  -moz-appearance: textfield;
+  /* -moz-appearance: textfield; */
 }
 .ctrl-number::-webkit-inner-spin-button,
 .ctrl-number::-webkit-outer-spin-button {
