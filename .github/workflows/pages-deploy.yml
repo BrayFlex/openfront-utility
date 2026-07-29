@@ -5,7 +5,7 @@ on:
     branches: [main, dev]
 
 concurrency:
-  group: pages-${{ github.workflow }}-${{ github.ref }}
+  group: pages-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
@@ -14,8 +14,6 @@ permissions:
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    env:
-      DEPLOY_DELAY_SECONDS: 30
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -24,9 +22,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run build
-      - name: Wait before deploy
-        run: sleep ${{ env.DEPLOY_DELAY_SECONDS }}
-
+      
       - name: Deploy main to gh-pages root
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v4
@@ -45,3 +41,18 @@ jobs:
           publish_dir: ./docs
           destination_dir: dev
           keep_files: true
+      
+      - name: Create root redirect for dev
+        if: github.ref == 'refs/heads/dev'
+        run: |
+          # Create redirect at root of gh-pages
+          echo '<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0; url=./dev/"></head><body><a href="./dev/">Go to dev</a></body></html>' > ./dev-redirect.html
+          # Commit it directly to gh-pages
+          git clone --depth 1 --branch gh-pages https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/BrayFlex/openfront-utility.git gh-pages-repo
+          cp ./dev-redirect.html gh-pages-repo/index.html
+          cd gh-pages-repo
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add index.html
+          git commit -m "Add root redirect to dev" || echo "No changes to commit"
+          git push
