@@ -307,13 +307,13 @@
 #preview {
   --preview-width: 100cqw;
   display: block;
-  width: round(down, var(--preview-width), 64px);
-  /* width: 100%; */
-  height: round(down, var(--preview-width), 64px);
+  width: 100%;
+  max-width: round(down, var(--preview-width), 1px);
   aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
-  /* border-bottom: 1px solid var(--border); */
+  /* This prevents the element from growing beyond its container */
+  height: auto;
 }
 
 /* Colors Section */
