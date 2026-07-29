@@ -31,7 +31,7 @@ await copyStaticFiles(srcDir);
 
 
 const fs = require('fs');
-const path = require('path');
+const path2 = require('path');
 
 const basePath = process.env.BASE_PATH || '/openfront-utility/';
 
@@ -40,7 +40,7 @@ function updateHtmlFiles(dir) {
   const files = fs.readdirSync(dir);
   
   files.forEach(file => {
-    const fullPath = path.join(dir, file);
+    const fullPath = path2.join(dir, file);
     const stat = fs.statSync(fullPath);
     
     if (stat.isDirectory()) {
