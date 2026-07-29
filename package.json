@@ -2,15 +2,12 @@
   "name": "openfront-utility-ts",
   "version": "1.0.0",
   "type": "module",
-  "description": "Pattern JSON Generator + Preview (TypeScript版)",
+  "description": "Pattern JSON Generator + Preview ",
   "scripts": {
     "build": "tsc && node scripts/copy-static.js",
     "start": "npx serve docs",
     "dev": "npm run build && npm run start",
-    "test": "npm run build && node scripts/test-image-pattern-conversion.js && node scripts/test-circle-geometry.js",
-    "build:prod": "BASE_PATH=/openfront-utility/ npm run build",
-    "build:staging": "BASE_PATH=/openfront-utility/staging/ npm run build",
-    "build:copy": "node scripts/copy-static.js"
+    "test": "npm run build && node scripts/test-image-pattern-conversion.js && node scripts/test-circle-geometry.js"
   },
   "devDependencies": {
     "typescript": "^5.0.0"
