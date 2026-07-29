@@ -59,7 +59,7 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
       context.font = "bold 15px 'Space Grotesk', sans-serif";
       context.textAlign = "center";
       context.textBaseline = "middle";
-      context.fillText("SCRAP CANVAS — NOT MAIN PATTERN", width / 2, height - 17);
+      context.fillText("< Test Canvas >", width / 2, height - 17);
       context.restore();
     }
   };

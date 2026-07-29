@@ -306,9 +306,10 @@
 
 #preview {
   display: block;
-  width: 100%;
-  height: auto;
-  aspect-ratio: 1;
+  width: round(down, 100cqw, 1px);
+  /* width: 100%; */
+  /* height: auto; */
+  aspect-ratio: 1 / 1;
   background: #fff;
   image-rendering: pixelated;
   border-bottom: 1px solid var(--border);
