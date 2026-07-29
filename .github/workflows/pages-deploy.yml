@@ -1,46 +1,100 @@
-name: Deploy GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
-    branches: [main, dev]
+    branches:
+      - main
+      - dev
 
 permissions:
   contents: write
+  pages: write
+  id-token: write
 
 jobs:
-  deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
-          node-version: 20
-          cache: npm
-      - run: npm ci
-      - run: npm run build
+          fetch-depth: 0
 
-      - name: Deploy main to root
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build
+
+      - name: Prepare deployment
+        run: |
+          # Create deployment directory
+          mkdir -p deploy
+          
+          # Determine the base path based on branch
+          if [ "${{ github.ref_name }}" = "main" ]; then
+            DEPLOY_PATH="deploy"
+            BASE_URL="/openfront-utility/"
+          else
+            DEPLOY_PATH="deploy/staging"
+            BASE_URL="/openfront-utility/staging/"
+          fi
+          
+          mkdir -p $DEPLOY_PATH
+          
+          # Copy built files
+          cp -r dist/* $DEPLOY_PATH/ 2>/dev/null || cp -r build/* $DEPLOY_PATH/ 2>/dev/null || cp -r public/* $DEPLOY_PATH/ 2>/dev/null || true
+          
+          # Copy source files (for development setup)
+          cp -r src/*.html $DEPLOY_PATH/ 2>/dev/null || true
+          cp -r src/*.css $DEPLOY_PATH/ 2>/dev/null || true
+          cp -r src/*.ico $DEPLOY_PATH/ 2>/dev/null || true
+          cp -r src/*.png $DEPLOY_PATH/ 2>/dev/null || true
+          cp -r src/*.json $DEPLOY_PATH/ 2>/dev/null || true
+          
+          # Copy scripts
+          mkdir -p $DEPLOY_PATH/scripts
+          cp -r scripts/*.js $DEPLOY_PATH/scripts/ 2>/dev/null || true
+          
+          # Copy app directory if it exists
+          if [ -d "src/app" ]; then
+            mkdir -p $DEPLOY_PATH/app
+            cp -r src/app/* $DEPLOY_PATH/app/ 2>/dev/null || true
+          fi
+          
+          # Copy styles
+          if [ -d "styles" ]; then
+            mkdir -p $DEPLOY_PATH/styles
+            cp -r styles/* $DEPLOY_PATH/styles/ 2>/dev/null || true
+          fi
+          
+          # If staging, create a redirect index.html
+          if [ "${{ github.ref_name }}" = "dev" ]; then
+            echo '<!DOCTYPE html>
+            <html>
+              <head>
+                <meta http-equiv="refresh" content="0; url=/openfront-utility/staging/index.html" />
+              </head>
+              <body>
+                <p>Redirecting to staging...</p>
+              </body>
+            </html>' > deploy/staging-redirect.html
+          fi
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./deploy
           publish_branch: gh-pages
-          publish_dir: ./docs
+          destination_dir: .
           keep_files: true
-          force_orphan: false
-          allow_empty_commit: false
-
-      - name: Deploy dev to /dev
-        if: github.ref == 'refs/heads/dev'
-        uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_branch: gh-pages
-          publish_dir: ./docs
-          destination_dir: dev
-          keep_files: true
-          force_orphan: false
-          allow_empty_commit: false
-          # This is the key - disable Jekyll processing
-          user: |
-            .nojekyll
+          user_name: 'github-actions[bot]'
+          user_email: 'github-actions[bot]@users.noreply.github.com'
+          commit_message: 'Deploy ${{ github.ref_name }} to GitHub Pages'
