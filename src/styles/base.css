@@ -46,6 +46,10 @@ body {
   font-size: 13px;
 }
 
+a {
+  color: var(--accent);
+}
+
 button, input, select, textarea { font: inherit; }
 
 /* ── Buttons ────────────────────────────────────────────────────────────── */
