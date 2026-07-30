@@ -174,20 +174,20 @@
 .center-cross-overlay::after {
   content: "";
   position: absolute;
-  background: var(--accent);
+  background: var(--danger);
   opacity: 1;
 }
 .center-cross-overlay::before {
   top: 14px;
   left: 0;
-  width: 31px;
-  height: 3px;
+  width: 36px;
+  height: 4px;
 }
 .center-cross-overlay::after {
   top: 0;
   left: 14px;
-  width: 3px;
-  height: 31px;
+  width: 4px;
+  height: 36px;
 }
 
 /* Watermark is at the bottom of the canvas workspace panel */
@@ -247,8 +247,8 @@
 }
 
 /* ── Guides ─────────────────────────────────────────────────────────────── */
-.cell.guide-h { border-top-color: var(--danger); border-top-width: 3px; }
-.cell.guide-v { border-left-color: var(--danger); border-left-width: 3px; }
+.cell.guide-h { border-top-color: var(--danger); border-top-width: 4px; }
+.cell.guide-v { border-left-color: var(--danger); border-left-width: 4px; }
 
 /* ── Preview Panel ──────────────────────────────────────────────────────── */
 .preview-panel {
