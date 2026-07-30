@@ -1,21 +1,410 @@
 <!DOCTYPE html>
-  <html>
-    <head>
-      <meta charset="UTF-8">
-      <meta http-equiv="refresh" content="0; url=/openfront-utility/staging/">
-      <title>Redirecting to Staging</title>
-      <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f0f0; }
-        .container { text-align: center; padding: 40px; background: white; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #3498db; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <h2>Redirecting to Staging Environment...</h2>
-        <div class="loader"></div>
-        <p><a href="/openfront-utility/staging/">Click here if you are not redirected</a></p>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Pattern Utility — 1-Bit Pattern Editor</title>
+    <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="circle-tool.css" />
+    <link rel="stylesheet" href="image-import.css" />
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+  </head>
+  <body>
+    <div class="page">
+
+      <!-- ═══ TOP BAR ═══ -->
+      <header class="top-bar" aria-label="Toolbar">
+
+        <!-- Logo + theme toggle -->
+        <div class="logo-block">
+          <span class="logo-eyebrow">Pattern Utility</span>
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <label class="theme-toggle" aria-label="Toggle dark mode">
+              <input type="checkbox" id="themeToggle" />
+              <span class="theme-toggle-slider">
+                <span class="theme-toggle-icon theme-toggle-sun">☀</span>
+                <span class="theme-toggle-icon theme-toggle-moon">☽</span>
+              </span>
+            </label>
+            <button id="infoModalBtn" class="info-btn" aria-label="Helpful Information" title="Helpful Information">ℹ️</button>
+          </div>
+        </div>
+
+        <!-- ── Tool strip ── -->
+        <div class="tool-strip" id="toolbox" role="toolbar" aria-label="Drawing tools">
+
+          <!-- Drawing tools & Size -->
+          <div class="tool-strip-group">
+            <!-- Size button: shows current size value + dropdown arrow -->
+            <button id="toolSizeBtn" class="tool-btn size-btn" title="Tool size">
+              <span id="toolSizeBtnValue" class="size-btn-value">1</span>
+              <span class="size-btn-arrow">▾</span>
+            </button>
+            <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
+              <span class="tool-icon">✏</span>
+              <span class="tool-label">Pencil</span>
+            </button>
+            <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
+              <span class="tool-icon">○</span>
+              <span class="tool-label">Circle</span>
+            </button>
+            <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
+              <select id="shapeType" class="shape-select" onclick="event.stopPropagation()">
+                <option value="star" selected>Star</option>
+                <option value="cube">Cube</option>
+              </select>
+              <span class="tool-label">Shape</span>
+            </button>
+            <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
+              <span class="tool-icon">╱</span>
+              <span class="tool-label">Line</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Fill / Shade -->
+          <div class="tool-strip-group">
+            <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill area; with selection: inverts selection">
+              <span class="tool-icon">⬛</span>
+              <span class="tool-label">Fill</span>
+            </button>
+            <button id="tool-shade" class="tool-btn" data-tool="shade" title="Shade — checkerboard flood fill; with selection: shades entire selection">
+              <span class="tool-icon">▦</span>
+              <span class="tool-label">Shade</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Edit: Cut / Copy / Paste -->
+          <div class="tool-strip-group">
+            <button id="cutBtn" class="tool-btn action-btn" title="Cut selection (Ctrl+X)">
+              <span class="tool-icon">✂</span>
+              <span class="tool-label">Cut</span>
+            </button>
+            <button id="copyBtn" class="tool-btn action-btn" title="Copy selection (Ctrl+C)">
+              <span class="tool-icon">⧉</span>
+              <span class="tool-label">Copy</span>
+            </button>
+            <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (Ctrl+V) — then click top-left position">
+              <span class="tool-icon">⎘</span>
+              <span class="tool-label">Paste</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- History -->
+          <div class="tool-strip-group">
+            <button id="undoBtn" class="tool-btn action-btn" disabled title="Undo (Ctrl+Z)">
+              <span class="tool-icon">↩</span>
+              <span class="tool-label">Undo</span>
+            </button>
+            <button id="redoBtn" class="tool-btn action-btn" disabled title="Redo (Ctrl+Shift+Z)">
+              <span class="tool-icon">↪</span>
+              <span class="tool-label">Redo</span>
+            </button>
+            <!-- Scrap canvas undo/redo (shown when scrap is active) -->
+            <button id="scrapUndoBtn" class="tool-btn action-btn" disabled hidden title="Undo scrap canvas (Ctrl+Z)">
+              <span class="tool-icon">↩</span>
+              <span class="tool-label">Undo</span>
+            </button>
+            <button id="scrapRedoBtn" class="tool-btn action-btn" disabled hidden title="Redo scrap canvas (Ctrl+Shift+Z)">
+              <span class="tool-icon">↪</span>
+              <span class="tool-label">Redo</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Selection tools -->
+          <div class="tool-strip-group">
+            <button id="tool-selectArea" class="tool-btn" data-tool="selectArea" title="Select (Shift)">
+              <span class="tool-icon">⬚</span>
+              <span class="tool-label">Select</span>
+            </button>
+            <button id="deselectBtn" class="tool-btn action-btn" disabled title="Deselect all (Ctrl+D)">
+              <span class="tool-icon">⌧</span>
+              <span class="tool-label">Deselect</span>
+            </button>
+          </div>
+
+          <div class="tool-strip-separator"></div>
+
+          <!-- Transformations:
+               Col 1: RotateL, ShiftL
+               Col 2: ShiftUp, ShiftDown
+               Col 3: RotateR, ShiftR
+               Col 4: FlipV, FlipH
+          -->
+          <div class="tool-strip-group transform-group">
+            <div class="transform-btns-grid">
+              <button id="rotateLeftBtn"  class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
+              <button id="shiftUpBtn"     class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
+              <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate Right">↻</button>
+              <button id="flipVBtn"       class="tool-btn transform-btn" disabled title="Flip Vertical">↕</button>
+              <button id="shiftLeftBtn"   class="tool-btn transform-btn" disabled title="Shift Left">←</button>
+              <button id="shiftDownBtn"   class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
+              <button id="shiftRightBtn"  class="tool-btn transform-btn" disabled title="Shift Right">→</button>
+              <button id="flipHBtn"       class="tool-btn transform-btn" disabled title="Flip Horizontal">↔</button>
+            </div>
+          </div>
+
+          <!-- Guide buttons injected here by gridGuides.ts -->
+
+        </div><!-- end .tool-strip -->
+
+        <!-- Export / Import -->
+        <div class="top-bar-right">
+          <div class="export-import-wrap">
+            <div class="ei-tabs">
+              <button id="exportTabBtn" class="ei-tab selected" type="button">Export</button>
+              <button id="importTabBtn" class="ei-tab" type="button">Import</button>
+            </div>
+            <!-- Export panel -->
+            <div id="exportPanel" class="ei-panel export-grid">
+              <!-- <div class="ei-panel-section"> -->
+                <button id="copyJsonBtn"      class="ei-copy-btn" title="Copy Raw JSON">JSON</button>
+                <button id="copyDevStorageBtn"   class="ei-copy-btn" title="Copy Dev Storage for Console">Console</button>
+                <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy Preview Link">Preview Link</button>
+              <!-- </div> -->
+              <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
+            </div>
+            <!-- Import panel -->
+            <div id="importPanel" class="ei-panel" hidden>
+              <input type="text" id="base64Input" class="ei-text-input" placeholder="Paste Base64 / pattern code" value="" />
+              <button id="loadBtn" class="ei-copy-btn btn-primary">Load</button>
+              <div id="imageImportEntry"></div>
+            </div>
+          </div>
+        </div>
+
+      </header>
+
+      <!-- ═══ MAIN AREA ═══ -->
+      <main class="editor-shell workspace-split" aria-label="Editor workspace">
+
+        <!-- ─── Canvas panel ─── -->
+        <section class="canvas-panel" aria-label="Pattern canvas">
+
+          <!-- Canvas tabs + controls bar -->
+          <div class="canvas-controls-bar">
+            <!-- Tab switcher -->
+            <div class="canvas-tabs ei-tabs" role="tablist">
+              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
+              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test Canvas</button>
+            </div>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Invert / Clear -->
+            <button id="invertBtn" class="ctrl-btn" title="Invert canvas (or selection)">Invert</button>
+            <button id="clearBtn"  class="ctrl-btn" title="Clear canvas">Clear</button>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Width -->
+            <label class="ctrl-label" for="tileWidthValue">W</label>
+            <div class="ctrl-stepper">
+              <input type="number" id="tileWidthValue" class="ctrl-number" value="129" min="2" max="129" />
+              <!-- hidden range synced by JS -->
+              <input type="range"  id="tileWidth"      value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <div class="stepper-btns">
+                <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
+                <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+              </div>
+            </div>
+
+            <!-- Height -->
+            <label class="ctrl-label" for="tileHeightValue">H</label>
+            <div class="ctrl-stepper">
+              <input type="number" id="tileHeightValue" class="ctrl-number" value="63" min="2" max="63" />
+              <input type="range"  id="tileHeight"      value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <div class="stepper-btns">
+                <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
+                <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+              </div>
+            </div>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Scale dropdown — default 1× (value="0") -->
+            <label class="ctrl-label" for="scaleSelect">Scale</label>
+            <select id="scaleSelect" class="ctrl-select">
+              <option value="0" selected>1×</option>
+              <option value="1">2×</option>
+              <option value="2">4×</option>
+              <option value="3">8×</option>
+              <option value="4">16×</option>
+            </select>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Zoom control -->
+            <button id="zoomOutBtn"  class="ctrl-btn" aria-label="Zoom out">−</button>
+            <output  id="zoomValue"  class="ctrl-zoom">100%</output>
+            <button id="zoomInBtn"   class="ctrl-btn" aria-label="Zoom in">+</button>
+            <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+
+          </div>
+
+          <!-- Grid workspaces -->
+          <div id="canvasWorkspace" class="canvas-workspace">
+            <div id="gridViewport" class="grid-viewport">
+              <!-- Main canvas -->
+              <div id="mainGridWrap">
+                <div id="grid" class="grid"></div>
+              </div>
+            <!-- Scrap canvas -->
+            <div id="scrapGridWrap" hidden>
+              <div id="scrapGrid" class="grid scrap-grid"></div>
+            </div>
+          </div>
+        </div>
+        <!-- Watermark -->
+        <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
+
+        </section>
+
+        <!-- Resize handle -->
+        <div id="previewResizeHandle" class="resize-handle preview-resize-handle" role="separator" aria-label="Resize preview"></div>
+
+        <!-- ─── Preview panel (right, collapsible) ─── -->
+        <aside class="preview-panel" aria-label="Pattern preview">
+          <!-- Preview header -->
+          <div class="preview-header">
+            <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">›</button>
+            <span class="panel-title">Preview</span>
+            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">⤢</button>
+            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>⤡</button>
+          </div>
+
+          <!-- Preview canvas -->
+          <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+
+          <!-- Colors section (collapsible) -->
+          <details class="colors-section" open>
+            <summary class="colors-summary">
+              <span>Colors</span>
+            </summary>
+            <div class="colors-body">
+              <div class="color-row">
+                <label for="previewPrimaryColor" class="color-label">Primary</label>
+                <input type="color" id="previewPrimaryColor" value="#ffffff" />
+              </div>
+              <div class="color-row">
+                <label for="previewSecondaryColor" class="color-label">Secondary</label>
+                <input type="color" id="previewSecondaryColor" value="#000000" />
+              </div>
+              <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
+              <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
+              <details class="color-preset-details" open>
+                <summary>Color Presets</summary>
+                <div id="colorPresetContainer" class="color-preset-container loading">
+                  <div class="color-preset-placeholder">Loading presets…</div>
+                </div>
+              </details>
+            </div>
+          </details>
+
+        </aside>
+
+        <!-- Show-preview button (visible when preview is collapsed) -->
+        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">‹</button>
+
+        <!-- Toolbar resize handle (left edge of preview sidebar) -->
+        <div id="toolbarResizeHandle" class="resize-handle toolbar-resize-handle" role="separator" aria-label="Resize toolbar" style="display:none"></div>
+
+      </main>
+
+    </div><!-- end .page -->
+
+    <!-- Size Popover -->
+    <div id="sizePopover" class="size-popover" hidden>
+      <div class="size-popover-content">
+        <label for="toolSizeSlider" class="sr-only">Size</label>
+        <input
+          type="range"
+          id="toolSizeSlider"
+          class="size-slider vertical"
+          min="1" max="10" step="1" value="1"
+          list="toolSizeNotches"
+          orient="vertical"
+        />
+        <datalist id="toolSizeNotches">
+          <option value="1"></option>
+          <option value="2"></option>
+          <option value="3"></option>
+          <option value="4"></option>
+          <option value="5"></option>
+          <option value="6"></option>
+          <option value="7"></option>
+          <option value="8"></option>
+          <option value="9"></option>
+          <option value="10"></option>
+        </datalist>
+        <output id="toolSizeOutput" class="size-output">1</output>
       </div>
-    </body>
-  </html>
+    </div>
+
+  <!-- Information Modal -->
+  <div id="infoModal" class="modal-overlay" hidden>
+    <div class="modal-panel" style="overflow-y:scroll;max-width: 800px;max-height: 600px;">
+      <div class="modal-header">
+        <h2 class="modal-title">Helpful Information</h2>
+        <button id="closeInfoModalBtn" class="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div class="modal-body" style="font-size: 13px; line-height: 1.6; user-select: text;">
+        <p>⚠️ <strong>This tool is in beta, I give no guarantee of stability, uptime, maintenance or permanence</strong><br>
+
+        <h3>Links:</h3>
+        <p>🗳️ <strong>Submit a Pattern</strong><br>
+        Use this form to submit your pattern for review:<br>
+        🔗 <a href="https://forms.gle/e2kH8eBUd7Zho4rYA" target="_blank">https://forms.gle/e2kH8eBUd7Zho4rYA</a></p>
+
+        <p>🗃️ <strong>Submission Status Tracker</strong><br>
+        Check here to see if your submission has been reviewed, accepted, or rejected:<br>
+        🔗 <a href="https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing" target="_blank">https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing</a></p>
+
+        <p>🎨 <strong>Create, Edit & Preview Pattern Tools</strong><br>
+        Use these tools to preview how your pattern looks in-game before submitting:<br>
+        🔗 <a href="https://aotumuri.github.io/openfront-utility/" target="_blank">https://aotumuri.github.io/openfront-utility/</a><br>
+        🔗 <a href="https://brayflex.github.io/openfront-utility/" target="_blank">https://brayflex.github.io/openfront-utility/</a></p>
+
+        <p>🖼️ <strong>Converter for normal images and other drawing apps</strong><br>
+        <a href="https://niconacho2020.github.io/projects/pattern/" target="_blank">https://niconacho2020.github.io/projects/pattern/</a></p>
+
+        <p>💬 <strong>Feedback & Suggestions</strong><br>
+        Submit an issue or suggestion on GitHub discussions:<br>
+        🔗 <a href="https://github.com/BrayFlex/openfront-utility/discussions" target="_blank">https://github.com/BrayFlex/openfront-utility/discussions</a></p>
+
+        <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
+        
+        <h3>Final Testing & In-Game Preview Instructions:</h3>
+        <ol style="padding-left: 20px; margin-top: 8px;">
+          <li>In the pattern preview tool press <strong>Console</strong> (Copy Dev localStorage)</li>
+          <li>Go to <a href="https://main.openfront.dev/" target="_blank">https://main.openfront.dev/</a></li>
+          <li>Right click on the page and select "Inspect" / <code>F12</code></li>
+          <li>In the top bar of the Inspector click the "Console" tab</li>
+          <li>Directly paste into the console ( after the<code>&gt</code>)</li>
+          <li>Open a solo game and see how the pattern looks.</li>
+        </ol>
+
+        <p>
+          I recommend testing not just FFA but also Teams as the primary is replaced in teams and you
+          want to ensure your secondary won't be confusing with other team colors. 
+          Currently you can test 2 Teams to see Red and Quads to see Orange you have to guess at other colors.
+        </p>
+        
+        <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px;">
+          Made with 🍫 by Aotumuri &amp; BrayFlex
+        </div>
+      </div>
+    </div>
+  </div>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>
