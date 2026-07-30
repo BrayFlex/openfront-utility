@@ -432,12 +432,16 @@ document.addEventListener("DOMContentLoaded", () => {
     // (Color presets initialization is deferred until URL hash parsing is complete)
     // ── Preview panel collapse ────────────────────────────────────────────────
     const collapsePreview = () => {
+        var _a;
         previewPanel.classList.add("collapsed");
+        (_a = document.querySelector(".editor-shell")) === null || _a === void 0 ? void 0 : _a.classList.add("preview-collapsed");
         showPreviewBtn.hidden = false;
         document.getElementById("previewResizeHandle").hidden = true;
     };
     const expandPreview = () => {
+        var _a;
         previewPanel.classList.remove("collapsed");
+        (_a = document.querySelector(".editor-shell")) === null || _a === void 0 ? void 0 : _a.classList.remove("preview-collapsed");
         showPreviewBtn.hidden = true;
         document.getElementById("previewResizeHandle").hidden = false;
     };
