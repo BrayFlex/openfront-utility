@@ -164,8 +164,8 @@
 /* Center guide cross — larger and theme-aware */
 .center-cross-overlay {
   position: absolute;
-  width: 31px;
-  height: 31px;
+  width: 36px;
+  height: 36px;
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 10;
@@ -247,8 +247,8 @@
 }
 
 /* ── Guides ─────────────────────────────────────────────────────────────── */
-.cell.guide-h { border-top-color: var(--danger); border-top-width: 4px; }
-.cell.guide-v { border-left-color: var(--danger); border-left-width: 4px; }
+.cell.guide-h { border-top-color: var(--danger); border-top-width: 3px; }
+.cell.guide-v { border-left-color: var(--danger); border-left-width: 3px; }
 
 /* ── Preview Panel ──────────────────────────────────────────────────────── */
 .preview-panel {
