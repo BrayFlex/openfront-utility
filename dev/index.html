@@ -37,9 +37,12 @@
           <!-- Drawing tools & Size -->
           <div class="tool-strip-group">
             <!-- Size button: shows current size value + dropdown arrow -->
-            <button id="toolSizeBtn" class="tool-btn size-btn" title="Tool size">
-              <span id="toolSizeBtnValue" class="size-btn-value">1</span>
-              <span class="size-btn-arrow">▾</span>
+            <button id="toolSizeBtn" class="tool-btn" title="Tool size">
+              <div class="size-btn">
+                <span id="toolSizeBtnValue" class="size-btn-value">1</span>
+                <span class="size-btn-arrow">▾</span>
+              </div>
+              <span class="tool-label">Size</span>
             </button>
             <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
               <span class="tool-icon">✏</span>
@@ -357,7 +360,8 @@
         <button id="closeInfoModalBtn" class="modal-close" aria-label="Close">&times;</button>
       </div>
       <div class="modal-body" style="font-size: 13px; line-height: 1.6; user-select: text;">
-        <p>⚠️ <strong>This tool is in beta, I give no guarantee of stability, uptime, maintenance or permanence-<br>that being said all links are backwards compatible and the code is open source.</strong><br></p>
+        <p>⚠️ <strong>This tool is in beta, I give no guarantee of stability, uptime, maintenance or permanence-<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;that being said all links are backwards compatible and the code is open source.</strong><br></p>
 
         <h3>Links:</h3>
         <p>🗳️ <strong>Submit a Pattern</strong><br>
