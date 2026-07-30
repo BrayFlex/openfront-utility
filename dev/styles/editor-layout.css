@@ -178,14 +178,14 @@
   opacity: 1;
 }
 .center-cross-overlay::before {
-  top: 14px;
+  top: 17px;
   left: 0;
   width: 36px;
   height: 4px;
 }
 .center-cross-overlay::after {
   top: 0;
-  left: 14px;
+  left: 17px;
   width: 4px;
   height: 36px;
 }
