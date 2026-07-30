@@ -2,7 +2,7 @@
   "name": "openfront-utility-ts",
   "version": "1.0.0",
   "type": "module",
-  "description": "Pattern JSON Generator + Preview (TypeScript版)",
+  "description": "Pattern JSON Generator + Preview ",
   "scripts": {
     "build": "tsc && node scripts/copy-static.js",
     "start": "npx serve docs",
