@@ -14,6 +14,16 @@
   min-height: 0;
 }
 
+.workspace-split.preview-collapsed,
+.workspace-split.preview-floating {
+  display: flex;
+}
+
+.workspace-split.preview-collapsed > .canvas-panel,
+.workspace-split.preview-floating > .canvas-panel {
+  flex: 1;
+}
+
 /* ── Canvas Panel ───────────────────────────────────────────────────────── */
 .canvas-panel {
   min-width: 0;
@@ -261,7 +271,7 @@
   overflow: hidden;
 }
 
-.preview-panel.collapsed {
+.preview-panel.collapsed:not(.floating) {
   display: none;
 }
 

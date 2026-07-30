@@ -477,12 +477,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // ── Preview panel collapse ────────────────────────────────────────────────
   const collapsePreview = () => {
     previewPanel.classList.add("collapsed");
+    document.querySelector(".editor-shell")?.classList.add("preview-collapsed");
     showPreviewBtn.hidden = false;
     document.getElementById("previewResizeHandle")!.hidden = true;
   };
 
   const expandPreview = () => {
     previewPanel.classList.remove("collapsed");
+    document.querySelector(".editor-shell")?.classList.remove("preview-collapsed");
     showPreviewBtn.hidden = true;
     document.getElementById("previewResizeHandle")!.hidden = false;
   };
