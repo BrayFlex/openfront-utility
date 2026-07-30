@@ -6,8 +6,6 @@ type PatternLoaderOptions = {
   tileHeightInput: HTMLInputElement;
   tileWidthValue: HTMLInputElement;
   tileHeightValue: HTMLInputElement;
-  scaleInput: HTMLInputElement;
-  scaleValue: HTMLSpanElement;
   onPatternLoaded: (pattern: number[][]) => void;
 };
 
@@ -18,8 +16,6 @@ export function createPatternLoader(options: PatternLoaderOptions) {
     tileHeightInput,
     tileWidthValue,
     tileHeightValue,
-    scaleInput,
-    scaleValue,
     onPatternLoaded,
   } = options;
 
@@ -33,13 +29,11 @@ export function createPatternLoader(options: PatternLoaderOptions) {
       alert((e as Error).message);
       return;
     }
-    const { pattern, tileWidth, tileHeight, scale } = decoded;
+    const { pattern, tileWidth, tileHeight } = decoded;
     tileWidthInput.value = tileWidth.toString();
     tileHeightInput.value = tileHeight.toString();
     tileWidthValue.value = tileWidthInput.value;
     tileHeightValue.value = tileHeightInput.value;
-    scaleInput.value = scale.toString();
-    scaleValue.textContent = String(1 << parseInt(scaleInput.value));
     onPatternLoaded(pattern);
   };
 }

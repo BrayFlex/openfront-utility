@@ -401,22 +401,4 @@
 /* Prevent text selection while dragging */
 body.is-resizing-pane * { user-select: none !important; }
 
-/* Floating preview resize handle */
-.floating-resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1;
-  user-select: none;
-  opacity: 0.5;
-}
-.floating-resize-handle:hover { opacity: 1; }
+

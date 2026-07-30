@@ -6,8 +6,8 @@
     <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
-    <link rel="stylesheet" href="circle-tool.css" />
-    <link rel="stylesheet" href="image-import.css" />
+    <link rel="stylesheet" href="styles/circle-tool.css" />
+    <link rel="stylesheet" href="styles/image-import.css" />
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   </head>
   <body>
@@ -211,9 +211,9 @@
             <!-- Width -->
             <label class="ctrl-label" for="tileWidthValue">W</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileWidthValue" class="ctrl-number" value="129" min="2" max="129" />
+              <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
               <!-- hidden range synced by JS -->
-              <input type="range"  id="tileWidth"      value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
                 <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
@@ -223,8 +223,8 @@
             <!-- Height -->
             <label class="ctrl-label" for="tileHeightValue">H</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileHeightValue" class="ctrl-number" value="63" min="2" max="63" />
-              <input type="range"  id="tileHeight"      value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
+              <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
                 <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
@@ -279,6 +279,7 @@
           <!-- Preview header -->
           <div class="preview-header">
             <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">›</button>
+            <button id="floatingResizeBtn" class="preview-hide-btn" title="Resize preview" aria-label="Resize preview" hidden>⤡</button>
             <span class="panel-title">Preview</span>
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">⤢</button>
             <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>⤡</button>

@@ -42,10 +42,6 @@ function addOutlinePoints(
   addPoint(points, seen, width, height, cx + x, cy - y);
 }
 
-export function getCircleRadius(start: GridPoint, end: GridPoint) {
-  return Math.max(0, Math.round(Math.hypot(end.x - start.x, end.y - start.y)));
-}
-
 export function getCircleCells(
   center: GridPoint,
   radius: number,

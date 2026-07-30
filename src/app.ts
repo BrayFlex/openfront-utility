@@ -182,15 +182,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let handleGuideChange = () => {};
   const guideState = setupGridGuides(toolbox, () => handleGuideChange());
 
-  // ── Grid Scale (visual) ───────────────────────────────────────────────────
-  // Visual zoom is handled by workspaceControls now, so internal scale factor is 1
-  const makeGridScaleSelect = () => {
-    return {
-      get value() { return "1"; },
-      addEventListener: (ev: string, fn: EventListenerOrEventListenerObject) => {},
-    } as unknown as HTMLSelectElement;
-  };
-
   // ── MAIN grid manager ─────────────────────────────────────────────────────
   const mainGrid = createGridManager({
     gridDiv,
@@ -198,7 +189,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tileHeightInput,
     tileWidthValue,
     tileHeightValue,
-    gridScaleInput: makeGridScaleSelect(),
     guideState,
     toolState,
     clipboard,
@@ -222,7 +212,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tileHeightInput,
     tileWidthValue,
     tileHeightValue,
-    gridScaleInput: makeGridScaleSelect(),
     guideState,
     toolState,
     clipboard,
@@ -340,47 +329,29 @@ document.addEventListener("DOMContentLoaded", () => {
   scrapRedoBtn.addEventListener("click", handleRedo);
 
   // ── Canvas size steppers ──────────────────────────────────────────────────
-  const clampW = (v: number) => Math.max(2, Math.min(129, v));
-  const clampH = (v: number) => Math.max(2, Math.min(63, v));
+  const clampW = (v: number) => Math.max(2, Math.min(128, v));
+  const clampH = (v: number) => Math.max(2, Math.min(64, v));
 
-  tileWidthUpBtn.addEventListener("click", () => {
-    const v = clampW(parseInt(tileWidthInput.value) + 1);
-    tileWidthInput.value = String(v);
-    tileWidthValue.value = String(v);
-    activeGrid().generateGrid();
-  });
-  tileWidthDownBtn.addEventListener("click", () => {
-    const v = clampW(parseInt(tileWidthInput.value) - 1);
-    tileWidthInput.value = String(v);
-    tileWidthValue.value = String(v);
-    activeGrid().generateGrid();
-  });
-  tileHeightUpBtn.addEventListener("click", () => {
-    const v = clampH(parseInt(tileHeightInput.value) + 1);
-    tileHeightInput.value = String(v);
-    tileHeightValue.value = String(v);
-    activeGrid().generateGrid();
-  });
-  tileHeightDownBtn.addEventListener("click", () => {
-    const v = clampH(parseInt(tileHeightInput.value) - 1);
-    tileHeightInput.value = String(v);
-    tileHeightValue.value = String(v);
-    activeGrid().generateGrid();
-  });
+  const makeStepper = (
+    btnUp: HTMLButtonElement,
+    btnDown: HTMLButtonElement,
+    input: HTMLInputElement,
+    valueLabel: HTMLInputElement,
+    clamp: (v: number) => number
+  ) => {
+    const update = (delta: number) => {
+      const v = clamp((parseInt(input.value) || 2) + delta);
+      input.value = String(v);
+      valueLabel.value = String(v);
+      activeGrid().generateGrid();
+    };
+    btnUp.addEventListener("click", () => update(1));
+    btnDown.addEventListener("click", () => update(-1));
+    valueLabel.addEventListener("change", () => update(0));
+  };
 
-  // Width/height direct input (on change / enter)
-  tileWidthValue.addEventListener("change", () => {
-    const v = clampW(parseInt(tileWidthValue.value) || 2);
-    tileWidthValue.value = String(v);
-    tileWidthInput.value = String(v);
-    activeGrid().generateGrid();
-  });
-  tileHeightValue.addEventListener("change", () => {
-    const v = clampH(parseInt(tileHeightValue.value) || 2);
-    tileHeightValue.value = String(v);
-    tileHeightInput.value = String(v);
-    activeGrid().generateGrid();
-  });
+  makeStepper(tileWidthUpBtn, tileWidthDownBtn, tileWidthInput, tileWidthValue, clampW);
+  makeStepper(tileHeightUpBtn, tileHeightDownBtn, tileHeightInput, tileHeightValue, clampH);
 
   // ── Scale select ──────────────────────────────────────────────────────────
   scaleSelect.addEventListener("change", () => updateOutput());
@@ -487,8 +458,6 @@ document.addEventListener("DOMContentLoaded", () => {
     tileHeightInput,
     tileWidthValue,
     tileHeightValue,
-    scaleInput: { value: "0", addEventListener: () => {} } as unknown as HTMLInputElement,
-    scaleValue: { textContent: "" } as unknown as HTMLSpanElement,
     onPatternLoaded: (pattern) => {
       // Also update scale select from decoded
       const base64 = base64Input.value;
@@ -502,31 +471,8 @@ document.addEventListener("DOMContentLoaded", () => {
   loadBtn.addEventListener("click", loadFromBase64);
 
   // ── Colors ───────────────────────────────────────────────────────────────
-  const colorPresetControls = initColorPresetControls({
-    container: colorPresetContainer,
-    primaryColorInput: previewPrimaryColor,
-    secondaryColorInput: previewSecondaryColor,
-    selectedLabel: selectedPresetLabel,
-    initialColors: null,
-    onChange: () => updateOutput(),
-  });
+  // (Color presets initialization is deferred until URL hash parsing is complete)
 
-  swapColorsBtn.addEventListener("click", () => {
-    const p = previewPrimaryColor.value;
-    previewPrimaryColor.value = previewSecondaryColor.value;
-    previewSecondaryColor.value = p;
-    colorPresetControls.setCustomSelection();
-    updateOutput();
-  });
-
-  previewPrimaryColor.addEventListener("input", () => {
-    colorPresetControls.setCustomSelection();
-    updateOutput();
-  });
-  previewSecondaryColor.addEventListener("input", () => {
-    colorPresetControls.setCustomSelection();
-    updateOutput();
-  });
 
   // ── Preview panel collapse ────────────────────────────────────────────────
   hidePreviewBtn.addEventListener("click", () => {
@@ -545,45 +491,59 @@ document.addEventListener("DOMContentLoaded", () => {
   let floatingPtr: number | null = null;
   let fStartX = 0, fStartY = 0, fLeft = 0, fTop = 0;
 
+  const floatingResizeBtn = document.getElementById("floatingResizeBtn") as HTMLButtonElement;
+
   floatPreviewBtn.addEventListener("click", () => {
     previewPanel.classList.add("floating");
     document.querySelector(".editor-shell")?.classList.add("preview-floating");
     dockPreviewBtn.hidden = false;
     floatPreviewBtn.hidden = true;
-    // Add a resize handle to the floating panel if not already there
-    if (!previewPanel.querySelector(".floating-resize-handle")) {
-      const resizeHandle = document.createElement("div");
-      resizeHandle.className = "floating-resize-handle";
-      resizeHandle.textContent = "⇲";
-      previewPanel.appendChild(resizeHandle);
-      let rPtr: number | null = null;
-      let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
-      resizeHandle.addEventListener("pointerdown", (ev) => {
-        ev.preventDefault();
-        ev.stopPropagation();
-        rPtr = ev.pointerId;
-        resizeHandle.setPointerCapture(ev.pointerId);
-        rStartW = previewPanel.offsetWidth;
-        rStartH = previewPanel.offsetHeight;
-        rStartX = ev.clientX;
-        rStartY = ev.clientY;
-      });
-      resizeHandle.addEventListener("pointermove", (ev) => {
-        if (rPtr !== ev.pointerId) return;
-        const w = Math.max(180, rStartW + (ev.clientX - rStartX));
-        const h = Math.max(200, rStartH + (ev.clientY - rStartY));
-        previewPanel.style.width = `${w}px`;
-        previewPanel.style.height = `${h}px`;
-      });
-      ["pointerup", "pointercancel"].forEach(evt =>
-        resizeHandle.addEventListener(evt, (ev) => {
-          if (rPtr !== (ev as PointerEvent).pointerId) return;
-          rPtr = null;
-          resizeHandle.releasePointerCapture((ev as PointerEvent).pointerId);
-        })
-      );
-    }
+    hidePreviewBtn.hidden = true;
+    floatingResizeBtn.hidden = false;
+    floatingResizeBtn.style.cursor = "nwse-resize";
   });
+  
+  let rPtr: number | null = null;
+  let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0, rStartL = 0, rStartT = 0;
+  
+  floatingResizeBtn.addEventListener("pointerdown", (ev) => {
+    ev.preventDefault();
+    ev.stopPropagation();
+    rPtr = ev.pointerId;
+    floatingResizeBtn.setPointerCapture(ev.pointerId);
+    rStartW = previewPanel.offsetWidth;
+    rStartH = previewPanel.offsetHeight;
+    rStartX = ev.clientX;
+    rStartY = ev.clientY;
+    rStartL = previewPanel.offsetLeft;
+    rStartT = previewPanel.offsetTop;
+  });
+  
+  floatingResizeBtn.addEventListener("pointermove", (ev) => {
+    if (rPtr !== ev.pointerId) return;
+    const dx = ev.clientX - rStartX;
+    const dy = ev.clientY - rStartY;
+    const w = Math.max(180, rStartW - dx);
+    const h = Math.max(200, rStartH - dy);
+    
+    // adjust position based on how much width/height actually changed
+    const dw = w - rStartW;
+    const dh = h - rStartH;
+    
+    previewPanel.style.left = `${rStartL - dw}px`;
+    previewPanel.style.top = `${rStartT - dh}px`;
+    previewPanel.style.width = `${w}px`;
+    previewPanel.style.height = `${h}px`;
+  });
+  
+  ["pointerup", "pointercancel"].forEach(evt =>
+    floatingResizeBtn.addEventListener(evt, (ev) => {
+      if (rPtr !== (ev as PointerEvent).pointerId) return;
+      rPtr = null;
+      floatingResizeBtn.releasePointerCapture((ev as PointerEvent).pointerId);
+    })
+  );
+
   dockPreviewBtn.addEventListener("click", () => {
     previewPanel.classList.remove("floating");
     document.querySelector(".editor-shell")?.classList.remove("preview-floating");
@@ -593,6 +553,8 @@ document.addEventListener("DOMContentLoaded", () => {
     previewPanel.style.height = "";
     dockPreviewBtn.hidden = true;
     floatPreviewBtn.hidden = false;
+    hidePreviewBtn.hidden = false;
+    floatingResizeBtn.hidden = true;
     
     // Expand sidebar again
     previewPanel.classList.remove("collapsed");
@@ -649,10 +611,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Pane resize ────────────────────────────────────────────────────────────
   initPaneResizeControls({
-    shell: document.querySelector<HTMLElement>(".editor-shell")!,
-    workspaceSplit: document.querySelector<HTMLElement>(".workspace-split")!,
-    toolbarHandle: document.getElementById("toolbarResizeHandle") as HTMLElement,
-    previewHandle: document.getElementById("previewResizeHandle") as HTMLElement,
+    workspaceSplit: document.querySelector(".workspace-split") as HTMLElement,
+    previewHandle: document.getElementById("previewResizeHandle")!,
   });
 
   // ── Image import overlay ──────────────────────────────────────────────────
@@ -729,13 +689,30 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Re-init color presets with initialColors
-  initColorPresetControls({
+  const colorPresetControls = initColorPresetControls({
     container: colorPresetContainer,
     primaryColorInput: previewPrimaryColor,
     secondaryColorInput: previewSecondaryColor,
     selectedLabel: selectedPresetLabel,
     initialColors,
     onChange: () => updateOutput(),
+  });
+
+  swapColorsBtn.addEventListener("click", () => {
+    const p = previewPrimaryColor.value;
+    previewPrimaryColor.value = previewSecondaryColor.value;
+    previewSecondaryColor.value = p;
+    colorPresetControls.setCustomSelection();
+    updateOutput();
+  });
+
+  previewPrimaryColor.addEventListener("input", () => {
+    colorPresetControls.setCustomSelection();
+    updateOutput();
+  });
+  previewSecondaryColor.addEventListener("input", () => {
+    colorPresetControls.setCustomSelection();
+    updateOutput();
   });
 
   // ── Initial grid + scrap grid ─────────────────────────────────────────────
