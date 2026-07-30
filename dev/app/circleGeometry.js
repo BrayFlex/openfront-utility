@@ -19,9 +19,6 @@ function addOutlinePoints(points, seen, cx, cy, x, y, width, height) {
     addPoint(points, seen, width, height, cx + y, cy - x);
     addPoint(points, seen, width, height, cx + x, cy - y);
 }
-export function getCircleRadius(start, end) {
-    return Math.max(0, Math.round(Math.hypot(end.x - start.x, end.y - start.y)));
-}
 export function getCircleCells(center, radius, fill, width, height) {
     const points = [];
     const seen = new Set();

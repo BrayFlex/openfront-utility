@@ -157,14 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
     // ── Guide state ───────────────────────────────────────────────────────────
     let handleGuideChange = () => { };
     const guideState = setupGridGuides(toolbox, () => handleGuideChange());
-    // ── Grid Scale (visual) ───────────────────────────────────────────────────
-    // Visual zoom is handled by workspaceControls now, so internal scale factor is 1
-    const makeGridScaleSelect = () => {
-        return {
-            get value() { return "1"; },
-            addEventListener: (ev, fn) => { },
-        };
-    };
     // ── MAIN grid manager ─────────────────────────────────────────────────────
     const mainGrid = createGridManager({
         gridDiv,
@@ -172,7 +164,6 @@ document.addEventListener("DOMContentLoaded", () => {
         tileHeightInput,
         tileWidthValue,
         tileHeightValue,
-        gridScaleInput: makeGridScaleSelect(),
         guideState,
         toolState,
         clipboard,
@@ -195,7 +186,6 @@ document.addEventListener("DOMContentLoaded", () => {
         tileHeightInput,
         tileWidthValue,
         tileHeightValue,
-        gridScaleInput: makeGridScaleSelect(),
         guideState,
         toolState,
         clipboard,
@@ -314,45 +304,21 @@ document.addEventListener("DOMContentLoaded", () => {
     scrapUndoBtn.addEventListener("click", handleUndo);
     scrapRedoBtn.addEventListener("click", handleRedo);
     // ── Canvas size steppers ──────────────────────────────────────────────────
-    const clampW = (v) => Math.max(2, Math.min(129, v));
-    const clampH = (v) => Math.max(2, Math.min(63, v));
-    tileWidthUpBtn.addEventListener("click", () => {
-        const v = clampW(parseInt(tileWidthInput.value) + 1);
-        tileWidthInput.value = String(v);
-        tileWidthValue.value = String(v);
-        activeGrid().generateGrid();
-    });
-    tileWidthDownBtn.addEventListener("click", () => {
-        const v = clampW(parseInt(tileWidthInput.value) - 1);
-        tileWidthInput.value = String(v);
-        tileWidthValue.value = String(v);
-        activeGrid().generateGrid();
-    });
-    tileHeightUpBtn.addEventListener("click", () => {
-        const v = clampH(parseInt(tileHeightInput.value) + 1);
-        tileHeightInput.value = String(v);
-        tileHeightValue.value = String(v);
-        activeGrid().generateGrid();
-    });
-    tileHeightDownBtn.addEventListener("click", () => {
-        const v = clampH(parseInt(tileHeightInput.value) - 1);
-        tileHeightInput.value = String(v);
-        tileHeightValue.value = String(v);
-        activeGrid().generateGrid();
-    });
-    // Width/height direct input (on change / enter)
-    tileWidthValue.addEventListener("change", () => {
-        const v = clampW(parseInt(tileWidthValue.value) || 2);
-        tileWidthValue.value = String(v);
-        tileWidthInput.value = String(v);
-        activeGrid().generateGrid();
-    });
-    tileHeightValue.addEventListener("change", () => {
-        const v = clampH(parseInt(tileHeightValue.value) || 2);
-        tileHeightValue.value = String(v);
-        tileHeightInput.value = String(v);
-        activeGrid().generateGrid();
-    });
+    const clampW = (v) => Math.max(2, Math.min(128, v));
+    const clampH = (v) => Math.max(2, Math.min(64, v));
+    const makeStepper = (btnUp, btnDown, input, valueLabel, clamp) => {
+        const update = (delta) => {
+            const v = clamp((parseInt(input.value) || 2) + delta);
+            input.value = String(v);
+            valueLabel.value = String(v);
+            activeGrid().generateGrid();
+        };
+        btnUp.addEventListener("click", () => update(1));
+        btnDown.addEventListener("click", () => update(-1));
+        valueLabel.addEventListener("change", () => update(0));
+    };
+    makeStepper(tileWidthUpBtn, tileWidthDownBtn, tileWidthInput, tileWidthValue, clampW);
+    makeStepper(tileHeightUpBtn, tileHeightDownBtn, tileHeightInput, tileHeightValue, clampH);
     // ── Scale select ──────────────────────────────────────────────────────────
     scaleSelect.addEventListener("change", () => updateOutput());
     // ── Invert / Clear ───────────────────────────────────────────────────────
@@ -450,8 +416,6 @@ document.addEventListener("DOMContentLoaded", () => {
         tileHeightInput,
         tileWidthValue,
         tileHeightValue,
-        scaleInput: { value: "0", addEventListener: () => { } },
-        scaleValue: { textContent: "" },
         onPatternLoaded: (pattern) => {
             // Also update scale select from decoded
             const base64 = base64Input.value;
@@ -465,29 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     loadBtn.addEventListener("click", loadFromBase64);
     // ── Colors ───────────────────────────────────────────────────────────────
-    const colorPresetControls = initColorPresetControls({
-        container: colorPresetContainer,
-        primaryColorInput: previewPrimaryColor,
-        secondaryColorInput: previewSecondaryColor,
-        selectedLabel: selectedPresetLabel,
-        initialColors: null,
-        onChange: () => updateOutput(),
-    });
-    swapColorsBtn.addEventListener("click", () => {
-        const p = previewPrimaryColor.value;
-        previewPrimaryColor.value = previewSecondaryColor.value;
-        previewSecondaryColor.value = p;
-        colorPresetControls.setCustomSelection();
-        updateOutput();
-    });
-    previewPrimaryColor.addEventListener("input", () => {
-        colorPresetControls.setCustomSelection();
-        updateOutput();
-    });
-    previewSecondaryColor.addEventListener("input", () => {
-        colorPresetControls.setCustomSelection();
-        updateOutput();
-    });
+    // (Color presets initialization is deferred until URL hash parsing is complete)
     // ── Preview panel collapse ────────────────────────────────────────────────
     hidePreviewBtn.addEventListener("click", () => {
         previewPanel.classList.add("collapsed");
@@ -503,46 +445,52 @@ document.addEventListener("DOMContentLoaded", () => {
     // Float / dock preview
     let floatingPtr = null;
     let fStartX = 0, fStartY = 0, fLeft = 0, fTop = 0;
+    const floatingResizeBtn = document.getElementById("floatingResizeBtn");
     floatPreviewBtn.addEventListener("click", () => {
         var _a;
         previewPanel.classList.add("floating");
         (_a = document.querySelector(".editor-shell")) === null || _a === void 0 ? void 0 : _a.classList.add("preview-floating");
         dockPreviewBtn.hidden = false;
         floatPreviewBtn.hidden = true;
-        // Add a resize handle to the floating panel if not already there
-        if (!previewPanel.querySelector(".floating-resize-handle")) {
-            const resizeHandle = document.createElement("div");
-            resizeHandle.className = "floating-resize-handle";
-            resizeHandle.textContent = "⇲";
-            previewPanel.appendChild(resizeHandle);
-            let rPtr = null;
-            let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
-            resizeHandle.addEventListener("pointerdown", (ev) => {
-                ev.preventDefault();
-                ev.stopPropagation();
-                rPtr = ev.pointerId;
-                resizeHandle.setPointerCapture(ev.pointerId);
-                rStartW = previewPanel.offsetWidth;
-                rStartH = previewPanel.offsetHeight;
-                rStartX = ev.clientX;
-                rStartY = ev.clientY;
-            });
-            resizeHandle.addEventListener("pointermove", (ev) => {
-                if (rPtr !== ev.pointerId)
-                    return;
-                const w = Math.max(180, rStartW + (ev.clientX - rStartX));
-                const h = Math.max(200, rStartH + (ev.clientY - rStartY));
-                previewPanel.style.width = `${w}px`;
-                previewPanel.style.height = `${h}px`;
-            });
-            ["pointerup", "pointercancel"].forEach(evt => resizeHandle.addEventListener(evt, (ev) => {
-                if (rPtr !== ev.pointerId)
-                    return;
-                rPtr = null;
-                resizeHandle.releasePointerCapture(ev.pointerId);
-            }));
-        }
+        hidePreviewBtn.hidden = true;
+        floatingResizeBtn.hidden = false;
+        floatingResizeBtn.style.cursor = "nwse-resize";
     });
+    let rPtr = null;
+    let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0, rStartL = 0, rStartT = 0;
+    floatingResizeBtn.addEventListener("pointerdown", (ev) => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        rPtr = ev.pointerId;
+        floatingResizeBtn.setPointerCapture(ev.pointerId);
+        rStartW = previewPanel.offsetWidth;
+        rStartH = previewPanel.offsetHeight;
+        rStartX = ev.clientX;
+        rStartY = ev.clientY;
+        rStartL = previewPanel.offsetLeft;
+        rStartT = previewPanel.offsetTop;
+    });
+    floatingResizeBtn.addEventListener("pointermove", (ev) => {
+        if (rPtr !== ev.pointerId)
+            return;
+        const dx = ev.clientX - rStartX;
+        const dy = ev.clientY - rStartY;
+        const w = Math.max(180, rStartW - dx);
+        const h = Math.max(200, rStartH - dy);
+        // adjust position based on how much width/height actually changed
+        const dw = w - rStartW;
+        const dh = h - rStartH;
+        previewPanel.style.left = `${rStartL - dw}px`;
+        previewPanel.style.top = `${rStartT - dh}px`;
+        previewPanel.style.width = `${w}px`;
+        previewPanel.style.height = `${h}px`;
+    });
+    ["pointerup", "pointercancel"].forEach(evt => floatingResizeBtn.addEventListener(evt, (ev) => {
+        if (rPtr !== ev.pointerId)
+            return;
+        rPtr = null;
+        floatingResizeBtn.releasePointerCapture(ev.pointerId);
+    }));
     dockPreviewBtn.addEventListener("click", () => {
         var _a;
         previewPanel.classList.remove("floating");
@@ -553,6 +501,8 @@ document.addEventListener("DOMContentLoaded", () => {
         previewPanel.style.height = "";
         dockPreviewBtn.hidden = true;
         floatPreviewBtn.hidden = false;
+        hidePreviewBtn.hidden = false;
+        floatingResizeBtn.hidden = true;
         // Expand sidebar again
         previewPanel.classList.remove("collapsed");
         showPreviewBtn.hidden = true;
@@ -609,9 +559,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // ── Pane resize ────────────────────────────────────────────────────────────
     initPaneResizeControls({
-        shell: document.querySelector(".editor-shell"),
         workspaceSplit: document.querySelector(".workspace-split"),
-        toolbarHandle: document.getElementById("toolbarResizeHandle"),
         previewHandle: document.getElementById("previewResizeHandle"),
     });
     // ── Image import overlay ──────────────────────────────────────────────────
@@ -643,7 +591,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     // ── Submission modal ──────────────────────────────────────────────────────
     const submissionModal = initSubmissionModal({
-        getBase64: getOutputBase64,
         getPrimaryColor: () => previewPrimaryColor.value,
         getSecondaryColor: () => previewSecondaryColor.value,
         getPatternUrl: () => {
@@ -684,13 +631,28 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     }
     // Re-init color presets with initialColors
-    initColorPresetControls({
+    const colorPresetControls = initColorPresetControls({
         container: colorPresetContainer,
         primaryColorInput: previewPrimaryColor,
         secondaryColorInput: previewSecondaryColor,
         selectedLabel: selectedPresetLabel,
         initialColors,
         onChange: () => updateOutput(),
+    });
+    swapColorsBtn.addEventListener("click", () => {
+        const p = previewPrimaryColor.value;
+        previewPrimaryColor.value = previewSecondaryColor.value;
+        previewSecondaryColor.value = p;
+        colorPresetControls.setCustomSelection();
+        updateOutput();
+    });
+    previewPrimaryColor.addEventListener("input", () => {
+        colorPresetControls.setCustomSelection();
+        updateOutput();
+    });
+    previewSecondaryColor.addEventListener("input", () => {
+        colorPresetControls.setCustomSelection();
+        updateOutput();
     });
     // ── Initial grid + scrap grid ─────────────────────────────────────────────
     mainGrid.generateGrid();

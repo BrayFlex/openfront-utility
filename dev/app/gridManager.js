@@ -549,11 +549,7 @@ export function createGridManager(options) {
                         previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius());
                         return;
                     }
-                    if (!isMouseDown && tool === "line" && lineStart) {
-                        previewLine(cx, cy);
-                        return;
-                    }
-                    if (isMouseDown && tool === "line" && lineStart) {
+                    if (tool === "line" && lineStart) {
                         previewLine(cx, cy);
                         return;
                     }
