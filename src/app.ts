@@ -646,7 +646,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Submission modal ──────────────────────────────────────────────────────
   const submissionModal = initSubmissionModal({
-    getBase64: getOutputBase64,
     getPrimaryColor: () => previewPrimaryColor.value,
     getSecondaryColor: () => previewSecondaryColor.value,
     getPatternUrl: () => {
