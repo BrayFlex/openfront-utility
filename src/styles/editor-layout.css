@@ -164,8 +164,8 @@
 /* Center guide cross — larger and theme-aware */
 .center-cross-overlay {
   position: absolute;
-  width: 31px;
-  height: 31px;
+  width: 36px;
+  height: 36px;
   pointer-events: none;
   transform: translate(-50%, -50%);
   z-index: 10;
