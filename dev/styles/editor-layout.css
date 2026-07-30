@@ -247,8 +247,8 @@
 }
 
 /* ── Guides ─────────────────────────────────────────────────────────────── */
-.cell.guide-h { border-top-color: var(--accent); border-top-width: 2px; }
-.cell.guide-v { border-left-color: var(--accent); border-left-width: 2px; }
+.cell.guide-h { border-top-color: var(--accent-dark); border-top-width: 3px; }
+.cell.guide-v { border-left-color: var(--accent-dark); border-left-width: 3px; }
 
 /* ── Preview Panel ──────────────────────────────────────────────────────── */
 .preview-panel {
