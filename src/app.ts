@@ -475,16 +475,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ── Preview panel collapse ────────────────────────────────────────────────
-  hidePreviewBtn.addEventListener("click", () => {
+  const collapsePreview = () => {
     previewPanel.classList.add("collapsed");
     showPreviewBtn.hidden = false;
     document.getElementById("previewResizeHandle")!.hidden = true;
-  });
-  showPreviewBtn.addEventListener("click", () => {
+  };
+
+  const expandPreview = () => {
     previewPanel.classList.remove("collapsed");
     showPreviewBtn.hidden = true;
     document.getElementById("previewResizeHandle")!.hidden = false;
-  });
+  };
+
+  hidePreviewBtn.addEventListener("click", collapsePreview);
+  showPreviewBtn.addEventListener("click", expandPreview);
   showPreviewBtn.hidden = true;
 
   // Float / dock preview
@@ -494,11 +498,13 @@ document.addEventListener("DOMContentLoaded", () => {
   const floatingResizeBtn = document.getElementById("floatingResizeBtn") as HTMLButtonElement;
 
   floatPreviewBtn.addEventListener("click", () => {
+    collapsePreview();
     previewPanel.classList.add("floating");
     document.querySelector(".editor-shell")?.classList.add("preview-floating");
     dockPreviewBtn.hidden = false;
     floatPreviewBtn.hidden = true;
     hidePreviewBtn.hidden = true;
+    showPreviewBtn.hidden = true;
     floatingResizeBtn.hidden = false;
     floatingResizeBtn.style.cursor = "nwse-resize";
   });
@@ -545,6 +551,7 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   dockPreviewBtn.addEventListener("click", () => {
+    expandPreview();
     previewPanel.classList.remove("floating");
     document.querySelector(".editor-shell")?.classList.remove("preview-floating");
     previewPanel.style.left = "";
@@ -555,10 +562,6 @@ document.addEventListener("DOMContentLoaded", () => {
     floatPreviewBtn.hidden = false;
     hidePreviewBtn.hidden = false;
     floatingResizeBtn.hidden = true;
-    
-    // Expand sidebar again
-    previewPanel.classList.remove("collapsed");
-    showPreviewBtn.hidden = true;
   });
   dockPreviewBtn.hidden = true;
 
