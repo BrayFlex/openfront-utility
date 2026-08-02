@@ -6,8 +6,8 @@
     <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
-    <link rel="stylesheet" href="circle-tool.css" />
-    <link rel="stylesheet" href="image-import.css" />
+    <link rel="stylesheet" href="styles/circle-tool.css" />
+    <link rel="stylesheet" href="styles/image-import.css" />
     <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
   </head>
   <body>
@@ -24,10 +24,10 @@
               <input type="checkbox" id="themeToggle" />
               <span class="theme-toggle-slider">
                 <span class="theme-toggle-icon theme-toggle-sun">☀</span>
-                <span class="theme-toggle-icon theme-toggle-moon">☽</span>
+                <span class="theme-toggle-icon theme-toggle-moon">⏾</span>
               </span>
             </label>
-            <button id="infoModalBtn" class="info-btn" aria-label="Helpful Information" title="Helpful Information">ℹ️</button>
+            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Helpful Information">ℹ️</button>
           </div>
         </div>
 
@@ -211,9 +211,9 @@
             <!-- Width -->
             <label class="ctrl-label" for="tileWidthValue">W</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileWidthValue" class="ctrl-number" value="129" min="2" max="129" />
+              <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
               <!-- hidden range synced by JS -->
-              <input type="range"  id="tileWidth"      value="129" min="2" max="129" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
                 <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
@@ -223,8 +223,8 @@
             <!-- Height -->
             <label class="ctrl-label" for="tileHeightValue">H</label>
             <div class="ctrl-stepper">
-              <input type="number" id="tileHeightValue" class="ctrl-number" value="63" min="2" max="63" />
-              <input type="range"  id="tileHeight"      value="63" min="2" max="63" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+              <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
+              <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
               <div class="stepper-btns">
                 <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
                 <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
@@ -278,31 +278,42 @@
         <aside class="preview-panel" aria-label="Pattern preview">
           <!-- Preview header -->
           <div class="preview-header">
-            <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">›</button>
+            <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">⇥</button>
+            <button id="floatingResizeBtn" class="preview-hide-btn" title="Resize preview" aria-label="Resize preview" hidden>⤡</button>
             <span class="panel-title">Preview</span>
-            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">⤢</button>
-            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>⤡</button>
+            <div class="preview-zoom-controls">
+              <button id="previewZoomOutBtn" class="preview-zoom-btn" aria-label="Zoom out">−</button>
+              <output id="previewZoomValue" class="preview-zoom-value">100%</output>
+              <button id="previewZoomInBtn" class="preview-zoom-btn" aria-label="Zoom in">+</button>
+            </div>
+            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">❐</button>
+            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>❏</button>
           </div>
 
           <!-- Preview canvas -->
-          <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+          <div class="preview-canvas-wrap" id="previewCanvasWrap">
+            <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+          </div>
 
-          <!-- Colors section (collapsible) -->
-          <details class="colors-section" open>
-            <summary class="colors-summary">
-              <span>Colors</span>
-            </summary>
+          <!-- Colors section -->
+          <div class="colors-section">
+            <div class="colors-header">Colors</div>
             <div class="colors-body">
               <div class="color-row">
-                <label for="previewPrimaryColor" class="color-label">Primary</label>
-                <input type="color" id="previewPrimaryColor" value="#ffffff" />
+                <div class="color-field">
+                  <label for="previewPrimaryColor" class="color-label">Primary</label>
+                  <input type="color" id="previewPrimaryColor" value="#ffffff" />
+                </div>
+                <div class="color-field">
+                  <label for="previewSecondaryColor" class="color-label">Secondary</label>
+                  <input type="color" id="previewSecondaryColor" value="#000000" />
+                </div>
+                <button id="swapColorsBtn" class="swap-btn">⇄ Swap</button>
               </div>
-              <div class="color-row">
-                <label for="previewSecondaryColor" class="color-label">Secondary</label>
-                <input type="color" id="previewSecondaryColor" value="#000000" />
+              <div class="selected-preset" id="selectedPresetLabel">
+                <span class="selected-preset-name">Custom Palette</span>
+                <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">⧉ Color Code</button>
               </div>
-              <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
-              <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
               <details class="color-preset-details" open>
                 <summary>Color Presets</summary>
                 <div id="colorPresetContainer" class="color-preset-container loading">
@@ -310,12 +321,12 @@
                 </div>
               </details>
             </div>
-          </details>
+          </div>
 
         </aside>
 
         <!-- Show-preview button (visible when preview is collapsed) -->
-        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">‹</button>
+        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">⇤</button>
 
         <!-- Toolbar resize handle (left edge of preview sidebar) -->
         <div id="toolbarResizeHandle" class="resize-handle toolbar-resize-handle" role="separator" aria-label="Resize toolbar" style="display:none"></div>
@@ -397,9 +408,10 @@
         </ol>
 
         <p>
-          I recommend testing not just FFA but also Teams as the primary is replaced in teams and you
-          want to ensure your secondary won't be confusing with other team colors. 
-          Currently you can test 2 Teams to see Red and Quads to see Orange you have to guess at other colors.
+          I <i>recommend</i> testing not just FFA but also Teams as the primary is replaced in teams and you
+          want to ensure your secondary won't be confused with other team colors. 
+          Currently you can test 2 Teams to see Red and Quads to see Orange/Yellow. You have to use your own judgement for the other team colors.
+          <br> TLDR; If your pattern uses a color for secondary and most of your pattern is that color it <i>may</i> be declined as it is confusing in team games.
         </p>
         
         <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px;">

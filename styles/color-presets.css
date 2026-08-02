@@ -2,6 +2,8 @@
   min-height: 30px;
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -9,6 +11,19 @@
   color: var(--muted);
   font-size: 13px;
   font-weight: 700;
+  cursor: default;
+  user-select: none;
+}
+.selected-preset.is-preset {
+  color: var(--accent);
+}
+.selected-preset.is-preset .selected-preset-name {
+  color: var(--accent);
+}
+.selected-preset-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .color-preset-details summary {
@@ -25,8 +40,8 @@
 }
 
 .color-preset-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   max-height: 230px;
   overflow-y: auto;
@@ -44,11 +59,11 @@
 }
 
 .color-preset-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 7px;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;
@@ -79,4 +94,5 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
+  color: var(--text);
 }

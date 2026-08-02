@@ -100,36 +100,7 @@ export function createDrawingTools(options) {
         }
         return pts;
     }
-    /** Flood fill from (sx,sy) — respects selection constraint */
-    function floodFill(sx, sy, selection) {
-        if (!isInSelection(sx, sy, selection))
-            return;
-        const width = getTileWidth();
-        const height = getTileHeight();
-        const target = isCellActive(sx, sy) ? 1 : 0;
-        const newValue = target ? 0 : 1;
-        const visited = Array.from({ length: height }, () => new Array(width).fill(false));
-        const stack = [[sx, sy]];
-        while (stack.length) {
-            const [x, y] = stack.pop();
-            if (x < 0 || y < 0 || x >= width || y >= height)
-                continue;
-            if (visited[y][x])
-                continue;
-            if (!isInSelection(x, y, selection))
-                continue;
-            const cur = isCellActive(x, y) ? 1 : 0;
-            if (cur !== target)
-                continue;
-            setCellActive(x, y, newValue === 1);
-            visited[y][x] = true;
-            stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
-        }
-    }
-    /** Shade flood fill — fills connected same-state area with checkerboard */
-    function floodShade(sx, sy, selection) {
-        if (!isInSelection(sx, sy, selection))
-            return;
+    function floodTraverse(sx, sy, selection) {
         const width = getTileWidth();
         const height = getTileHeight();
         const target = isCellActive(sx, sy) ? 1 : 0;
@@ -150,6 +121,22 @@ export function createDrawingTools(options) {
             toApply.push([x, y]);
             stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
         }
+        return toApply;
+    }
+    /** Flood fill from (sx,sy) — respects selection constraint */
+    function floodFill(sx, sy, selection) {
+        if (!isInSelection(sx, sy, selection))
+            return;
+        const target = isCellActive(sx, sy) ? 1 : 0;
+        const newValue = target ? 0 : 1;
+        const toApply = floodTraverse(sx, sy, selection);
+        toApply.forEach(([x, y]) => setCellActive(x, y, newValue === 1));
+    }
+    /** Shade flood fill — fills connected same-state area with checkerboard */
+    function floodShade(sx, sy, selection) {
+        if (!isInSelection(sx, sy, selection))
+            return;
+        const toApply = floodTraverse(sx, sy, selection);
         const anchorParity = (sx + sy) % 2;
         toApply.forEach(([x, y]) => {
             // Checkerboard aligned with click anchor
