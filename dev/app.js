@@ -494,7 +494,7 @@ document.addEventListener("DOMContentLoaded", () => {
         floatingResizeBtn.style.cursor = "nwse-resize";
     });
     let rPtr = null;
-    let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0, rStartL = 0, rStartT = 0;
+    let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
     floatingResizeBtn.addEventListener("pointerdown", (ev) => {
         ev.preventDefault();
         ev.stopImmediatePropagation();
@@ -504,21 +504,16 @@ document.addEventListener("DOMContentLoaded", () => {
         rStartH = previewPanel.offsetHeight;
         rStartX = ev.clientX;
         rStartY = ev.clientY;
-        rStartL = previewPanel.offsetLeft;
-        rStartT = previewPanel.offsetTop;
     });
     floatingResizeBtn.addEventListener("pointermove", (ev) => {
         if (rPtr !== ev.pointerId)
             return;
         const dx = ev.clientX - rStartX;
         const dy = ev.clientY - rStartY;
+        // Panel is anchored at bottom-right via CSS, so we only adjust width/height
+        // Moving mouse left (negative dx) increases width, moving up (negative dy) increases height
         const w = Math.max(220, rStartW - dx);
         const h = Math.max(240, rStartH - dy);
-        // adjust position based on how much width/height actually changed
-        const dw = w - rStartW;
-        const dh = h - rStartH;
-        previewPanel.style.left = `${rStartL - dw}px`;
-        previewPanel.style.top = `${rStartT - dh}px`;
         previewPanel.style.width = `${w}px`;
         previewPanel.style.height = `${h}px`;
     });
