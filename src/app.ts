@@ -136,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewZoomOutBtn = document.getElementById("previewZoomOutBtn") as HTMLButtonElement;
   const previewZoomValue = document.getElementById("previewZoomValue") as HTMLOutputElement;
   const copyColorsBtn = document.getElementById("copyColorsBtn") as HTMLButtonElement;
+  const previewCanvasWrap = document.getElementById("previewCanvasWrap") as HTMLElement;
 
   // Submission
   const submitPatternBtn = document.getElementById("submitPatternBtn") as HTMLButtonElement;
@@ -267,6 +268,9 @@ document.addEventListener("DOMContentLoaded", () => {
     previewCanvas.style.transform = `scale(${previewZoom})`;
     previewCanvas.style.transformOrigin = "center";
     previewZoomValue.textContent = `${Math.round(previewZoom * 100)}%`;
+    if (previewCanvasWrap) {
+      previewCanvasWrap.style.background = previewPrimaryColor.value;
+    }
   };
 
   previewZoomInBtn.addEventListener("click", () => {
@@ -296,6 +300,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const secondary = previewSecondaryColor.value;
 
     renderPreview(base64, isScrapActive);
+    if (previewCanvasWrap) {
+      previewCanvasWrap.style.background = primary;
+    }
 
     // Update URL hash from MAIN canvas only
     if (!isScrapActive) {
@@ -741,7 +748,12 @@ document.addEventListener("DOMContentLoaded", () => {
   copyColorsBtn.addEventListener("click", () => {
     const primary = previewPrimaryColor.value.replace("#", "");
     const secondary = previewSecondaryColor.value.replace("#", "");
-    copyText(`primary=${primary}&secondary=${secondary}`);
+    const presetName = colorPresetControls.getCurrentPreset();
+    let text = `primary=${primary}&secondary=${secondary}`;
+    if (presetName) {
+      text += ` (${presetName})`;
+    }
+    copyText(text);
   });
 
   previewPrimaryColor.addEventListener("input", () => {

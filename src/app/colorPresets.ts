@@ -29,6 +29,7 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   let colorPresets: ColorPresetMap = {};
   let presetButtons: Record<string, HTMLButtonElement> = {};
   let customPresetButton: HTMLButtonElement | null = null;
+  let currentPresetKey: string | null = null;
 
   async function loadColorPresets(): Promise<ColorPresetMap> {
     if (Object.keys(colorPresets).length > 0) {
@@ -48,9 +49,16 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   }
 
   function setSelectedPreset(key: string | null) {
+    currentPresetKey = key;
     if (selectedLabel) {
-      selectedLabel.textContent = key ? colorPresets[key]?.name ?? key : "Custom colors";
+      const name = key ? colorPresets[key]?.name ?? key : "Custom colors";
+      const nameEl = selectedLabel.querySelector<HTMLElement>(".selected-preset-name");
+      if (nameEl) nameEl.textContent = name;
       selectedLabel.classList.toggle("is-preset", !!key);
+      // Set title with color details for hover tooltip
+      const primary = primaryColorInput.value;
+      const secondary = secondaryColorInput.value;
+      selectedLabel.title = `${name} — primary=${primary}, secondary=${secondary}`;
     }
     Object.values(presetButtons).forEach((button) => {
       const presetKey = button.dataset.presetKey ?? "";
@@ -246,5 +254,11 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     updateCustomButtonSwatches();
   };
 
-  return { setCustomSelection };
+  return {
+    setCustomSelection,
+    getCurrentPreset: () =>
+      currentPresetKey
+        ? (colorPresets[currentPresetKey]?.name ?? currentPresetKey)
+        : null,
+  };
 }

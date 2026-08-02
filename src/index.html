@@ -291,7 +291,9 @@
           </div>
 
           <!-- Preview canvas -->
-          <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+          <div class="preview-canvas-wrap" id="previewCanvasWrap">
+            <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+          </div>
 
           <!-- Colors section -->
           <div class="colors-section">
@@ -306,10 +308,12 @@
                   <label for="previewSecondaryColor" class="color-label">Secondary</label>
                   <input type="color" id="previewSecondaryColor" value="#000000" />
                 </div>
-                <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
-                <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">📋</button>
+                <button id="swapColorsBtn" class="swap-btn">⇄ Swap</button>
               </div>
-              <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
+              <div class="selected-preset" id="selectedPresetLabel">
+                <span class="selected-preset-name">Custom colors</span>
+                <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">⧉ Color Code</button>
+              </div>
               <details class="color-preset-details" open>
                 <summary>Color Presets</summary>
                 <div id="colorPresetContainer" class="color-preset-container loading">

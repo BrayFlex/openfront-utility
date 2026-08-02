@@ -49,7 +49,7 @@
   position: absolute;
   cursor: pointer;
   inset: 0;
-  background-color: #4a5568;
+  background-color: var(--accent-dark);
   transition: .25s;
   border-radius: 22px;
   overflow: hidden;
@@ -62,9 +62,10 @@
   line-height: 1;
   transition: opacity .2s, transform .2s;
   user-select: none;
+  color: white;
 }
-.theme-toggle-sun  { left: 4px;  opacity: 1; }
-.theme-toggle-moon { right: 3px; opacity: 0; }
+.theme-toggle-sun  { left: 4px;  opacity: 0; }
+.theme-toggle-moon { right: 3px; opacity: 1; }
 .theme-toggle-slider:before {
   position: absolute;
   content: "";
@@ -102,8 +103,8 @@
 .theme-toggle input:checked + .theme-toggle-slider:before {
   transform: translateX(24px);
 }
-.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-sun  { opacity: 0; }
-.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-moon { opacity: 1; }
+.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-sun  { opacity: 1; }
+.theme-toggle input:checked + .theme-toggle-slider .theme-toggle-moon { opacity: 0; }
 
 /* ── Tool Strip ─────────────────────────────────────────────────────────── */
 .tool-strip {
