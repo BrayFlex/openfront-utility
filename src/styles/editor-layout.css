@@ -282,8 +282,6 @@
   min-width: 260px;
   height: 380px;
   min-height: 380px;
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
   bottom: 20px;
   left: auto;
   right: 20px;
