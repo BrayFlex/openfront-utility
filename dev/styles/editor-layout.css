@@ -278,16 +278,18 @@
 .preview-panel.floating {
   position: fixed;
   z-index: 100;
-  width: min(260px, calc(100vw - 32px));
-  max-height: min(500px, calc(100vh - 32px));
+  width: 260px;
+  min-width: 260px;
+  height: 380px;
+  min-height: 380px;
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
   bottom: 20px;
   left: auto;
   right: 20px;
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.15);
-  min-width: 220px;
-  min-height: 240px;
 }
 
 /* When floating, hide the color preset list — only show primary/secondary + swap + copy */
