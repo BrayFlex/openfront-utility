@@ -50,6 +50,7 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   function setSelectedPreset(key: string | null) {
     if (selectedLabel) {
       selectedLabel.textContent = key ? colorPresets[key]?.name ?? key : "Custom colors";
+      selectedLabel.classList.toggle("is-preset", !!key);
     }
     Object.values(presetButtons).forEach((button) => {
       const presetKey = button.dataset.presetKey ?? "";

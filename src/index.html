@@ -281,6 +281,11 @@
             <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">›</button>
             <button id="floatingResizeBtn" class="preview-hide-btn" title="Resize preview" aria-label="Resize preview" hidden>⤡</button>
             <span class="panel-title">Preview</span>
+            <div class="preview-zoom-controls">
+              <button id="previewZoomOutBtn" class="preview-zoom-btn" aria-label="Zoom out">−</button>
+              <output id="previewZoomValue" class="preview-zoom-value">100%</output>
+              <button id="previewZoomInBtn" class="preview-zoom-btn" aria-label="Zoom in">+</button>
+            </div>
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">❐</button>
             <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>❏</button>
           </div>
@@ -288,21 +293,22 @@
           <!-- Preview canvas -->
           <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
 
-          <!-- Colors section (collapsible) -->
-          <details class="colors-section" open>
-            <summary class="colors-summary">
-              <span>Colors</span>
-            </summary>
+          <!-- Colors section -->
+          <div class="colors-section">
+            <div class="colors-header">Colors</div>
             <div class="colors-body">
               <div class="color-row">
-                <label for="previewPrimaryColor" class="color-label">Primary</label>
-                <input type="color" id="previewPrimaryColor" value="#ffffff" />
+                <div class="color-field">
+                  <label for="previewPrimaryColor" class="color-label">Primary</label>
+                  <input type="color" id="previewPrimaryColor" value="#ffffff" />
+                </div>
+                <div class="color-field">
+                  <label for="previewSecondaryColor" class="color-label">Secondary</label>
+                  <input type="color" id="previewSecondaryColor" value="#000000" />
+                </div>
+                <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
+                <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">📋</button>
               </div>
-              <div class="color-row">
-                <label for="previewSecondaryColor" class="color-label">Secondary</label>
-                <input type="color" id="previewSecondaryColor" value="#000000" />
-              </div>
-              <button id="swapColorsBtn" class="swap-btn">⇅ Swap</button>
               <div class="selected-preset" id="selectedPresetLabel">Custom colors</div>
               <details class="color-preset-details" open>
                 <summary>Color Presets</summary>
@@ -311,7 +317,7 @@
                 </div>
               </details>
             </div>
-          </details>
+          </div>
 
         </aside>
 
