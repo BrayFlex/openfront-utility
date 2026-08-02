@@ -532,6 +532,57 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const floatingResizeBtn = document.getElementById("floatingResizeBtn") as HTMLButtonElement;
 
+  // Persisted floating preview state
+  const FLOAT_STATE_KEY = "floating-preview-state";
+  type FloatState = { left: number; top: number; width: number; height: number } | null;
+  let savedFloatState: FloatState = null;
+
+  const loadFloatState = (): FloatState => {
+    try {
+      const raw = localStorage.getItem(FLOAT_STATE_KEY);
+      if (raw) return JSON.parse(raw) as FloatState;
+    } catch { /* ignore */ }
+    return null;
+  };
+
+  const saveFloatState = () => {
+    const rect = previewPanel.getBoundingClientRect();
+    const state = {
+      left: Math.round(rect.left),
+      top: Math.round(rect.top),
+      width: Math.round(rect.width),
+      height: Math.round(rect.height),
+    };
+    localStorage.setItem(FLOAT_STATE_KEY, JSON.stringify(state));
+    savedFloatState = state;
+  };
+
+  const applyFloatState = (state: FloatState) => {
+    if (!state) return;
+    previewPanel.style.left = `${state.left}px`;
+    previewPanel.style.top = `${state.top}px`;
+    previewPanel.style.width = `${state.width}px`;
+    previewPanel.style.height = `${state.height}px`;
+    // Clear bottom/right since we're using explicit positioning
+    previewPanel.style.bottom = "";
+    previewPanel.style.right = "";
+  };
+
+  const getMaxDimensions = () => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    return { maxW: Math.min(260, vw - 32), maxH: Math.min(500, vh - 32) };
+  };
+
+  const clampPosition = (left: number, top: number, width: number, height: number) => {
+    const maxL = window.innerWidth - width - 8;
+    const maxT = window.innerHeight - height - 8;
+    return {
+      left: Math.max(8, Math.min(maxL, left)),
+      top: Math.max(8, Math.min(maxT, top)),
+    };
+  };
+
   floatPreviewBtn.addEventListener("click", () => {
     collapsePreview();
     previewPanel.classList.add("floating");
@@ -542,21 +593,23 @@ document.addEventListener("DOMContentLoaded", () => {
     showPreviewBtn.hidden = true;
     floatingResizeBtn.hidden = false;
     floatingResizeBtn.style.cursor = "nwse-resize";
+
+    // Restore saved position/size or use defaults
+    savedFloatState = loadFloatState();
+    if (savedFloatState) {
+      applyFloatState(savedFloatState);
+    } else {
+      // Default: bottom-right anchored (CSS handles this via bottom/right)
+      previewPanel.style.left = "";
+      previewPanel.style.top = "";
+      previewPanel.style.width = "";
+      previewPanel.style.height = "";
+    }
   });
   
   let rPtr: number | null = null;
   let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
-  
-  // Compute max dimensions based on CSS constraints
-  const getMaxDimensions = () => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    // From CSS: width: min(260px, calc(100vw - 32px))
-    const maxW = Math.min(260, vw - 32);
-    // From CSS: max-height: min(500px, calc(100vh - 32px))
-    const maxH = Math.min(500, vh - 32);
-    return { maxW, maxH };
-  };
+  let rStartL = 0, rStartT = 0;
   
   floatingResizeBtn.addEventListener("pointerdown", (ev) => {
     ev.preventDefault();
@@ -567,21 +620,36 @@ document.addEventListener("DOMContentLoaded", () => {
     rStartH = previewPanel.offsetHeight;
     rStartX = ev.clientX;
     rStartY = ev.clientY;
-    // Ensure no inline left/top interfering with bottom-right anchoring
-    previewPanel.style.left = "";
-    previewPanel.style.top = "";
+    // Get current position (works whether using left/top or bottom/right)
+    const rect = previewPanel.getBoundingClientRect();
+    rStartL = rect.left;
+    rStartT = rect.top;
+    // Switch to explicit left/top positioning for consistent resize behavior
+    previewPanel.style.left = `${rStartL}px`;
+    previewPanel.style.top = `${rStartT}px`;
+    previewPanel.style.bottom = "";
+    previewPanel.style.right = "";
   });
   
   floatingResizeBtn.addEventListener("pointermove", (ev) => {
     if (rPtr !== ev.pointerId) return;
     const dx = ev.clientX - rStartX;
     const dy = ev.clientY - rStartY;
-    // Panel is anchored at bottom-right via CSS, so we only adjust width/height
-    // Moving mouse left (negative dx) increases width, moving up (negative dy) increases height
+    // Resize handle is at top-left (in header), so:
+    // - Moving mouse left (negative dx) increases width, moves left edge left
+    // - Moving mouse up (negative dy) increases height, moves top edge up
     const { maxW, maxH } = getMaxDimensions();
     const w = Math.min(maxW, Math.max(220, rStartW - dx));
     const h = Math.min(maxH, Math.max(240, rStartH - dy));
+    const dw = w - rStartW;
+    const dh = h - rStartH;
     
+    const newLeft = rStartL - dw;
+    const newTop = rStartT - dh;
+    const clamped = clampPosition(newLeft, newTop, w, h);
+    
+    previewPanel.style.left = `${clamped.left}px`;
+    previewPanel.style.top = `${clamped.top}px`;
     previewPanel.style.width = `${w}px`;
     previewPanel.style.height = `${h}px`;
   });
@@ -591,6 +659,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (rPtr !== (ev as PointerEvent).pointerId) return;
       rPtr = null;
       floatingResizeBtn.releasePointerCapture((ev as PointerEvent).pointerId);
+      saveFloatState();
     })
   );
 
@@ -600,6 +669,8 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelector(".editor-shell")?.classList.remove("preview-floating");
     previewPanel.style.left = "";
     previewPanel.style.top = "";
+    previewPanel.style.bottom = "";
+    previewPanel.style.right = "";
     previewPanel.style.width = "";
     previewPanel.style.height = "";
     dockPreviewBtn.hidden = true;
@@ -616,23 +687,28 @@ document.addEventListener("DOMContentLoaded", () => {
     if (path.some((el) => el instanceof HTMLButtonElement)) return;
     e.preventDefault();
     floatingPtr = e.pointerId;
-    const r = previewPanel.getBoundingClientRect();
+    const rect = previewPanel.getBoundingClientRect();
     fStartX = e.clientX; fStartY = e.clientY;
-    fLeft = r.left; fTop = r.top;
+    fLeft = rect.left; fTop = rect.top;
     previewHeader.setPointerCapture(e.pointerId);
   });
   previewHeader.addEventListener("pointermove", (e) => {
     if (floatingPtr !== e.pointerId) return;
-    const maxL = window.innerWidth - previewPanel.offsetWidth - 8;
-    const maxT = window.innerHeight - previewPanel.offsetHeight - 8;
-    previewPanel.style.left = `${Math.max(8, Math.min(maxL, fLeft + e.clientX - fStartX))}px`;
-    previewPanel.style.top = `${Math.max(8, Math.min(maxT, fTop + e.clientY - fStartY))}px`;
+    const newLeft = fLeft + e.clientX - fStartX;
+    const newTop = fTop + e.clientY - fStartY;
+    const clamped = clampPosition(newLeft, newTop, previewPanel.offsetWidth, previewPanel.offsetHeight);
+    previewPanel.style.left = `${clamped.left}px`;
+    previewPanel.style.top = `${clamped.top}px`;
+    // Ensure we're using explicit positioning
+    previewPanel.style.bottom = "";
+    previewPanel.style.right = "";
   });
   ["pointerup", "pointercancel"].forEach((ev) =>
     previewHeader.addEventListener(ev, (e) => {
       if (floatingPtr !== (e as PointerEvent).pointerId) return;
       floatingPtr = null;
       previewHeader.releasePointerCapture((e as PointerEvent).pointerId);
+      saveFloatState();
     })
   );
 
