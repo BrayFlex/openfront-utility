@@ -94,4 +94,5 @@
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
+  color: var(--text);
 }
