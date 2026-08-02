@@ -468,7 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0, rStartL = 0, rStartT = 0;
     floatingResizeBtn.addEventListener("pointerdown", (ev) => {
         ev.preventDefault();
-        ev.stopPropagation();
+        ev.stopImmediatePropagation();
         rPtr = ev.pointerId;
         floatingResizeBtn.setPointerCapture(ev.pointerId);
         rStartW = previewPanel.offsetWidth;
@@ -517,7 +517,9 @@ document.addEventListener("DOMContentLoaded", () => {
     previewHeader.addEventListener("pointerdown", (e) => {
         if (!previewPanel.classList.contains("floating"))
             return;
-        if (e.target.closest("button"))
+        // Use composedPath to check if the click originated from a button (including shadow DOM)
+        const path = e.composedPath();
+        if (path.some((el) => el instanceof HTMLButtonElement))
             return;
         e.preventDefault();
         floatingPtr = e.pointerId;
