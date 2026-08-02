@@ -547,11 +547,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const saveFloatState = () => {
     const rect = previewPanel.getBoundingClientRect();
+    // Enforce minimum constraints when saving
+    const width = Math.max(MIN_WIDTH, Math.round(rect.width));
+    const height = Math.max(MIN_HEIGHT, Math.round(rect.height));
     const state = {
       left: Math.round(rect.left),
       top: Math.round(rect.top),
-      width: Math.round(rect.width),
-      height: Math.round(rect.height),
+      width,
+      height,
     };
     localStorage.setItem(FLOAT_STATE_KEY, JSON.stringify(state));
     savedFloatState = state;
@@ -559,20 +562,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const applyFloatState = (state: FloatState) => {
     if (!state) return;
+    // Enforce minimum size constraints
+    const width = Math.max(MIN_WIDTH, state.width);
+    const height = Math.max(MIN_HEIGHT, state.height);
     previewPanel.style.left = `${state.left}px`;
     previewPanel.style.top = `${state.top}px`;
-    previewPanel.style.width = `${state.width}px`;
-    previewPanel.style.height = `${state.height}px`;
+    previewPanel.style.width = `${width}px`;
+    previewPanel.style.height = `${height}px`;
     // Clear bottom/right since we're using explicit positioning
     previewPanel.style.bottom = "";
     previewPanel.style.right = "";
   };
 
-  const getMaxDimensions = () => {
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    return { maxW: Math.min(260, vw - 32), maxH: Math.min(500, vh - 32) };
-  };
+  // Minimum size constraints
+  const MIN_WIDTH = 260;
+  const MIN_HEIGHT = 380;
+  // No maximum - can resize freely
 
   const clampPosition = (left: number, top: number, width: number, height: number) => {
     const maxL = window.innerWidth - width - 8;
@@ -599,11 +604,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (savedFloatState) {
       applyFloatState(savedFloatState);
     } else {
-      // Default: bottom-right anchored (CSS handles this via bottom/right)
+      // Default: bottom-right anchored with min width and min height
       previewPanel.style.left = "";
       previewPanel.style.top = "";
-      previewPanel.style.width = "";
-      previewPanel.style.height = "";
+      previewPanel.style.width = `${MIN_WIDTH}px`;
+      previewPanel.style.height = `${MIN_HEIGHT}px`;
     }
   });
   
@@ -638,9 +643,9 @@ document.addEventListener("DOMContentLoaded", () => {
     // Resize handle is at top-left (in header), so:
     // - Moving mouse left (negative dx) increases width, moves left edge left
     // - Moving mouse up (negative dy) increases height, moves top edge up
-    const { maxW, maxH } = getMaxDimensions();
-    const w = Math.min(maxW, Math.max(220, rStartW - dx));
-    const h = Math.min(maxH, Math.max(240, rStartH - dy));
+    // Both width and height can be resized freely with minimums
+    const w = Math.max(MIN_WIDTH, rStartW - dx);
+    const h = Math.max(MIN_HEIGHT, rStartH - dy);
     const dw = w - rStartW;
     const dh = h - rStartH;
     
