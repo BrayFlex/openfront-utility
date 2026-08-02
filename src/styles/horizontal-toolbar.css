@@ -64,8 +64,8 @@
   user-select: none;
   color: white;
 }
-.theme-toggle-sun  { left: 4px;  opacity: 0; }
-.theme-toggle-moon { right: 3px; opacity: 1; }
+.theme-toggle-sun  { left: 6px;  opacity: 0; }
+.theme-toggle-moon { right: 6px; opacity: 1; }
 .theme-toggle-slider:before {
   position: absolute;
   content: "";
