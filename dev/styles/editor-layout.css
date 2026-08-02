@@ -404,11 +404,14 @@
 .preview-resize-handle[hidden] {
   display: none !important;
 }
+/* When preview is floating, hide the docked resize handle to prevent
+   it from interfering with the floating preview's drag/resize behavior */
+.preview-floating .preview-resize-handle {
+  display: none !important;
+}
 .resize-handle:hover, .resize-handle:active {
   background: var(--accent);
 }
 
 /* Prevent text selection while dragging */
 body.is-resizing-pane * { user-select: none !important; }
-
-
