@@ -3,7 +3,6 @@ const STORAGE_KEY_PLAYER_ID = "pu-submit-player-id";
 const STORAGE_KEY_PATTERN_NAME = "pu-submit-pattern-name";
 
 export function initSubmissionModal(options: {
-  getBase64: () => string;
   getPrimaryColor: () => string;
   getSecondaryColor: () => string;
   getPatternUrl: () => string;

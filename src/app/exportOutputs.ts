@@ -1,5 +1,3 @@
-
-
 export function buildPreviewLink(
   currentHref: string,
   patternCode: string,

@@ -649,12 +649,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             return;
           }
 
-          if (!isMouseDown && tool === "line" && lineStart) {
-            previewLine(cx, cy);
-            return;
-          }
-
-          if (isMouseDown && tool === "line" && lineStart) {
+          if (tool === "line" && lineStart) {
             previewLine(cx, cy);
             return;
           }

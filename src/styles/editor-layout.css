@@ -14,6 +14,16 @@
   min-height: 0;
 }
 
+.workspace-split.preview-collapsed,
+.workspace-split.preview-floating {
+  display: flex;
+}
+
+.workspace-split.preview-collapsed > .canvas-panel,
+.workspace-split.preview-floating > .canvas-panel {
+  flex: 1;
+}
+
 /* ── Canvas Panel ───────────────────────────────────────────────────────── */
 .canvas-panel {
   min-width: 0;
@@ -178,14 +188,14 @@
   opacity: 1;
 }
 .center-cross-overlay::before {
-  top: 14px;
+  top: 17px;
   left: 0;
   width: 36px;
   height: 4px;
 }
 .center-cross-overlay::after {
   top: 0;
-  left: 14px;
+  left: 17px;
   width: 4px;
   height: 36px;
 }
@@ -261,16 +271,18 @@
   overflow: hidden;
 }
 
-.preview-panel.collapsed {
+.preview-panel.collapsed:not(.floating) {
   display: none;
 }
 
 .preview-panel.floating {
   position: fixed;
   z-index: 100;
-  width: min(320px, calc(100vw - 32px));
-  max-height: min(600px, calc(100vh - 32px));
-  top: 80px;
+  width: 260px;
+  min-width: 260px;
+  height: 380px;
+  min-height: 380px;
+  bottom: 20px;
   left: auto;
   right: 20px;
   border: 1px solid var(--border);
@@ -278,23 +290,64 @@
   box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
+/* When floating, hide the color preset list — only show primary/secondary + swap + copy */
+.preview-panel.floating .color-preset-details {
+  display: none;
+}
+
 .preview-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
 }
+.preview-header .panel-title {
+  margin-right: auto;
+}
 .preview-panel.floating .preview-header {
   cursor: move;
+}
+
+/* Preview zoom controls in header */
+.preview-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.preview-zoom-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-zoom-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.preview-zoom-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-hide-btn, .preview-float-btn {
   background: none;
   border: none;
   color: var(--muted);
-  font-size: 16px;
+  font-size: 18px;
   cursor: pointer;
   padding: 4px;
   border-radius: 4px;
@@ -304,30 +357,38 @@
   color: var(--text);
 }
 
+.preview-canvas-wrap {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+
 #preview {
-  --preview-width: 100cqw;
-  display: block;
   width: 100%;
-  max-width: round(down, var(--preview-width), 1px);
+  max-width: 100%;
+  height: auto;
   aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
-  /* This prevents the element from growing beyond its container */
-  height: auto;
+  transform-origin: center;
 }
 
 /* Colors Section */
 .colors-section {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
-.colors-summary {
-  display: flex;
-  align-items: center;
-  padding: 12px 14px;
+.colors-header {
+  padding: 10px 14px;
   font-weight: 600;
-  cursor: pointer;
-  user-select: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -340,17 +401,48 @@
 
 .color-row {
   display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.color-field {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 2px;
+}
+.color-field input[type="color"] {
+  width: 60px;
 }
 .color-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 .swap-btn {
-  align-self: center;
+  align-self: flex-end;
   padding: 4px 12px;
   font-size: 12px;
+}
+.copy-colors-btn {
+  margin-left: auto;
+  align-self: center;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.copy-colors-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Show Preview Button ────────────────────────────────────────────────── */
@@ -394,29 +486,14 @@
 .preview-resize-handle[hidden] {
   display: none !important;
 }
+/* When preview is floating, hide the docked resize handle to prevent
+   it from interfering with the floating preview's drag/resize behavior */
+.preview-floating .preview-resize-handle {
+  display: none !important;
+}
 .resize-handle:hover, .resize-handle:active {
   background: var(--accent);
 }
 
 /* Prevent text selection while dragging */
 body.is-resizing-pane * { user-select: none !important; }
-
-/* Floating preview resize handle */
-.floating-resize-handle {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: se-resize;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 11px;
-  color: var(--muted);
-  line-height: 1;
-  user-select: none;
-  opacity: 0.5;
-}
-.floating-resize-handle:hover { opacity: 1; }

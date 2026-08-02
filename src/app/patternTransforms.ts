@@ -142,10 +142,10 @@ export function rotateSelection(
   return { pattern: next, rotatedSelection: newSel };
 }
 
-/** Flip selected pixels horizontally (mirror left/right within bounding box). */
-export function flipSelectionH(
+function flipSelectionOnAxis(
   pattern: number[][],
-  selection: Set<string>
+  selection: Set<string>,
+  axis: "h" | "v"
 ): { pattern: number[][]; flippedSelection: Set<string> } {
   if (selection.size === 0) return { pattern, flippedSelection: selection };
 
@@ -153,13 +153,16 @@ export function flipSelectionH(
   const width = pattern[0]?.length ?? 0;
 
   // Compute bounding box
-  let minX = Infinity, maxX = -Infinity;
+  let minH = Infinity, maxH = -Infinity;
+  let minV = Infinity, maxV = -Infinity;
   const cells: Array<{ x: number; y: number }> = [];
   selection.forEach((key) => {
     const [x, y] = key.split(",").map(Number);
     cells.push({ x, y });
-    if (x < minX) minX = x;
-    if (x > maxX) maxX = x;
+    if (x < minH) minH = x;
+    if (x > maxH) maxH = x;
+    if (y < minV) minV = y;
+    if (y > maxV) maxV = y;
   });
 
   const next = pattern.map((row) => row.slice());
@@ -170,14 +173,27 @@ export function flipSelectionH(
 
   // Place at mirrored positions
   cells.forEach(({ x, y }) => {
-    const nx = minX + (maxX - x);
-    if (nx >= 0 && nx < width && y >= 0 && y < height) {
-      if (pattern[y]?.[x] === 1) next[y][nx] = 1;
-      newSel.add(`${nx},${y}`);
+    let nx = x, ny = y;
+    if (axis === "h") {
+      nx = minH + (maxH - x);
+    } else {
+      ny = minV + (maxV - y);
+    }
+    if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
+      if (pattern[y]?.[x] === 1) next[ny][nx] = 1;
+      newSel.add(`${nx},${ny}`);
     }
   });
 
   return { pattern: next, flippedSelection: newSel };
+}
+
+/** Flip selected pixels horizontally (mirror left/right within bounding box). */
+export function flipSelectionH(
+  pattern: number[][],
+  selection: Set<string>
+): { pattern: number[][]; flippedSelection: Set<string> } {
+  return flipSelectionOnAxis(pattern, selection, "h");
 }
 
 /** Flip selected pixels vertically (mirror top/bottom within bounding box). */
@@ -185,35 +201,5 @@ export function flipSelectionV(
   pattern: number[][],
   selection: Set<string>
 ): { pattern: number[][]; flippedSelection: Set<string> } {
-  if (selection.size === 0) return { pattern, flippedSelection: selection };
-
-  const height = pattern.length;
-  const width = pattern[0]?.length ?? 0;
-
-  // Compute bounding box
-  let minY = Infinity, maxY = -Infinity;
-  const cells: Array<{ x: number; y: number }> = [];
-  selection.forEach((key) => {
-    const [x, y] = key.split(",").map(Number);
-    cells.push({ x, y });
-    if (y < minY) minY = y;
-    if (y > maxY) maxY = y;
-  });
-
-  const next = pattern.map((row) => row.slice());
-  const newSel = new Set<string>();
-
-  // Clear source positions
-  cells.forEach(({ x, y }) => { next[y][x] = 0; });
-
-  // Place at mirrored positions
-  cells.forEach(({ x, y }) => {
-    const ny = minY + (maxY - y);
-    if (ny >= 0 && ny < height && x >= 0 && x < width) {
-      if (pattern[y]?.[x] === 1) next[ny][x] = 1;
-      newSel.add(`${x},${ny}`);
-    }
-  });
-
-  return { pattern: next, flippedSelection: newSel };
+  return flipSelectionOnAxis(pattern, selection, "v");
 }

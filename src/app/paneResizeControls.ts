@@ -1,7 +1,5 @@
 type PaneResizeControlsOptions = {
-  shell: HTMLElement;
   workspaceSplit: HTMLElement;
-  toolbarHandle: HTMLElement;
   previewHandle: HTMLElement;
 };
 
@@ -43,26 +41,6 @@ export function initPaneResizeControls(options: PaneResizeControlsOptions) {
     handle.addEventListener("pointercancel", stop);
   };
 
-  const beginMouseResize = (
-    event: MouseEvent,
-    onMove: (clientX: number) => void
-  ) => {
-    if (event.button !== 0) return;
-    event.preventDefault();
-    document.body.classList.add("is-resizing-pane");
-
-    const move = (nextEvent: MouseEvent) => {
-      onMove(nextEvent.clientX);
-    };
-    const stop = () => {
-      document.body.classList.remove("is-resizing-pane");
-      document.removeEventListener("mousemove", move);
-      document.removeEventListener("mouseup", stop);
-    };
-    document.addEventListener("mousemove", move);
-    document.addEventListener("mouseup", stop);
-  };
-
   const resizePreview = (clientX: number) => {
     const splitRect = workspaceSplit.getBoundingClientRect();
     // Minimum 180px preview, maximum is half the workspace
@@ -71,14 +49,7 @@ export function initPaneResizeControls(options: PaneResizeControlsOptions) {
     workspaceSplit.style.setProperty("--preview-width", `${Math.round(width)}px`);
   };
 
-  const startPreviewResize = (event: PointerEvent | MouseEvent) => {
-    if (event instanceof PointerEvent) {
-      beginPointerResize(event, previewHandle, resizePreview);
-      return;
-    }
-    beginMouseResize(event, resizePreview);
-  };
-
-  previewHandle.addEventListener("pointerdown", startPreviewResize);
-  previewHandle.addEventListener("mousedown", startPreviewResize);
+  previewHandle.addEventListener("pointerdown", (event) => {
+    beginPointerResize(event, previewHandle, resizePreview);
+  });
 }
