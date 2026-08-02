@@ -6,7 +6,7 @@
   --muted: #5d6870;
   --border: #cfd6da;
   --border-strong: #9aa8b0;
-  --accent: #0c7cc9;
+  --accent: #1080ca;
   --accent-dark: #095a94;
   --accent-light: #e6f2fa;
   --danger: #e25636;
@@ -86,6 +86,7 @@ button.selected,
 .btn-primary:hover,
 button.selected:hover,
 .tool-btn.selected:hover {
+  color: var(--surface);
   background: var(--accent-dark);
 }
 
