@@ -10,6 +10,9 @@
   font-size: 13px;
   font-weight: 700;
 }
+.selected-preset.is-preset {
+  color: var(--accent);
+}
 
 .color-preset-details summary {
   font-size: 13px;
@@ -25,8 +28,8 @@
 }
 
 .color-preset-container {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
+  flex-wrap: wrap;
   gap: 6px;
   max-height: 230px;
   overflow-y: auto;
@@ -44,11 +47,11 @@
 }
 
 .color-preset-item {
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  display: flex;
   align-items: center;
   gap: 7px;
-  width: 100%;
+  flex: 1 1 auto;
+  min-width: 0;
   padding: 6px 8px;
   border: 1px solid var(--border);
   border-radius: 6px;

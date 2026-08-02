@@ -278,26 +278,69 @@
 .preview-panel.floating {
   position: fixed;
   z-index: 100;
-  width: min(320px, calc(100vw - 32px));
-  max-height: min(600px, calc(100vh - 32px));
-  top: 80px;
+  width: min(260px, calc(100vw - 32px));
+  max-height: min(500px, calc(100vh - 32px));
+  bottom: 20px;
   left: auto;
   right: 20px;
   border: 1px solid var(--border);
   border-radius: 8px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.15);
+  min-width: 220px;
+  min-height: 240px;
+}
+
+/* When floating, hide the color preset list — only show primary/secondary + swap + copy */
+.preview-panel.floating .color-preset-details {
+  display: none;
 }
 
 .preview-header {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 10px 14px;
+  gap: 6px;
+  padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
 }
+.preview-header .panel-title {
+  margin-right: auto;
+}
 .preview-panel.floating .preview-header {
   cursor: move;
+}
+
+/* Preview zoom controls in header */
+.preview-zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.preview-zoom-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-zoom-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.preview-zoom-value {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  min-width: 44px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
 }
 
 .preview-hide-btn, .preview-float-btn {
@@ -324,20 +367,22 @@
   image-rendering: pixelated;
   /* This prevents the element from growing beyond its container */
   height: auto;
+  transform-origin: center;
 }
 
 /* Colors Section */
 .colors-section {
   flex: 1;
   overflow-y: auto;
+  min-height: 0;
 }
-.colors-summary {
-  display: flex;
-  align-items: center;
-  padding: 12px 14px;
+.colors-header {
+  padding: 10px 14px;
   font-weight: 600;
-  cursor: pointer;
-  user-select: none;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
@@ -350,17 +395,44 @@
 
 .color-row {
   display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.color-field {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 2px;
 }
 .color-label {
-  font-size: 13px;
+  font-size: 11px;
   font-weight: 500;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 .swap-btn {
-  align-self: center;
+  align-self: flex-end;
   padding: 4px 12px;
   font-size: 12px;
+}
+.copy-colors-btn {
+  align-self: flex-end;
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.copy-colors-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 /* ── Show Preview Button ────────────────────────────────────────────────── */

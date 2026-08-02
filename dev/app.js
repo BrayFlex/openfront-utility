@@ -116,6 +116,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const dockPreviewBtn = document.getElementById("dockPreviewBtn");
     const previewPanel = document.querySelector(".preview-panel");
     const previewHeader = document.querySelector(".preview-header");
+    const previewZoomInBtn = document.getElementById("previewZoomInBtn");
+    const previewZoomOutBtn = document.getElementById("previewZoomOutBtn");
+    const previewZoomValue = document.getElementById("previewZoomValue");
+    const copyColorsBtn = document.getElementById("copyColorsBtn");
     // Submission
     const submitPatternBtn = document.getElementById("submitPatternBtn");
     // Workspace zoom
@@ -220,6 +224,24 @@ document.addEventListener("DOMContentLoaded", () => {
         context: previewCtx,
         primaryColorInput: previewPrimaryColor,
         secondaryColorInput: previewSecondaryColor,
+    });
+    // ── Preview zoom ──────────────────────────────────────────────────────────
+    let previewZoom = 1;
+    const PREVIEW_ZOOM_MIN = 0.5;
+    const PREVIEW_ZOOM_MAX = 4;
+    const PREVIEW_ZOOM_STEP = 0.5;
+    const applyPreviewZoom = () => {
+        previewCanvas.style.transform = `scale(${previewZoom})`;
+        previewCanvas.style.transformOrigin = "center";
+        previewZoomValue.textContent = `${Math.round(previewZoom * 100)}%`;
+    };
+    previewZoomInBtn.addEventListener("click", () => {
+        previewZoom = Math.min(PREVIEW_ZOOM_MAX, previewZoom + PREVIEW_ZOOM_STEP);
+        applyPreviewZoom();
+    });
+    previewZoomOutBtn.addEventListener("click", () => {
+        previewZoom = Math.max(PREVIEW_ZOOM_MIN, previewZoom - PREVIEW_ZOOM_STEP);
+        applyPreviewZoom();
     });
     // ── Output update ─────────────────────────────────────────────────────────
     let updateOutput = () => { };
@@ -483,8 +505,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         const dx = ev.clientX - rStartX;
         const dy = ev.clientY - rStartY;
-        const w = Math.max(180, rStartW - dx);
-        const h = Math.max(200, rStartH - dy);
+        const w = Math.max(220, rStartW - dx);
+        const h = Math.max(240, rStartH - dy);
         // adjust position based on how much width/height actually changed
         const dw = w - rStartW;
         const dh = h - rStartH;
@@ -653,6 +675,11 @@ document.addEventListener("DOMContentLoaded", () => {
         previewSecondaryColor.value = p;
         colorPresetControls.setCustomSelection();
         updateOutput();
+    });
+    copyColorsBtn.addEventListener("click", () => {
+        const primary = previewPrimaryColor.value.replace("#", "");
+        const secondary = previewSecondaryColor.value.replace("#", "");
+        copyText(`primary=${primary}&secondary=${secondary}`);
     });
     previewPrimaryColor.addEventListener("input", () => {
         colorPresetControls.setCustomSelection();
