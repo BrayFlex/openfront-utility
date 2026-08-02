@@ -547,6 +547,17 @@ document.addEventListener("DOMContentLoaded", () => {
   let rPtr: number | null = null;
   let rStartW = 0, rStartH = 0, rStartX = 0, rStartY = 0;
   
+  // Compute max dimensions based on CSS constraints
+  const getMaxDimensions = () => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    // From CSS: width: min(260px, calc(100vw - 32px))
+    const maxW = Math.min(260, vw - 32);
+    // From CSS: max-height: min(500px, calc(100vh - 32px))
+    const maxH = Math.min(500, vh - 32);
+    return { maxW, maxH };
+  };
+  
   floatingResizeBtn.addEventListener("pointerdown", (ev) => {
     ev.preventDefault();
     ev.stopImmediatePropagation();
@@ -556,6 +567,9 @@ document.addEventListener("DOMContentLoaded", () => {
     rStartH = previewPanel.offsetHeight;
     rStartX = ev.clientX;
     rStartY = ev.clientY;
+    // Ensure no inline left/top interfering with bottom-right anchoring
+    previewPanel.style.left = "";
+    previewPanel.style.top = "";
   });
   
   floatingResizeBtn.addEventListener("pointermove", (ev) => {
@@ -564,8 +578,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const dy = ev.clientY - rStartY;
     // Panel is anchored at bottom-right via CSS, so we only adjust width/height
     // Moving mouse left (negative dx) increases width, moving up (negative dy) increases height
-    const w = Math.max(220, rStartW - dx);
-    const h = Math.max(240, rStartH - dy);
+    const { maxW, maxH } = getMaxDimensions();
+    const w = Math.min(maxW, Math.max(220, rStartW - dx));
+    const h = Math.min(maxH, Math.max(240, rStartH - dy));
     
     previewPanel.style.width = `${w}px`;
     previewPanel.style.height = `${h}px`;
