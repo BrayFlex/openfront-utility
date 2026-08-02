@@ -120,6 +120,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewZoomOutBtn = document.getElementById("previewZoomOutBtn");
     const previewZoomValue = document.getElementById("previewZoomValue");
     const copyColorsBtn = document.getElementById("copyColorsBtn");
+    const previewCanvasWrap = document.getElementById("previewCanvasWrap");
     // Submission
     const submitPatternBtn = document.getElementById("submitPatternBtn");
     // Workspace zoom
@@ -234,6 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
         previewCanvas.style.transform = `scale(${previewZoom})`;
         previewCanvas.style.transformOrigin = "center";
         previewZoomValue.textContent = `${Math.round(previewZoom * 100)}%`;
+        if (previewCanvasWrap) {
+            previewCanvasWrap.style.background = previewPrimaryColor.value;
+        }
     };
     previewZoomInBtn.addEventListener("click", () => {
         previewZoom = Math.min(PREVIEW_ZOOM_MAX, previewZoom + PREVIEW_ZOOM_STEP);
@@ -259,6 +263,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const primary = previewPrimaryColor.value;
         const secondary = previewSecondaryColor.value;
         renderPreview(base64, isScrapActive);
+        if (previewCanvasWrap) {
+            previewCanvasWrap.style.background = primary;
+        }
         // Update URL hash from MAIN canvas only
         if (!isScrapActive) {
             const params = new URLSearchParams({
@@ -679,7 +686,12 @@ document.addEventListener("DOMContentLoaded", () => {
     copyColorsBtn.addEventListener("click", () => {
         const primary = previewPrimaryColor.value.replace("#", "");
         const secondary = previewSecondaryColor.value.replace("#", "");
-        copyText(`primary=${primary}&secondary=${secondary}`);
+        const presetName = colorPresetControls.getCurrentPreset();
+        let text = `primary=${primary}&secondary=${secondary}`;
+        if (presetName) {
+            text += ` (${presetName})`;
+        }
+        copyText(text);
     });
     previewPrimaryColor.addEventListener("input", () => {
         colorPresetControls.setCustomSelection();
