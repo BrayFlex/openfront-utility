@@ -32,11 +32,13 @@ export type GridManager = {
   hasSelection: () => boolean;
   /** Invert all cells in selection (or full canvas if no selection) */
   invertGrid: () => void;
+  /** Invert the selection itself — select all unselected cells, deselect all selected */
+  invertSelection: () => void;
   /** Cut selection to clipboard */
   cutSelection: (clipboard: ClipboardManager) => void;
   /** Copy selection to clipboard */
   copySelection: (clipboard: ClipboardManager) => void;
-  /** Paste clipboard at (x,y) as top-left anchor */
+  /** Paste clipboard centered on (x,y) */
   paste: (x: number, y: number, clipboard: ClipboardManager) => void;
   /** Shift selection (or full canvas) in direction */
   shiftDir: (dx: number, dy: number) => void;
@@ -289,15 +291,18 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   const showPastePreview = (
     anchorX: number,
     anchorY: number,
-    entry: { cells: Array<{ x: number; y: number; active: boolean }>; originX: number; originY: number }
+    entry: { cells: Array<{ x: number; y: number; active: boolean }>; originX: number; originY: number; width: number; height: number }
   ) => {
     clearPastePreview();
     pastePreviewOrigin = { ox: entry.originX, oy: entry.originY };
+    // Center the paste on the cursor cell
+    const halfW = Math.floor(entry.width / 2);
+    const halfH = Math.floor(entry.height / 2);
     const pts: GridPoint[] = [];
     for (const c of entry.cells) {
       if (!c.active) continue;
-      const tx = anchorX + (c.x - entry.originX);
-      const ty = anchorY + (c.y - entry.originY);
+      const tx = anchorX + (c.x - entry.originX) - halfW;
+      const ty = anchorY + (c.y - entry.originY) - halfH;
       if (isInBounds(tx, ty)) {
         pts.push({ x: tx, y: ty });
         cellMatrix[ty]?.[tx]?.classList.add("paste-hover");
@@ -325,25 +330,30 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     clearPastePreview();
     const entry = clipboard.paste();
     if (!entry) return;
+    // Center on the anchor cell
+    const halfW = Math.floor(entry.width / 2);
+    const halfH = Math.floor(entry.height / 2);
     for (const c of entry.cells) {
       if (!c.active) continue;
-      const tx = anchorX + (c.x - entry.originX);
-      const ty = anchorY + (c.y - entry.originY);
+      const tx = anchorX + (c.x - entry.originX) - halfW;
+      const ty = anchorY + (c.y - entry.originY) - halfH;
+      // Respect active selection boundary if one exists
+      if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty))) continue;
       setCellActive(tx, ty, c.active);
     }
-    clearSelection();
     onPatternChange();
   };
 
   // ── Cut ───────────────────────────────────────────────────────────────────
   const cutSelection = (clipboard: ClipboardManager) => {
     if (!hasSelection()) return;
-    copySelection(clipboard);
-    activeSelection.forEach((k) => {
+    // Snapshot selection keys before copySelection clears them
+    const toErase = new Set(activeSelection);
+    copySelection(clipboard); // internally calls clearSelection()
+    toErase.forEach((k) => {
       const [x, y] = k.split(",").map(Number);
       setCellActive(x, y, false);
     });
-    clearSelection();
     onPatternChange();
   };
 
@@ -381,6 +391,21 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       applyPattern(invertPattern(patternState));
     }
     onPatternChange();
+  };
+
+  // ── Invert Selection ─────────────────────────────────────────────────────
+  // Toggles which cells are selected: everything not selected becomes selected.
+  const invertSelection = () => {
+    const newSel = new Set<string>();
+    for (let y = 0; y < tileHeight; y++) {
+      for (let x = 0; x < tileWidth; x++) {
+        if (!activeSelection.has(key(x, y))) {
+          newSel.add(key(x, y));
+        }
+      }
+    }
+    activeSelection = newSel;
+    renderSelection();
   };
 
   // ── Shift ─────────────────────────────────────────────────────────────────
@@ -435,16 +460,26 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Mouse & Key state ─────────────────────────────────────────────────────
   let isShiftDown = false;
+  // Button element for the selectArea tool — used for unified shift highlight
+  const selectAreaBtn = document.getElementById("tool-selectArea");
+
   document.addEventListener("keydown", (e) => {
-    if (e.key === "Shift") isShiftDown = true;
+    if (e.key === "Shift") {
+      isShiftDown = true;
+      // Highlight the select tool button while shift is held
+      selectAreaBtn?.classList.add("selected");
+      // Show select-mode cursor on the grid
+      gridDiv.classList.add("select-mode");
+    }
   });
   document.addEventListener("keyup", (e) => {
     if (e.key === "Shift") {
       isShiftDown = false;
-      // if tool is overridden via shift, release drag
-      if (selectAreaStart && !isMouseDown) {
-         // handle release
+      // Only remove highlight if select tool isn't permanently active
+      if (toolState.getCurrentTool() !== "selectArea") {
+        selectAreaBtn?.classList.remove("selected");
       }
+      gridDiv.classList.remove("select-mode");
     }
   });
 
@@ -578,6 +613,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         };
 
         cell.onclick = () => {
+          // If shift is held, the mousedown already handled the selectArea logic — don't draw.
+          if (isShiftDown) return;
           const tool = toolState.getCurrentTool();
           const sel = activeSelection.size > 0 ? activeSelection : undefined;
 
@@ -696,6 +733,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       selectAreaEnd = null;
       selectAreaPreview.clear();
     }
+    // Sync select-mode cursor class with tool state
+    if (tool === "selectArea") {
+      gridDiv.classList.add("select-mode");
+    } else if (!isShiftDown) {
+      gridDiv.classList.remove("select-mode");
+    }
   });
 
   // ── Clear grid ────────────────────────────────────────────────────────────
@@ -734,6 +777,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     clearSelection,
     hasSelection,
     invertGrid,
+    invertSelection,
     cutSelection,
     copySelection,
     paste,

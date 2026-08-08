@@ -34,34 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tool strip
   const toolButtons = document.querySelectorAll<HTMLButtonElement>("[data-tool]");
   const sizeSlider = document.getElementById("toolSizeSlider") as HTMLInputElement;
-  const sizeOutput = document.getElementById("toolSizeOutput")!;
-  const toolSizeBtn = document.getElementById("toolSizeBtn") as HTMLButtonElement;
+  const sizeOutput = document.getElementById("toolSizeOutput") as HTMLInputElement;
   const sizePopover = document.getElementById("sizePopover") as HTMLDivElement;
 
-  if (toolSizeBtn && sizePopover) {
-    const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
-    const syncSizeDisplay = () => {
-      if (toolSizeBtnValue && sizeSlider) toolSizeBtnValue.textContent = sizeSlider.value;
-    };
-    if (sizeSlider) sizeSlider.addEventListener("input", syncSizeDisplay);
-    syncSizeDisplay();
-
-    toolSizeBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sizePopover.hidden = !sizePopover.hidden;
-      if (!sizePopover.hidden) {
-        const rect = toolSizeBtn.getBoundingClientRect();
-        sizePopover.style.top = `${rect.bottom + 8}px`;
-        sizePopover.style.left = `${rect.left}px`;
-      }
-    });
-    document.addEventListener("click", (e) => {
-      if (!sizePopover.contains(e.target as Node) && e.target !== toolSizeBtn) {
-        sizePopover.hidden = true;
-      }
-    });
-  }
-  const sizeGroup = document.getElementById("toolSizeGroup") as HTMLElement;
+  // We use sizePopover as the sizeGroup so toolState automatically hides/shows it
+  const sizeGroup = sizePopover;
 
   // Undo / Redo
   const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
@@ -708,7 +685,9 @@ document.addEventListener("DOMContentLoaded", () => {
     previewPanel.style.bottom = "";
     previewPanel.style.right = "";
   });
-  ["pointerup", "pointercancel"].forEach((ev) =>
+  
+
+  ["pointerup", "pointercancel"].forEach(ev =>
     previewHeader.addEventListener(ev, (e) => {
       if (floatingPtr !== (e as PointerEvent).pointerId) return;
       floatingPtr = null;
@@ -764,6 +743,13 @@ document.addEventListener("DOMContentLoaded", () => {
       activeGrid().clearSelection();
       toolState.restoreTool();
     },
+    onClearSelection: () => {
+      if (activeGrid().hasSelection()) {
+        activeGrid().clearGrid();
+      }
+    },
+    onInvert: () => activeGrid().invertGrid(),
+    onInvertSelection: () => activeGrid().invertSelection(),
     onCopy: () => activeGrid().copySelection(clipboard),
     onCut: () => activeGrid().cutSelection(clipboard),
     onPaste: () => {
