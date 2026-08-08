@@ -38,11 +38,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const toolSizeBtn = document.getElementById("toolSizeBtn") as HTMLButtonElement;
   const sizePopover = document.getElementById("sizePopover") as HTMLDivElement;
 
+  const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
+  const syncSizeDisplay = () => {
+    if (toolSizeBtnValue && sizeSlider) toolSizeBtnValue.textContent = sizeSlider.value;
+  };
+
   if (toolSizeBtn && sizePopover) {
-    const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
-    const syncSizeDisplay = () => {
-      if (toolSizeBtnValue && sizeSlider) toolSizeBtnValue.textContent = sizeSlider.value;
-    };
     if (sizeSlider) sizeSlider.addEventListener("input", syncSizeDisplay);
     syncSizeDisplay();
 
@@ -176,6 +177,8 @@ document.addEventListener("DOMContentLoaded", () => {
   canvasTabScrap.addEventListener("click", () => switchCanvas(true));
 
   const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
+  // Sync size display button when tool changes (restores remembered size)
+  toolState.subscribeToToolChanges(() => syncSizeDisplay());
   const shapeTypeSelect = document.getElementById("shapeType") as HTMLSelectElement;
   if (shapeTypeSelect) {
     shapeTypeSelect.addEventListener("change", () => {
@@ -708,7 +711,9 @@ document.addEventListener("DOMContentLoaded", () => {
     previewPanel.style.bottom = "";
     previewPanel.style.right = "";
   });
-  ["pointerup", "pointercancel"].forEach((ev) =>
+  
+
+  ["pointerup", "pointercancel"].forEach(ev =>
     previewHeader.addEventListener(ev, (e) => {
       if (floatingPtr !== (e as PointerEvent).pointerId) return;
       floatingPtr = null;
@@ -764,6 +769,13 @@ document.addEventListener("DOMContentLoaded", () => {
       activeGrid().clearSelection();
       toolState.restoreTool();
     },
+    onClearSelection: () => {
+      if (activeGrid().hasSelection()) {
+        activeGrid().clearGrid();
+      }
+    },
+    onInvert: () => activeGrid().invertGrid(),
+    onInvertSelection: () => activeGrid().invertSelection(),
     onCopy: () => activeGrid().copySelection(clipboard),
     onCut: () => activeGrid().cutSelection(clipboard),
     onPaste: () => {

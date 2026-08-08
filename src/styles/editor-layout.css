@@ -83,6 +83,25 @@
 }
 .ctrl-btn:hover { border-color: var(--accent); }
 
+/* Size button when placed in the secondary toolbar */
+.ctrl-size-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ctrl-size-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  min-width: 14px;
+  text-align: right;
+}
+
 .ctrl-label {
   font-size: 12px;
   font-weight: 600;
@@ -234,11 +253,18 @@
   background: transparent;
   cursor: crosshair;
 }
-.canvas-workspace.is-space-pan .cell { cursor: grab; }
-.canvas-workspace.is-panning .cell { cursor: grabbing; }
+
 
 .cell.active { background: #24313a; }
 .cell.line-start { box-shadow: inset 0 0 0 2px #f4a261; }
+
+/* Select-mode cursor — applied when shift is held or selectArea tool is active */
+.select-mode .cell { cursor: cell; }
+.canvas-workspace.is-space-pan .cell { cursor: grab; }
+.canvas-workspace.is-panning .cell { cursor: grabbing; }
+/* Ctrl held = drag to pan */
+.canvas-workspace.is-ctrl-pan { cursor: grab; }
+.canvas-workspace.is-ctrl-pan .cell { cursor: grab; }
 
 /* Selection — theme-aware, visible over black pixels */
 .selection-cell {

@@ -34,16 +34,8 @@
         <!-- ── Tool strip ── -->
         <div class="tool-strip" id="toolbox" role="toolbar" aria-label="Drawing tools">
 
-          <!-- Drawing tools & Size -->
+          <!-- Drawing tools -->
           <div class="tool-strip-group">
-            <!-- Size button: shows current size value + dropdown arrow -->
-            <button id="toolSizeBtn" class="tool-btn" title="Tool size">
-              <div class="size-btn">
-                <span id="toolSizeBtnValue" class="size-btn-value">1</span>
-                <span class="size-btn-arrow">▾</span>
-              </div>
-              <span class="tool-label">Size</span>
-            </button>
             <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
               <span class="tool-icon">✏</span>
               <span class="tool-label">Pencil</span>
@@ -192,13 +184,13 @@
         <!-- ─── Canvas panel ─── -->
         <section class="canvas-panel" aria-label="Pattern canvas">
 
-          <!-- Canvas tabs + controls bar -->
+          <!-- Canvas controls bar -->
           <div class="canvas-controls-bar">
-            <!-- Tab switcher -->
-            <div class="canvas-tabs ei-tabs" role="tablist">
-              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
-              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test Canvas</button>
-            </div>
+
+            <!-- Size button (moved from toolstrip, left of Invert/Clear) -->
+            <button id="toolSizeBtn" class="ctrl-btn ctrl-size-btn" title="Tool size (click to open size slider)">
+              <span id="toolSizeBtnValue" class="ctrl-size-value">1</span><span class="size-btn-arrow">▾</span>
+            </button>
 
             <div class="canvas-controls-divider"></div>
 
@@ -250,6 +242,14 @@
             <output  id="zoomValue"  class="ctrl-zoom">100%</output>
             <button id="zoomInBtn"   class="ctrl-btn" aria-label="Zoom in">+</button>
             <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+
+            <div class="canvas-controls-divider"></div>
+
+            <!-- Canvas tab switcher (far right) -->
+            <div class="canvas-tabs ei-tabs" role="tablist">
+              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main</button>
+              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test</button>
+            </div>
 
           </div>
 
