@@ -30,7 +30,7 @@ export function createToolState(options) {
             sizeSlider.value = String((_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue);
         }
         if (sizeOutput)
-            sizeOutput.textContent = (_b = sizeSlider === null || sizeSlider === void 0 ? void 0 : sizeSlider.value) !== null && _b !== void 0 ? _b : "1";
+            sizeOutput.value = (_b = sizeSlider === null || sizeSlider === void 0 ? void 0 : sizeSlider.value) !== null && _b !== void 0 ? _b : "1";
     };
     function selectTool(tool) {
         // Save current size before switching
@@ -60,9 +60,25 @@ export function createToolState(options) {
     if (sizeSlider) {
         sizeSlider.addEventListener("input", () => {
             if (sizeOutput)
-                sizeOutput.textContent = sizeSlider.value;
+                sizeOutput.value = sizeSlider.value;
             if (TOOL_SIZE_CONFIGS[currentTool]) {
                 rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+            }
+        });
+    }
+    // Wire up size numeric input
+    if (sizeOutput) {
+        sizeOutput.addEventListener("change", () => {
+            let val = parseInt(sizeOutput.value);
+            if (isNaN(val))
+                val = 1;
+            const config = TOOL_SIZE_CONFIGS[currentTool];
+            if (config) {
+                val = Math.max(config.min, Math.min(config.max, val));
+                sizeOutput.value = String(val);
+                if (sizeSlider)
+                    sizeSlider.value = String(val);
+                rememberedSizes[currentTool] = val;
             }
         });
     }

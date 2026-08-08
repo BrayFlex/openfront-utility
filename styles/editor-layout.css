@@ -83,10 +83,37 @@
 }
 .ctrl-btn:hover { border-color: var(--accent); }
 
+/* Size button when placed in the secondary toolbar */
+.ctrl-size-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 4px 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.ctrl-size-value {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--accent);
+  min-width: 14px;
+  text-align: right;
+}
+
 .ctrl-label {
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+  user-select: none;
+}
+
+.ctrl-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .ctrl-stepper {
@@ -163,6 +190,67 @@
 }
 .canvas-workspace.is-panning { cursor: grabbing; }
 
+/* ── Size Popover Overlay ────────────────────────────────────────────────── */
+.overlay-popover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  z-index: 50;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.overlay-popover[hidden] {
+  display: none !important;
+}
+.size-popover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.size-output-input {
+  width: 40px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 4px;
+  color: var(--fg);
+  outline: none;
+}
+.size-output-input:focus {
+  border-color: var(--accent);
+}
+/* Hide number input spin buttons */
+.size-output-input::-webkit-outer-spin-button,
+.size-output-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.size-output-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.size-slider.vertical {
+  writing-mode: vertical-lr; /* IE/Edge */
+  direction: rtl; /* Flip direction if needed */
+  appearance: slider-vertical; /* WebKit */
+  width: 16px;
+  height: 200px;
+  margin: 0;
+  cursor: pointer;
+}
+/* Datalist styling for ticks isn't broadly supported but the native slider UI will show notches */
+
 .grid-viewport {
   position: absolute;
   top: 50%;
@@ -234,11 +322,18 @@
   background: transparent;
   cursor: crosshair;
 }
-.canvas-workspace.is-space-pan .cell { cursor: grab; }
-.canvas-workspace.is-panning .cell { cursor: grabbing; }
+
 
 .cell.active { background: #24313a; }
 .cell.line-start { box-shadow: inset 0 0 0 2px #f4a261; }
+
+/* Select-mode cursor — applied when shift is held or selectArea tool is active */
+.select-mode .cell { cursor: cell; }
+.canvas-workspace.is-space-pan .cell { cursor: grab; }
+.canvas-workspace.is-panning .cell { cursor: grabbing; }
+/* Ctrl held = drag to pan */
+.canvas-workspace.is-ctrl-pan { cursor: grab; }
+.canvas-workspace.is-ctrl-pan .cell { cursor: grab; }
 
 /* Selection — theme-aware, visible over black pixels */
 .selection-cell {

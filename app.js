@@ -28,33 +28,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const toolButtons = document.querySelectorAll("[data-tool]");
     const sizeSlider = document.getElementById("toolSizeSlider");
     const sizeOutput = document.getElementById("toolSizeOutput");
-    const toolSizeBtn = document.getElementById("toolSizeBtn");
     const sizePopover = document.getElementById("sizePopover");
-    if (toolSizeBtn && sizePopover) {
-        const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
-        const syncSizeDisplay = () => {
-            if (toolSizeBtnValue && sizeSlider)
-                toolSizeBtnValue.textContent = sizeSlider.value;
-        };
-        if (sizeSlider)
-            sizeSlider.addEventListener("input", syncSizeDisplay);
-        syncSizeDisplay();
-        toolSizeBtn.addEventListener("click", (e) => {
-            e.stopPropagation();
-            sizePopover.hidden = !sizePopover.hidden;
-            if (!sizePopover.hidden) {
-                const rect = toolSizeBtn.getBoundingClientRect();
-                sizePopover.style.top = `${rect.bottom + 8}px`;
-                sizePopover.style.left = `${rect.left}px`;
-            }
-        });
-        document.addEventListener("click", (e) => {
-            if (!sizePopover.contains(e.target) && e.target !== toolSizeBtn) {
-                sizePopover.hidden = true;
-            }
-        });
-    }
-    const sizeGroup = document.getElementById("toolSizeGroup");
+    // We use sizePopover as the sizeGroup so toolState automatically hides/shows it
+    const sizeGroup = sizePopover;
     // Undo / Redo
     const undoBtn = document.getElementById("undoBtn");
     const redoBtn = document.getElementById("redoBtn");
@@ -652,7 +628,7 @@ document.addEventListener("DOMContentLoaded", () => {
         previewPanel.style.bottom = "";
         previewPanel.style.right = "";
     });
-    ["pointerup", "pointercancel"].forEach((ev) => previewHeader.addEventListener(ev, (e) => {
+    ["pointerup", "pointercancel"].forEach(ev => previewHeader.addEventListener(ev, (e) => {
         if (floatingPtr !== e.pointerId)
             return;
         floatingPtr = null;
@@ -703,6 +679,13 @@ document.addEventListener("DOMContentLoaded", () => {
             activeGrid().clearSelection();
             toolState.restoreTool();
         },
+        onClearSelection: () => {
+            if (activeGrid().hasSelection()) {
+                activeGrid().clearGrid();
+            }
+        },
+        onInvert: () => activeGrid().invertGrid(),
+        onInvertSelection: () => activeGrid().invertSelection(),
         onCopy: () => activeGrid().copySelection(clipboard),
         onCut: () => activeGrid().cutSelection(clipboard),
         onPaste: () => {
