@@ -34,35 +34,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tool strip
   const toolButtons = document.querySelectorAll<HTMLButtonElement>("[data-tool]");
   const sizeSlider = document.getElementById("toolSizeSlider") as HTMLInputElement;
-  const sizeOutput = document.getElementById("toolSizeOutput")!;
-  const toolSizeBtn = document.getElementById("toolSizeBtn") as HTMLButtonElement;
+  const sizeOutput = document.getElementById("toolSizeOutput") as HTMLInputElement;
   const sizePopover = document.getElementById("sizePopover") as HTMLDivElement;
 
-  const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
-  const syncSizeDisplay = () => {
-    if (toolSizeBtnValue && sizeSlider) toolSizeBtnValue.textContent = sizeSlider.value;
-  };
-
-  if (toolSizeBtn && sizePopover) {
-    if (sizeSlider) sizeSlider.addEventListener("input", syncSizeDisplay);
-    syncSizeDisplay();
-
-    toolSizeBtn.addEventListener("click", (e) => {
-      e.stopPropagation();
-      sizePopover.hidden = !sizePopover.hidden;
-      if (!sizePopover.hidden) {
-        const rect = toolSizeBtn.getBoundingClientRect();
-        sizePopover.style.top = `${rect.bottom + 8}px`;
-        sizePopover.style.left = `${rect.left}px`;
-      }
-    });
-    document.addEventListener("click", (e) => {
-      if (!sizePopover.contains(e.target as Node) && e.target !== toolSizeBtn) {
-        sizePopover.hidden = true;
-      }
-    });
-  }
-  const sizeGroup = document.getElementById("toolSizeGroup") as HTMLElement;
+  // We use sizePopover as the sizeGroup so toolState automatically hides/shows it
+  const sizeGroup = sizePopover;
 
   // Undo / Redo
   const undoBtn = document.getElementById("undoBtn") as HTMLButtonElement;
@@ -177,8 +153,6 @@ document.addEventListener("DOMContentLoaded", () => {
   canvasTabScrap.addEventListener("click", () => switchCanvas(true));
 
   const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
-  // Sync size display button when tool changes (restores remembered size)
-  toolState.subscribeToToolChanges(() => syncSizeDisplay());
   const shapeTypeSelect = document.getElementById("shapeType") as HTMLSelectElement;
   if (shapeTypeSelect) {
     shapeTypeSelect.addEventListener("change", () => {

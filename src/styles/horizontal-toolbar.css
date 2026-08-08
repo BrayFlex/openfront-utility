@@ -256,37 +256,7 @@
 }
 
 /* ── Size Popover ───────────────────────────────────────────────────────── */
-.size-popover {
-  position: absolute;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  padding: 12px;
-  z-index: 100;
-}
-.size-popover-content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-}
-.size-slider.vertical {
-  writing-mode: vertical-lr; /* IE/Edge */
-  direction: rtl; /* Flip direction if needed */
-  appearance: slider-vertical; /* WebKit */
-  width: 16px;
-  height: 240px;
-  margin: 0;
-}
-.size-output {
-  font-size: 11px;
-  font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  background: var(--surface-muted);
-  padding: 2px 6px;
-  border-radius: 4px;
-}
+
 
 /* ── Export / Import Toggle ─────────────────────────────────────────────── */
 .top-bar-right {

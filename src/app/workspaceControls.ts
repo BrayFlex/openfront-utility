@@ -142,10 +142,10 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     }
 
     // Arrow key panning — 5 cells (100px at base scale)
-    if (event.code === "ArrowUp")    { event.preventDefault(); panY -= ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowDown")  { event.preventDefault(); panY += ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowLeft")  { event.preventDefault(); panX -= ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowRight") { event.preventDefault(); panX += ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowUp")    { event.preventDefault(); panY += ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowDown")  { event.preventDefault(); panY -= ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowLeft")  { event.preventDefault(); panX += ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowRight") { event.preventDefault(); panX -= ARROW_PAN_STEP; render(); return; }
   });
 
   document.addEventListener("keyup", (event) => {

@@ -26,7 +26,7 @@ const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
 type ToolStateOptions = {
   toolButtons: NodeListOf<HTMLButtonElement>;
   sizeSlider: HTMLInputElement;
-  sizeOutput: HTMLElement;
+  sizeOutput: HTMLInputElement;
   sizeGroup: HTMLElement;
 };
 
@@ -69,7 +69,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
       // Restore remembered size or use default
       sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
     }
-    if (sizeOutput) sizeOutput.textContent = sizeSlider?.value ?? "1";
+    if (sizeOutput) sizeOutput.value = sizeSlider?.value ?? "1";
   };
 
   function selectTool(tool: ToolKind) {
@@ -103,9 +103,24 @@ export function createToolState(options: ToolStateOptions): ToolState {
   // Wire up size slider
   if (sizeSlider) {
     sizeSlider.addEventListener("input", () => {
-      if (sizeOutput) sizeOutput.textContent = sizeSlider.value;
+      if (sizeOutput) sizeOutput.value = sizeSlider.value;
       if (TOOL_SIZE_CONFIGS[currentTool]) {
         rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+      }
+    });
+  }
+
+  // Wire up size numeric input
+  if (sizeOutput) {
+    sizeOutput.addEventListener("change", () => {
+      let val = parseInt(sizeOutput.value);
+      if (isNaN(val)) val = 1;
+      const config = TOOL_SIZE_CONFIGS[currentTool];
+      if (config) {
+        val = Math.max(config.min, Math.min(config.max, val));
+        sizeOutput.value = String(val);
+        if (sizeSlider) sizeSlider.value = String(val);
+        rememberedSizes[currentTool] = val;
       }
     });
   }

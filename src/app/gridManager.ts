@@ -341,7 +341,6 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty))) continue;
       setCellActive(tx, ty, c.active);
     }
-    clearSelection();
     onPatternChange();
   };
 
