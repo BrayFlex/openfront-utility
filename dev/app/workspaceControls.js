@@ -1,6 +1,7 @@
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.15;
+const ARROW_PAN_STEP = 100; // 5 cells × 20px base cell size
 function isEditableTarget(target) {
     if (!(target instanceof HTMLElement))
         return false;
@@ -21,7 +22,8 @@ export function initWorkspaceControls(options) {
     let startPanX = 0;
     let startPanY = 0;
     let isSpacePressed = false;
-    let didSpacePan = false;
+    let isCtrlPressed = false;
+    let didKeyPan = false;
     const clampZoom = (value) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
     const render = () => {
         viewport.style.transform = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
@@ -54,6 +56,7 @@ export function initWorkspaceControls(options) {
         render();
     };
     const isPanGesture = (event) => isSpacePressed ||
+        isCtrlPressed ||
         event.button === 1 ||
         event.altKey ||
         event.metaKey ||
@@ -64,7 +67,7 @@ export function initWorkspaceControls(options) {
             return;
         event.preventDefault();
         event.stopPropagation();
-        didSpacePan = isSpacePressed;
+        didKeyPan = isSpacePressed || isCtrlPressed;
         panPointerId = event.pointerId;
         panStartX = event.clientX;
         panStartY = event.clientY;
@@ -90,28 +93,67 @@ export function initWorkspaceControls(options) {
     workspace.addEventListener("pointerup", stopPan);
     workspace.addEventListener("pointercancel", stopPan);
     workspace.addEventListener("click", (event) => {
-        if (!didSpacePan)
+        if (!didKeyPan)
             return;
         event.preventDefault();
         event.stopPropagation();
-        didSpacePan = false;
+        didKeyPan = false;
     }, { capture: true });
     document.addEventListener("keydown", (event) => {
-        if (event.code !== "Space" || isEditableTarget(event.target))
+        if (isEditableTarget(event.target))
             return;
-        isSpacePressed = true;
-        workspace.classList.add("is-space-pan");
-        event.preventDefault();
+        if (event.code === "Space") {
+            isSpacePressed = true;
+            workspace.classList.add("is-space-pan");
+            event.preventDefault();
+            return;
+        }
+        if (event.code === "ControlLeft" || event.code === "ControlRight") {
+            isCtrlPressed = true;
+            workspace.classList.add("is-ctrl-pan");
+            return;
+        }
+        // Arrow key panning — 5 cells (100px at base scale)
+        if (event.code === "ArrowUp") {
+            event.preventDefault();
+            panY -= ARROW_PAN_STEP;
+            render();
+            return;
+        }
+        if (event.code === "ArrowDown") {
+            event.preventDefault();
+            panY += ARROW_PAN_STEP;
+            render();
+            return;
+        }
+        if (event.code === "ArrowLeft") {
+            event.preventDefault();
+            panX -= ARROW_PAN_STEP;
+            render();
+            return;
+        }
+        if (event.code === "ArrowRight") {
+            event.preventDefault();
+            panX += ARROW_PAN_STEP;
+            render();
+            return;
+        }
     });
     document.addEventListener("keyup", (event) => {
-        if (event.code !== "Space")
-            return;
-        isSpacePressed = false;
-        workspace.classList.remove("is-space-pan");
+        if (event.code === "Space") {
+            isSpacePressed = false;
+            workspace.classList.remove("is-space-pan");
+        }
+        if (event.code === "ControlLeft" || event.code === "ControlRight") {
+            isCtrlPressed = false;
+            workspace.classList.remove("is-ctrl-pan");
+        }
     });
     window.addEventListener("blur", () => {
         isSpacePressed = false;
+        isCtrlPressed = false;
         workspace.classList.remove("is-space-pan");
+        workspace.classList.remove("is-ctrl-pan");
     });
     workspace.addEventListener("wheel", (event) => {
         event.preventDefault();

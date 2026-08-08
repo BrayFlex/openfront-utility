@@ -30,12 +30,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const sizeOutput = document.getElementById("toolSizeOutput");
     const toolSizeBtn = document.getElementById("toolSizeBtn");
     const sizePopover = document.getElementById("sizePopover");
+    const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
+    const syncSizeDisplay = () => {
+        if (toolSizeBtnValue && sizeSlider)
+            toolSizeBtnValue.textContent = sizeSlider.value;
+    };
     if (toolSizeBtn && sizePopover) {
-        const toolSizeBtnValue = document.getElementById("toolSizeBtnValue");
-        const syncSizeDisplay = () => {
-            if (toolSizeBtnValue && sizeSlider)
-                toolSizeBtnValue.textContent = sizeSlider.value;
-        };
         if (sizeSlider)
             sizeSlider.addEventListener("input", syncSizeDisplay);
         syncSizeDisplay();
@@ -153,6 +153,8 @@ document.addEventListener("DOMContentLoaded", () => {
     canvasTabMain.addEventListener("click", () => switchCanvas(false));
     canvasTabScrap.addEventListener("click", () => switchCanvas(true));
     const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
+    // Sync size display button when tool changes (restores remembered size)
+    toolState.subscribeToToolChanges(() => syncSizeDisplay());
     const shapeTypeSelect = document.getElementById("shapeType");
     if (shapeTypeSelect) {
         shapeTypeSelect.addEventListener("change", () => {
@@ -652,7 +654,7 @@ document.addEventListener("DOMContentLoaded", () => {
         previewPanel.style.bottom = "";
         previewPanel.style.right = "";
     });
-    ["pointerup", "pointercancel"].forEach((ev) => previewHeader.addEventListener(ev, (e) => {
+    ["pointerup", "pointercancel"].forEach(ev => previewHeader.addEventListener(ev, (e) => {
         if (floatingPtr !== e.pointerId)
             return;
         floatingPtr = null;
@@ -703,6 +705,13 @@ document.addEventListener("DOMContentLoaded", () => {
             activeGrid().clearSelection();
             toolState.restoreTool();
         },
+        onClearSelection: () => {
+            if (activeGrid().hasSelection()) {
+                activeGrid().clearGrid();
+            }
+        },
+        onInvert: () => activeGrid().invertGrid(),
+        onInvertSelection: () => activeGrid().invertSelection(),
         onCopy: () => activeGrid().copySelection(clipboard),
         onCut: () => activeGrid().cutSelection(clipboard),
         onPaste: () => {
