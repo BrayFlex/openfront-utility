@@ -187,13 +187,6 @@
           <!-- Canvas controls bar -->
           <div class="canvas-controls-bar">
 
-            <!-- Size button (moved from toolstrip, left of Invert/Clear) -->
-            <button id="toolSizeBtn" class="ctrl-btn ctrl-size-btn" title="Tool size (click to open size slider)">
-              <span id="toolSizeBtnValue" class="ctrl-size-value">1</span><span class="size-btn-arrow">▾</span>
-            </button>
-
-            <div class="canvas-controls-divider"></div>
-
             <!-- Invert / Clear -->
             <button id="invertBtn" class="ctrl-btn" title="Invert canvas (or selection)">Invert</button>
             <button id="clearBtn"  class="ctrl-btn" title="Clear canvas">Clear</button>
@@ -226,14 +219,16 @@
             <div class="canvas-controls-divider"></div>
 
             <!-- Scale dropdown — default 1× (value="0") -->
-            <label class="ctrl-label" for="scaleSelect">Scale</label>
-            <select id="scaleSelect" class="ctrl-select">
-              <option value="0" selected>1×</option>
-              <option value="1">2×</option>
-              <option value="2">4×</option>
-              <option value="3">8×</option>
-              <option value="4">16×</option>
-            </select>
+            <div class="ctrl-col">
+              <label class="ctrl-label" for="scaleSelect">Scale</label>
+              <select id="scaleSelect" class="ctrl-select">
+                <option value="0" selected>1×</option>
+                <option value="1">2×</option>
+                <option value="2">4×</option>
+                <option value="3">8×</option>
+                <option value="4">16×</option>
+              </select>
+            </div>
 
             <div class="canvas-controls-divider"></div>
 
@@ -247,14 +242,43 @@
 
             <!-- Canvas tab switcher (far right) -->
             <div class="canvas-tabs ei-tabs" role="tablist">
-              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main</button>
-              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test</button>
+              <button id="canvasTabMain"  class="canvas-tab ei-tab selected" role="tab" aria-selected="true">Main Canvas</button>
+              <button id="canvasTabScrap" class="canvas-tab ei-tab"          role="tab" aria-selected="false">Test Canvas</button>
             </div>
 
           </div>
 
           <!-- Grid workspaces -->
           <div id="canvasWorkspace" class="canvas-workspace">
+            
+            <!-- Size Popover (Overlay) -->
+            <div id="sizePopover" class="size-popover overlay-popover" hidden>
+              <div class="size-popover-content">
+                <input type="number" id="toolSizeOutput" class="size-output-input" value="1" min="1" max="10" />
+                <label for="toolSizeSlider" class="sr-only">Size</label>
+                <input
+                  type="range"
+                  id="toolSizeSlider"
+                  class="size-slider vertical"
+                  min="1" max="10" step="1" value="1"
+                  list="toolSizeNotches"
+                  orient="vertical"
+                />
+                <datalist id="toolSizeNotches">
+                  <option value="1"></option>
+                  <option value="2"></option>
+                  <option value="3"></option>
+                  <option value="4"></option>
+                  <option value="5"></option>
+                  <option value="6"></option>
+                  <option value="7"></option>
+                  <option value="8"></option>
+                  <option value="9"></option>
+                  <option value="10"></option>
+                </datalist>
+              </div>
+            </div>
+
             <div id="gridViewport" class="grid-viewport">
               <!-- Main canvas -->
               <div id="mainGridWrap">
@@ -335,33 +359,7 @@
 
     </div><!-- end .page -->
 
-    <!-- Size Popover -->
-    <div id="sizePopover" class="size-popover" hidden>
-      <div class="size-popover-content">
-        <label for="toolSizeSlider" class="sr-only">Size</label>
-        <input
-          type="range"
-          id="toolSizeSlider"
-          class="size-slider vertical"
-          min="1" max="10" step="1" value="1"
-          list="toolSizeNotches"
-          orient="vertical"
-        />
-        <datalist id="toolSizeNotches">
-          <option value="1"></option>
-          <option value="2"></option>
-          <option value="3"></option>
-          <option value="4"></option>
-          <option value="5"></option>
-          <option value="6"></option>
-          <option value="7"></option>
-          <option value="8"></option>
-          <option value="9"></option>
-          <option value="10"></option>
-        </datalist>
-        <output id="toolSizeOutput" class="size-output">1</output>
-      </div>
-    </div>
+
 
   <!-- Information Modal -->
   <div id="infoModal" class="modal-overlay" hidden>

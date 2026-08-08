@@ -247,7 +247,6 @@ export function createGridManager(options) {
                 continue;
             setCellActive(tx, ty, c.active);
         }
-        clearSelection();
         onPatternChange();
     };
     // ── Cut ───────────────────────────────────────────────────────────────────

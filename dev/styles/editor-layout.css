@@ -106,6 +106,14 @@
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
+  user-select: none;
+}
+
+.ctrl-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
 }
 
 .ctrl-stepper {
@@ -181,6 +189,67 @@
   cursor: grab;
 }
 .canvas-workspace.is-panning { cursor: grabbing; }
+
+/* ── Size Popover Overlay ────────────────────────────────────────────────── */
+.overlay-popover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+  padding: 12px;
+  z-index: 50;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.overlay-popover[hidden] {
+  display: none !important;
+}
+.size-popover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.size-output-input {
+  width: 40px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  padding: 4px;
+  color: var(--fg);
+  outline: none;
+}
+.size-output-input:focus {
+  border-color: var(--accent);
+}
+/* Hide number input spin buttons */
+.size-output-input::-webkit-outer-spin-button,
+.size-output-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.size-output-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+.size-slider.vertical {
+  writing-mode: vertical-lr; /* IE/Edge */
+  direction: rtl; /* Flip direction if needed */
+  appearance: slider-vertical; /* WebKit */
+  width: 16px;
+  height: 200px;
+  margin: 0;
+  cursor: pointer;
+}
+/* Datalist styling for ticks isn't broadly supported but the native slider UI will show notches */
 
 .grid-viewport {
   position: absolute;
