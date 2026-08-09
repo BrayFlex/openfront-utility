@@ -68,13 +68,23 @@ export function createToolState(options: ToolStateOptions): ToolState {
       sizeSlider.step = String(config.step);
       // Restore remembered size or use default
       sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
-      // Rebuild datalist notches to match the tool's range
-      if (sizeSlider.list) {
-        sizeSlider.list.innerHTML = "";
-        for (let i = config.min; i <= config.max; i += config.step) {
-          const option = document.createElement("option");
-          option.value = String(i);
-          sizeSlider.list.appendChild(option);
+      
+      // Generate tick marks for the slider
+      const ticksContainer = sizeGroup?.querySelector(".size-slider-ticks");
+      if (ticksContainer) {
+        ticksContainer.innerHTML = "";
+        const range = config.max - config.min;
+        const step = config.step;
+        const numTicks = Math.floor(range / step) + 1;
+        
+        for (let i = 0; i < numTicks; i++) {
+          const value = config.min + i * step;
+          const tick = document.createElement("div");
+          tick.className = "size-slider-tick" + (value % 5 === 0 ? " major" : "");
+          // Position: 0% at top (max value), 100% at bottom (min value) for vertical slider
+          const percent = (i / (numTicks - 1)) * 100;
+          tick.style.top = `${percent}%`;
+          ticksContainer.appendChild(tick);
         }
       }
     }
