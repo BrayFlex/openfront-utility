@@ -265,26 +265,16 @@
               <div class="size-popover-content">
                 <label for="toolSizeSlider" class="size-label">Size</label>
                 <input type="number" id="toolSizeOutput" class="size-output-input" value="1" min="1" max="10" />
-                <input
-                  type="range"
-                  id="toolSizeSlider"
-                  class="size-slider vertical"
-                  min="1" max="10" step="1" value="1"
-                  list="toolSizeNotches"
-                  orient="vertical"
-                />
-                <datalist id="toolSizeNotches">
-                  <option value="1"></option>
-                  <option value="2"></option>
-                  <option value="3"></option>
-                  <option value="4"></option>
-                  <option value="5"></option>
-                  <option value="6"></option>
-                  <option value="7"></option>
-                  <option value="8"></option>
-                  <option value="9"></option>
-                  <option value="10"></option>
-                </datalist>
+                <div class="size-slider-wrap">
+                  <input
+                    type="range"
+                    id="toolSizeSlider"
+                    class="size-slider"
+                    min="1" max="10" step="1" value="1"
+                    orient="vertical"
+                  />
+                  <div class="size-slider-ticks" aria-hidden="true"></div>
+                </div>
               </div>
             </div>
 
