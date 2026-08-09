@@ -337,18 +337,19 @@
 
 /* Native vertical slider - slim and properly centered */
 .size-slider {
-  -webkit-appearance: none;
-  appearance: none;
+  /* Use native vertical appearance */
+  -webkit-appearance: slider-vertical;
+  appearance: slider-vertical;
   width: 28px;
   height: 200px;
   background: transparent;
   cursor: pointer;
-  /* Center the thumb on the track */
+  /* Add padding so thumb stays within visual bounds */
   padding: 10px 0;
   box-sizing: content-box;
 }
 
-/* WebKit/Blink track */
+/* WebKit/Blink track - vertical orientation */
 .size-slider::-webkit-slider-runnable-track {
   width: 4px;
   height: 100%;
@@ -357,7 +358,7 @@
   border: none;
 }
 
-/* WebKit/Blink thumb - centered on track */
+/* WebKit/Blink thumb - centered on track for vertical slider */
 .size-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
@@ -368,7 +369,8 @@
   border: 2px solid var(--surface);
   box-shadow: 0 2px 4px rgba(0,0,0,0.2);
   cursor: pointer;
-  margin-top: -10px; /* Center vertically on 4px track */
+  /* Center the 20px thumb on the 4px track */
+  margin-top: -10px;
   transition: transform 0.1s ease, box-shadow 0.1s ease;
 }
 
@@ -381,7 +383,7 @@
   transform: scale(1.25);
 }
 
-/* Firefox track */
+/* Firefox track - vertical */
 .size-slider::-moz-range-track {
   width: 4px;
   height: 100%;
@@ -390,7 +392,7 @@
   border: none;
 }
 
-/* Firefox thumb */
+/* Firefox thumb - vertical */
 .size-slider::-moz-range-thumb {
   width: 20px;
   height: 20px;
