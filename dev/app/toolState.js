@@ -28,9 +28,21 @@ export function createToolState(options) {
             sizeSlider.step = String(config.step);
             // Restore remembered size or use default
             sizeSlider.value = String((_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue);
+            // Rebuild datalist notches to match the tool's range
+            if (sizeSlider.list) {
+                sizeSlider.list.innerHTML = "";
+                for (let i = config.min; i <= config.max; i += config.step) {
+                    const option = document.createElement("option");
+                    option.value = String(i);
+                    sizeSlider.list.appendChild(option);
+                }
+            }
         }
-        if (sizeOutput)
+        if (sizeOutput) {
+            sizeOutput.min = String(config.min);
+            sizeOutput.max = String(config.max);
             sizeOutput.value = (_b = sizeSlider === null || sizeSlider === void 0 ? void 0 : sizeSlider.value) !== null && _b !== void 0 ? _b : "1";
+        }
     };
     function selectTool(tool) {
         // Save current size before switching
