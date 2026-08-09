@@ -214,15 +214,6 @@
   user-select: none;
 }
 
-.ctrl-zoom {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--text);
-  min-width: 44px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
-}
-
 .ctrl-range-hidden { display: none; }
 
 /* ── Workspace ──────────────────────────────────────────────────────────── */
@@ -289,6 +280,9 @@
 }
 
 /* ── Size Slider (Vertical) ────────────────────────────────────────────────── */
+/* Uses writing-mode: bt-lr for true vertical orientation (bottom-to-top, left-to-right) */
+/* This is the modern, standards-compliant way to create vertical sliders */
+
 .size-slider-wrap {
   position: relative;
   width: 28px;
@@ -335,16 +329,19 @@
   background: color-mix(in srgb, var(--border) 90%, transparent);
 }
 
-/* Native vertical slider - slim and properly centered */
+/* Native vertical slider using writing-mode - truly vertical, not rotated */
 .size-slider {
-  /* Use native vertical appearance */
+  -webkit-appearance: none;
+  appearance: none;
+  /* writing-mode: bt-lr makes the slider vertical (bottom-to-top, left-to-right) */
+  writing-mode: bt-lr;
+  /* In WebKit, we also need -webkit-appearance: slider-vertical for the track to render vertically */
   -webkit-appearance: slider-vertical;
-  appearance: slider-vertical;
   width: 28px;
   height: 200px;
   background: transparent;
   cursor: pointer;
-  /* Add padding so thumb stays within visual bounds */
+  /* Padding to keep thumb within visual bounds */
   padding: 10px 0;
   box-sizing: content-box;
 }
@@ -383,7 +380,7 @@
   transform: scale(1.25);
 }
 
-/* Firefox track - vertical */
+/* Firefox track - vertical (uses writing-mode) */
 .size-slider::-moz-range-track {
   width: 4px;
   height: 100%;
