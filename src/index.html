@@ -194,49 +194,58 @@
             <div class="canvas-controls-divider"></div>
 
             <!-- Width -->
-            <label class="ctrl-label" for="tileWidthValue">W</label>
-            <div class="ctrl-stepper">
-              <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
-              <!-- hidden range synced by JS -->
-              <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
-              <div class="stepper-btns">
-                <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
-                <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+            <div class="ctrl-col">
+              <label class="ctrl-label" for="tileWidthValue">Width</label>
+              <div class="ctrl-stepper">
+                <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
+                <!-- hidden range synced by JS -->
+                <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+                <div class="stepper-btns">
+                  <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
+                  <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+                </div>
               </div>
             </div>
 
             <!-- Height -->
-            <label class="ctrl-label" for="tileHeightValue">H</label>
-            <div class="ctrl-stepper">
-              <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
-              <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
-              <div class="stepper-btns">
-                <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
-                <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+            <div class="ctrl-col">
+              <label class="ctrl-label" for="tileHeightValue">Height</label>
+              <div class="ctrl-stepper">
+                <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
+                <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+                <div class="stepper-btns">
+                  <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
+                  <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+                </div>
               </div>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
-            <!-- Scale dropdown — default 1× (value="0") -->
+            <!-- Pattern Scale tabs — default 1× (value="0") -->
             <div class="ctrl-col">
-              <label class="ctrl-label" for="scaleSelect">Scale</label>
-              <select id="scaleSelect" class="ctrl-select">
-                <option value="0" selected>1×</option>
-                <option value="1">2×</option>
-                <option value="2">4×</option>
-                <option value="3">8×</option>
-                <option value="4">16×</option>
-              </select>
+              <label class="ctrl-label" for="scaleTabs">Pattern Scale</label>
+              <div id="scaleTabs" class="ctrl-tabs" role="tablist">
+                <button type="button" class="ctrl-tab selected" data-scale="0" aria-selected="true">1×</button>
+                <button type="button" class="ctrl-tab" data-scale="1" aria-selected="false">2×</button>
+                <button type="button" class="ctrl-tab" data-scale="2" aria-selected="false">4×</button>
+              </div>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
             <!-- Zoom control -->
-            <button id="zoomOutBtn"  class="ctrl-btn" aria-label="Zoom out">−</button>
-            <output  id="zoomValue"  class="ctrl-zoom">100%</output>
-            <button id="zoomInBtn"   class="ctrl-btn" aria-label="Zoom in">+</button>
-            <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+            <div class="ctrl-col">
+              <span class="ctrl-label">Zoom:</span>
+              <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+            </div>
+            <div class="ctrl-col">
+              <output id="zoomValue" class="ctrl-zoom">100%</output>
+              <div class="ctrl-zoom-btns">
+                <button id="zoomOutBtn" class="ctrl-btn" aria-label="Zoom out">−</button>
+                <button id="zoomInBtn" class="ctrl-btn" aria-label="Zoom in">+</button>
+              </div>
+            </div>
 
             <div class="canvas-controls-divider"></div>
 
@@ -254,8 +263,8 @@
             <!-- Size Popover (Overlay) -->
             <div id="sizePopover" class="size-popover overlay-popover" hidden>
               <div class="size-popover-content">
+                <label for="toolSizeSlider" class="size-label">Size</label>
                 <input type="number" id="toolSizeOutput" class="size-output-input" value="1" min="1" max="10" />
-                <label for="toolSizeSlider" class="sr-only">Size</label>
                 <input
                   type="range"
                   id="toolSizeSlider"

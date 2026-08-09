@@ -68,8 +68,21 @@ export function createToolState(options: ToolStateOptions): ToolState {
       sizeSlider.step = String(config.step);
       // Restore remembered size or use default
       sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
+      // Rebuild datalist notches to match the tool's range
+      if (sizeSlider.list) {
+        sizeSlider.list.innerHTML = "";
+        for (let i = config.min; i <= config.max; i += config.step) {
+          const option = document.createElement("option");
+          option.value = String(i);
+          sizeSlider.list.appendChild(option);
+        }
+      }
     }
-    if (sizeOutput) sizeOutput.value = sizeSlider?.value ?? "1";
+    if (sizeOutput) {
+      sizeOutput.min = String(config.min);
+      sizeOutput.max = String(config.max);
+      sizeOutput.value = sizeSlider?.value ?? "1";
+    }
   };
 
   function selectTool(tool: ToolKind) {
