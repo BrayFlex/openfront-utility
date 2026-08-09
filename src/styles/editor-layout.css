@@ -281,29 +281,29 @@
 
 /* ── Size Slider (Vertical) ────────────────────────────────────────────────── */
 /* Uses writing-mode: bt-lr for true vertical orientation (bottom-to-top, left-to-right) */
-/* This is the modern, standards-compliant way to create vertical sliders */
+/* Neumorphic/soft UI style with tactile notches */
 
 .size-slider-wrap {
   position: relative;
-  width: 28px;
+  width: 48px;
   height: 200px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Tick marks container - positioned behind the slider */
+/* Tick marks container - positioned to the LEFT of the track */
 .size-slider-ticks {
   position: absolute;
-  left: 50%;
+  right: calc(50% + 14px); /* Track is at 50%, 4px wide, so right edge at 52%. Ticks at ~66px from left */
   top: 10px;
   bottom: 10px;
-  width: 1px;
-  transform: translateX(-50%);
+  width: 12px;
   pointer-events: none;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  padding-right: 4px;
 }
 
 .size-slider-ticks::before,
@@ -316,17 +316,25 @@
 /* Individual tick marks - generated via JS based on min/max */
 .size-slider-tick {
   position: absolute;
-  left: 50%;
-  width: 10px;
+  right: 0;
+  width: 8px;
   height: 1px;
-  background: color-mix(in srgb, var(--border) 60%, transparent);
-  transform: translateX(-50%);
+  background: color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: 1px;
   pointer-events: none;
+  /* Neumorphic inset effect */
+  box-shadow:
+    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
+    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
 }
 
 .size-slider-tick.major {
-  width: 14px;
-  background: color-mix(in srgb, var(--border) 90%, transparent);
+  width: 12px;
+  height: 2px;
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow:
+    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
+    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
 }
 
 /* Native vertical slider using writing-mode - truly vertical, not rotated */
@@ -337,7 +345,7 @@
   writing-mode: bt-lr;
   /* In WebKit, we also need -webkit-appearance: slider-vertical for the track to render vertically */
   -webkit-appearance: slider-vertical;
-  width: 28px;
+  width: 48px;
   height: 200px;
   background: transparent;
   cursor: pointer;
@@ -346,64 +354,138 @@
   box-sizing: content-box;
 }
 
-/* WebKit/Blink track - vertical orientation */
+/* WebKit/Blink track - vertical orientation, neumorphic recessed track */
 .size-slider::-webkit-slider-runnable-track {
-  width: 4px;
+  width: 6px;
   height: 100%;
-  background: color-mix(in srgb, var(--border) 40%, transparent);
-  border-radius: 2px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--surface) 90%, var(--bg)) 0%,
+      var(--surface) 50%,
+      color-mix(in srgb, var(--surface) 85%, var(--bg)) 100%
+    );
+  border-radius: 3px;
   border: none;
+  /* Neumorphic inset shadow */
+  box-shadow:
+    inset 1px 1px 3px color-mix(in srgb, var(--bg) 50%, black),
+    inset -1px -1px 3px color-mix(in srgb, var(--surface) 90%, white),
+    inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
 }
 
-/* WebKit/Blink thumb - centered on track for vertical slider */
+/* WebKit/Blink thumb - centered on track, neumorphic raised button */
 .size-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--surface);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  background:
+    radial-gradient(circle at 30% 30%,
+      color-mix(in srgb, var(--accent) 100%, white) 0%,
+      var(--accent) 60%,
+      color-mix(in srgb, var(--accent) 70%, black) 100%
+    );
+  border: none;
+  box-shadow:
+    /* Neumorphic raised effect */
+    -3px -3px 6px color-mix(in srgb, var(--surface) 90%, white),
+    3px 3px 6px color-mix(in srgb, var(--bg) 50%, black),
+    /* Accent glow */
+    0 0 0 2px var(--surface),
+    0 0 8px 2px color-mix(in srgb, var(--accent) 40%, transparent);
   cursor: pointer;
-  /* Center the 20px thumb on the 4px track */
-  margin-top: -10px;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  /* Center the 24px thumb on the 6px track: track center is at 3px from left, thumb center at 12px, so margin-left = -9px */
+  /* But with writing-mode bt-lr, the coordinate system is rotated. margin-top centers vertically on track */
+  margin-top: -12px; /* Center vertically: -thumbHeight/2 */
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 }
 
 .size-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  transform: scale(1.1);
+  box-shadow:
+    -4px -4px 8px color-mix(in srgb, var(--surface) 90%, white),
+    4px 4px 8px color-mix(in srgb, var(--bg) 50%, black),
+    0 0 0 2px var(--surface),
+    0 0 12px 3px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
 .size-slider:active::-webkit-slider-thumb {
-  transform: scale(1.25);
+  transform: scale(0.95);
+  box-shadow:
+    inset -2px -2px 4px color-mix(in srgb, var(--surface) 90%, white),
+    inset 2px 2px 4px color-mix(in srgb, var(--bg) 50%, black),
+    0 0 0 2px var(--surface),
+    0 0 6px 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  background:
+    radial-gradient(circle at 30% 30%,
+      color-mix(in srgb, var(--accent) 100%, white) 0%,
+      color-mix(in srgb, var(--accent) 85%, black) 60%,
+      color-mix(in srgb, var(--accent) 60%, black) 100%
+    );
 }
 
-/* Firefox track - vertical (uses writing-mode) */
+/* Firefox track - vertical, neumorphic */
 .size-slider::-moz-range-track {
-  width: 4px;
+  width: 6px;
   height: 100%;
-  background: color-mix(in srgb, var(--border) 40%, transparent);
-  border-radius: 2px;
+  background:
+    linear-gradient(180deg,
+      color-mix(in srgb, var(--surface) 90%, var(--bg)) 0%,
+      var(--surface) 50%,
+      color-mix(in srgb, var(--surface) 85%, var(--bg)) 100%
+    );
+  border-radius: 3px;
   border: none;
+  box-shadow:
+    inset 1px 1px 3px color-mix(in srgb, var(--bg) 50%, black),
+    inset -1px -1px 3px color-mix(in srgb, var(--surface) 90%, white),
+    inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
 }
 
-/* Firefox thumb - vertical */
+/* Firefox thumb - vertical, neumorphic */
 .size-slider::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--surface);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  background:
+    radial-gradient(circle at 30% 30%,
+      color-mix(in srgb, var(--accent) 100%, white) 0%,
+      var(--accent) 60%,
+      color-mix(in srgb, var(--accent) 70%, black) 100%
+    );
+  border: none;
+  box-shadow:
+    -3px -3px 6px color-mix(in srgb, var(--surface) 90%, white),
+    3px 3px 6px color-mix(in srgb, var(--bg) 50%, black),
+    0 0 0 2px var(--surface),
+    0 0 8px 2px color-mix(in srgb, var(--accent) 40%, transparent);
   cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
 }
 
 .size-slider::-moz-range-thumb:hover {
-  transform: scale(1.15);
-  box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+  transform: scale(1.1);
+  box-shadow:
+    -4px -4px 8px color-mix(in srgb, var(--surface) 90%, white),
+    4px 4px 8px color-mix(in srgb, var(--bg) 50%, black),
+    0 0 0 2px var(--surface),
+    0 0 12px 3px color-mix(in srgb, var(--accent) 50%, transparent);
+}
+
+.size-slider:active::-moz-range-thumb {
+  transform: scale(0.95);
+  box-shadow:
+    inset -2px -2px 4px color-mix(in srgb, var(--surface) 90%, white),
+    inset 2px 2px 4px color-mix(in srgb, var(--bg) 50%, black),
+    0 0 0 2px var(--surface),
+    0 0 6px 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  background:
+    radial-gradient(circle at 30% 30%,
+      color-mix(in srgb, var(--accent) 100%, white) 0%,
+      color-mix(in srgb, var(--accent) 85%, black) 60%,
+      color-mix(in srgb, var(--accent) 60%, black) 100%
+    );
 }
 
 /* Firefox focus */

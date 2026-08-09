@@ -9,7 +9,7 @@ type WorkspaceControlsOptions = {
 
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
-const ZOOM_STEP = 0.15;
+const ZOOM_STEP = 0.10;
 const ARROW_PAN_STEP = 100; // 5 cells × 20px base cell size
 
 function isEditableTarget(target: EventTarget | null) {
