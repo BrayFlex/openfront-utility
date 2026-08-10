@@ -110,7 +110,8 @@ export function createToolState(options: ToolStateOptions): ToolState {
   function selectTool(tool: ToolKind) {
     // Save current size before switching
     if (TOOL_SIZE_CONFIGS[currentTool]) {
-      rememberedSizes[currentTool] = slider.get() as number;
+      const currentValue = slider.get();
+      rememberedSizes[currentTool] = Array.isArray(currentValue) ? parseInt(currentValue[0] as string) : parseInt(currentValue as string);
     }
     
     previousTool = currentTool;
@@ -162,25 +163,31 @@ export function createToolState(options: ToolStateOptions): ToolState {
   // Initialize
   selectTool("pencil");
 
+  // Helper to get slider value as number
+  const getSliderValue = () => {
+    const val = slider.get();
+    return Array.isArray(val) ? parseInt(val[0] as string) : parseInt(val as string);
+  };
+
   return {
     getCurrentTool: () => currentTool,
     getPreviousTool: () => previousTool,
     selectTool,
     restoreTool: () => selectTool(lastNonSelectTool),
     getPencilSize: () => {
-      if (currentTool === "pencil") return slider.get() as number;
+      if (currentTool === "pencil") return getSliderValue();
       return rememberedSizes["pencil"] ?? 1;
     },
     getShapeRadius: () => {
       const size = currentTool === "shape"
-        ? slider.get() as number
+        ? getSliderValue()
         : (rememberedSizes["shape"] ?? 5);
       return size;
     },
     getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
     getCircleRadius: () => {
       const size = currentTool === "circle"
-        ? slider.get() as number
+        ? getSliderValue()
         : (rememberedSizes["circle"] ?? 7);
       return Math.max(0, Math.floor(size / 2));
     },
@@ -188,6 +195,6 @@ export function createToolState(options: ToolStateOptions): ToolState {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    getCurrentSize: () => slider.get() as number,
+    getCurrentSize: () => getSliderValue(),
   };
 }
