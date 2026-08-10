@@ -254,7 +254,7 @@
   gap: 12px;
 }
 .size-output-input {
-  width: 40px;
+  width: 38px;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
@@ -262,7 +262,8 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 4px;
-  padding: 4px;
+  padding: 2px;
+  margin-left: 4px;
   color: var(--text);
   outline: none;
 }
@@ -293,7 +294,7 @@
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   /* Almost no left padding (helps center the track); right padding halved */
-  padding: 16px 6px 16px 2px;
+  padding: 16px 6px 16px 1px;
   z-index: 50;
   cursor: default;
   transition: opacity 0.2s ease, transform 0.2s ease;
@@ -478,7 +479,8 @@
   bottom: 0 !important;
   height: 100% !important;
   width: auto !important;
-  padding: 0 !important;
+  /* 1px left padding so the numbers don't touch the overlay's left edge */
+  padding: 0 0 0 1px !important;
   pointer-events: none !important;
   z-index: 1 !important;
 }
@@ -486,14 +488,14 @@
 .size-slider .noUi-marker {
   position: absolute !important;
   right: 0 !important;
-  width: 4px !important;
+  width: 1px !important;
   height: 2px !important;
   background: color-mix(in srgb, var(--muted) 90%, transparent) !important;
   border-radius: 1px !important;
 }
 
 .size-slider .noUi-marker-large {
-  width: 8px !important;
+  width: 1px !important;
   height: 2px !important;
   background: var(--muted) !important;
 }
