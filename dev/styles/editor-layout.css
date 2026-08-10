@@ -294,10 +294,16 @@
   justify-content: center;
 }
 
-/* noUiSlider base overrides */
-.size-slider .noUi-target {
+/* Ensure the slider element itself has dimensions */
+.size-slider {
   width: 100%;
   height: 100%;
+}
+
+/* noUiSlider base overrides */
+.size-slider .noUi-target {
+  width: 100% !important;
+  height: 100% !important;
   border: none;
   box-shadow: none;
   background: transparent;

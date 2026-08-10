@@ -64,7 +64,8 @@ export function createToolState(options) {
     function selectTool(tool) {
         // Save current size before switching
         if (TOOL_SIZE_CONFIGS[currentTool]) {
-            rememberedSizes[currentTool] = slider.get();
+            const currentValue = slider.get();
+            rememberedSizes[currentTool] = Array.isArray(currentValue) ? parseInt(currentValue[0]) : parseInt(currentValue);
         }
         previousTool = currentTool;
         currentTool = tool;
@@ -111,6 +112,11 @@ export function createToolState(options) {
     }
     // Initialize
     selectTool("pencil");
+    // Helper to get slider value as number
+    const getSliderValue = () => {
+        const val = slider.get();
+        return Array.isArray(val) ? parseInt(val[0]) : parseInt(val);
+    };
     return {
         getCurrentTool: () => currentTool,
         getPreviousTool: () => previousTool,
@@ -119,13 +125,13 @@ export function createToolState(options) {
         getPencilSize: () => {
             var _a;
             if (currentTool === "pencil")
-                return slider.get();
+                return getSliderValue();
             return (_a = rememberedSizes["pencil"]) !== null && _a !== void 0 ? _a : 1;
         },
         getShapeRadius: () => {
             var _a;
             const size = currentTool === "shape"
-                ? slider.get()
+                ? getSliderValue()
                 : ((_a = rememberedSizes["shape"]) !== null && _a !== void 0 ? _a : 5);
             return size;
         },
@@ -133,7 +139,7 @@ export function createToolState(options) {
         getCircleRadius: () => {
             var _a;
             const size = currentTool === "circle"
-                ? slider.get()
+                ? getSliderValue()
                 : ((_a = rememberedSizes["circle"]) !== null && _a !== void 0 ? _a : 7);
             return Math.max(0, Math.floor(size / 2));
         },
@@ -141,6 +147,6 @@ export function createToolState(options) {
             listeners.add(listener);
             return () => listeners.delete(listener);
         },
-        getCurrentSize: () => slider.get(),
+        getCurrentSize: () => getSliderValue(),
     };
 }
