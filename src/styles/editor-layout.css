@@ -365,31 +365,7 @@
   height: 100%;
 }
 
-/* noUiSlider base overrides */
-.size-slider .noUi-target {
-  width: 100% !important;
-  height: 100% !important;
-  border: none;
-  box-shadow: none;
-  background: transparent;
-  border-radius: 0;
-}
-
-.size-slider .noUi-base {
-  width: 100%;
-  height: 100%;
-}
-
-.size-slider .noUi-origin {
-  width: 100%;
-  height: 100%;
-  border-radius: 0;
-}
-
-/* Track - slim, frosted glass look, on the RIGHT side */
-/* Let noUiSlider handle its own internal layout for target/base/origin */
-/* We only style the visual elements: track, handle, pips */
-
+/* noUiSlider base overrides - minimal, let noUiSlider handle layout */
 .size-slider .noUi-target {
   background: transparent !important;
   border: none !important;
