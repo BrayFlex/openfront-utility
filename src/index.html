@@ -2,13 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Pattern Utility — 1-Bit Pattern Editor</title>
+    <title>Pattern Utility — 1-Bit Pattern Editor Designed for OpenFront</title>
     <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
     <link rel="stylesheet" href="styles/circle-tool.css" />
     <link rel="stylesheet" href="styles/image-import.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=2">
     <script type="importmap">
     {
       "imports": {
@@ -25,7 +25,7 @@
 
         <!-- Logo + theme toggle -->
         <div class="logo-block">
-          <span class="logo-eyebrow">Pattern Utility</span>
+          <span class="logo-eyebrow">&gt; Pattern Util</span>
           <div style="display: flex; align-items: center; gap: 6px;">
             <label class="theme-toggle" aria-label="Toggle dark mode">
               <input type="checkbox" id="themeToggle" />
@@ -34,7 +34,7 @@
                 <span class="theme-toggle-icon theme-toggle-moon">⏾</span>
               </span>
             </label>
-            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Helpful Information">ℹ️</button>
+            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Tool Information">ⓘ</button>
           </div>
         </div>
 
@@ -44,7 +44,7 @@
           <!-- Drawing tools -->
           <div class="tool-strip-group">
             <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
-              <span class="tool-icon">✏</span>
+              <span class="tool-icon">✎</span>
               <span class="tool-label">Pencil</span>
             </button>
             <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
