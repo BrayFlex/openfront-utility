@@ -292,11 +292,12 @@
   border: 1px solid var(--border);
   border-radius: 12px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  padding: 16px 12px;
+  /* Almost no left padding (helps center the track); right padding halved */
+  padding: 16px 6px 16px 2px;
   z-index: 50;
   cursor: default;
   transition: opacity 0.2s ease, transform 0.2s ease;
-  min-width: 60px;
+  min-width: 0;
 }
 
 .size-popover[hidden] {
@@ -401,16 +402,18 @@
   background: transparent !important;
 }
 
-/* Thin vertical track drawn as a pseudo-element on the right edge.
-   noUiSlider has NO .noUi-track element, so we draw the slim track ourselves. */
+/* Thin vertical track drawn as a pseudo-element.
+   noUiSlider has NO .noUi-track element, so we draw the slim track ourselves.
+   Pulled in 6px from the edge so the thumb fits within the slim right padding. */
 .size-slider.noUi-target::before {
   content: "";
   position: absolute;
-  right: 0;
+  right: 6px;
   top: 0;
   bottom: 0;
   width: 3px;
-  background: color-mix(in srgb, var(--border) 50%, transparent);
+  /* More visible in both themes (was too faint in dark mode) */
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
   border-radius: 1.5px;
   pointer-events: none;
   z-index: 1;
@@ -430,8 +433,8 @@
   border: 2px solid var(--surface) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
   cursor: pointer !important;
-  /* Center 22px thumb on the 3px track at the right edge */
-  right: -9.5px !important;
+  /* Center 22px thumb on the 3px track (now at right: 6px) */
+  right: -3.5px !important;
   left: auto !important;
   /* Center 22px thumb vertically on the value position */
   bottom: -11px !important;
@@ -468,7 +471,9 @@
 .size-slider .noUi-pips {
   position: absolute !important;
   left: 0 !important;
-  right: calc(3px + 6px) !important; /* 3px track + 6px gap */
+  /* Track sits at right:6px (3px wide) → its left edge is 9px from the right.
+     right:19px gives a wider 10px gap between the ticks and the track. */
+  right: 19px !important;
   top: 0 !important;
   bottom: 0 !important;
   height: 100% !important;
@@ -481,16 +486,16 @@
 .size-slider .noUi-marker {
   position: absolute !important;
   right: 0 !important;
-  width: 5px !important;
-  height: 1px !important;
-  background: color-mix(in srgb, var(--border) 50%, transparent) !important;
+  width: 4px !important;
+  height: 2px !important;
+  background: color-mix(in srgb, var(--muted) 90%, transparent) !important;
   border-radius: 1px !important;
 }
 
 .size-slider .noUi-marker-large {
   width: 8px !important;
   height: 2px !important;
-  background: color-mix(in srgb, var(--border) 80%, transparent) !important;
+  background: var(--muted) !important;
 }
 
 /* Numbers beside the ticks, centered in the pips area.
@@ -505,7 +510,7 @@
   font-size: 9px !important;
   font-weight: 600 !important;
   font-variant-numeric: tabular-nums !important;
-  color: var(--muted) !important;
+  color: var(--text) !important;
   text-align: center !important;
   transform: translateY(50%) !important; /* RTL vertical centers label on its pip */
   padding-left: 0 !important;
