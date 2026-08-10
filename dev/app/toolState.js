@@ -16,7 +16,7 @@ export function createToolState(options) {
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
-        connect: "lower",
+        connect: false, // No colored progress track - just the track and thumb
         direction: "rtl", // Right-to-left so 0% is at top (max value)
         orientation: "vertical",
         range: {
@@ -25,8 +25,13 @@ export function createToolState(options) {
         },
         step: 1,
         pips: {
-            mode: PipsMode.Steps,
+            mode: PipsMode.Values,
+            values: [1], // Will be updated per tool
             density: 100,
+            format: {
+                to: (value) => String(value),
+                from: (value) => Number(value),
+            },
         },
         tooltips: false,
     });
@@ -40,7 +45,12 @@ export function createToolState(options) {
         }
         if (sizeGroup)
             sizeGroup.hidden = false;
-        // Update noUiSlider range and step
+        // Generate pip values for all steps in the range
+        const pipValues = [];
+        for (let v = config.min; v <= config.max; v += config.step) {
+            pipValues.push(v);
+        }
+        // Update noUiSlider range, step, and pips
         slider.updateOptions({
             range: {
                 min: config.min,
@@ -48,8 +58,13 @@ export function createToolState(options) {
             },
             step: config.step,
             pips: {
-                mode: PipsMode.Steps,
+                mode: PipsMode.Values,
+                values: pipValues,
                 density: 100,
+                format: {
+                    to: (value) => String(value),
+                    from: (value) => Number(value),
+                },
             },
         }, false);
         // Restore remembered size or use default
@@ -87,13 +102,13 @@ export function createToolState(options) {
         });
     });
     // Wire up noUiSlider events
+    // Only update the numeric input display; do NOT save to rememberedSizes here
+    // because that would overwrite during tool switching (updateOptions triggers update events)
+    // Saving is handled explicitly in selectTool (before switch) and sizeOutput change handler
     slider.on("update", (values) => {
         const value = parseInt(values[0]);
         if (sizeOutput)
             sizeOutput.value = String(value);
-        if (TOOL_SIZE_CONFIGS[currentTool]) {
-            rememberedSizes[currentTool] = value;
-        }
     });
     // Wire up size numeric input
     if (sizeOutput) {
