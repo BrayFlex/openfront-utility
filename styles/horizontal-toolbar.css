@@ -18,12 +18,12 @@
   gap: 4px;
 }
 .logo-eyebrow {
-  font-size: 10px;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
+  font-size: 12px;
+  letter-spacing: 0.04em;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 900;
   line-height: 1;
+  margin-left: -14px;
 }
 .logo-title {
   margin: 2px 0 0;
@@ -86,7 +86,7 @@
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
-  color: var(--muted);
+  color: var(--accent);
   display: flex;
   align-items: center;
   justify-content: center;

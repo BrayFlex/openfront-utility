@@ -2,13 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>Pattern Utility — 1-Bit Pattern Editor</title>
+    <title>Pattern Utility — 1-Bit Pattern Editor Designed for OpenFront</title>
     <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
     <link rel="stylesheet" href="styles/circle-tool.css" />
     <link rel="stylesheet" href="styles/image-import.css" />
-    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+    <link rel="shortcut icon" type="image/x-icon" href="favicon.ico?v=23">
+    <script type="importmap">
+    {
+      "imports": {
+        "nouislider": "./nouislider/nouislider.min.mjs"
+      }
+    }
+    </script>
   </head>
   <body>
     <div class="page">
@@ -18,7 +25,7 @@
 
         <!-- Logo + theme toggle -->
         <div class="logo-block">
-          <span class="logo-eyebrow">Pattern Utility</span>
+          <span class="logo-eyebrow">&gt; Pattern Utility</span>
           <div style="display: flex; align-items: center; gap: 6px;">
             <label class="theme-toggle" aria-label="Toggle dark mode">
               <input type="checkbox" id="themeToggle" />
@@ -27,7 +34,7 @@
                 <span class="theme-toggle-icon theme-toggle-moon">⏾</span>
               </span>
             </label>
-            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Helpful Information">ℹ️</button>
+            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Tool Information">ⓘ</button>
           </div>
         </div>
 
@@ -37,7 +44,7 @@
           <!-- Drawing tools -->
           <div class="tool-strip-group">
             <button id="tool-pencil" class="tool-btn" data-tool="pencil" title="Pencil">
-              <span class="tool-icon">✏</span>
+              <span class="tool-icon">✎</span>
               <span class="tool-label">Pencil</span>
             </button>
             <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
@@ -62,7 +69,7 @@
           <!-- Fill / Shade -->
           <div class="tool-strip-group">
             <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill area; with selection: inverts selection">
-              <span class="tool-icon">⬛</span>
+              <span class="tool-icon">■</span>
               <span class="tool-label">Fill</span>
             </button>
             <button id="tool-shade" class="tool-btn" data-tool="shade" title="Shade — checkerboard flood fill; with selection: shades entire selection">
@@ -194,49 +201,58 @@
             <div class="canvas-controls-divider"></div>
 
             <!-- Width -->
-            <label class="ctrl-label" for="tileWidthValue">W</label>
-            <div class="ctrl-stepper">
-              <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
-              <!-- hidden range synced by JS -->
-              <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
-              <div class="stepper-btns">
-                <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
-                <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+            <div class="ctrl-col">
+              <label class="ctrl-label" for="tileWidthValue">Width</label>
+              <div class="ctrl-stepper">
+                <input type="number" id="tileWidthValue" class="ctrl-number" value="128" min="16" max="128" />
+                <!-- hidden range synced by JS -->
+                <input type="range"  id="tileWidth"      value="128" min="16" max="128" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+                <div class="stepper-btns">
+                  <button id="tileWidthUp"   class="stepper-btn" aria-label="Increase width">▲</button>
+                  <button id="tileWidthDown" class="stepper-btn" aria-label="Decrease width">▼</button>
+                </div>
               </div>
             </div>
 
             <!-- Height -->
-            <label class="ctrl-label" for="tileHeightValue">H</label>
-            <div class="ctrl-stepper">
-              <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
-              <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
-              <div class="stepper-btns">
-                <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
-                <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+            <div class="ctrl-col">
+              <label class="ctrl-label" for="tileHeightValue">Height</label>
+              <div class="ctrl-stepper">
+                <input type="number" id="tileHeightValue" class="ctrl-number" value="64" min="16" max="64" />
+                <input type="range"  id="tileHeight"      value="64" min="16" max="64" class="ctrl-range-hidden" tabindex="-1" aria-hidden="true" />
+                <div class="stepper-btns">
+                  <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
+                  <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
+                </div>
               </div>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
-            <!-- Scale dropdown — default 1× (value="0") -->
+            <!-- Pattern Scale tabs — default 1× (value="0") -->
             <div class="ctrl-col">
-              <label class="ctrl-label" for="scaleSelect">Scale</label>
-              <select id="scaleSelect" class="ctrl-select">
-                <option value="0" selected>1×</option>
-                <option value="1">2×</option>
-                <option value="2">4×</option>
-                <option value="3">8×</option>
-                <option value="4">16×</option>
-              </select>
+              <label class="ctrl-label" for="scaleTabs">Pattern Scale</label>
+              <div id="scaleTabs" class="ctrl-tabs" role="tablist">
+                <button type="button" class="ctrl-tab selected" data-scale="0" aria-selected="true">1×</button>
+                <button type="button" class="ctrl-tab" data-scale="1" aria-selected="false">2×</button>
+                <button type="button" class="ctrl-tab" data-scale="2" aria-selected="false">4×</button>
+              </div>
             </div>
 
             <div class="canvas-controls-divider"></div>
 
             <!-- Zoom control -->
-            <button id="zoomOutBtn"  class="ctrl-btn" aria-label="Zoom out">−</button>
-            <output  id="zoomValue"  class="ctrl-zoom">100%</output>
-            <button id="zoomInBtn"   class="ctrl-btn" aria-label="Zoom in">+</button>
-            <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+            <div class="ctrl-col">
+              <span class="ctrl-label">Zoom:</span>
+              <button id="resetViewBtn" class="ctrl-btn">Reset</button>
+            </div>
+            <div class="ctrl-col">
+              <output id="zoomValue" class="ctrl-label">100%</output>
+              <div class="ctrl-zoom-btns">
+                <button id="zoomOutBtn" class="ctrl-btn" aria-label="Zoom out">−</button>
+                <button id="zoomInBtn" class="ctrl-btn" aria-label="Zoom in">+</button>
+              </div>
+            </div>
 
             <div class="canvas-controls-divider"></div>
 
@@ -252,30 +268,13 @@
           <div id="canvasWorkspace" class="canvas-workspace">
             
             <!-- Size Popover (Overlay) -->
-            <div id="sizePopover" class="size-popover overlay-popover" hidden>
+            <div id="sizePopover" class="size-popover" hidden>
               <div class="size-popover-content">
+                <label for="toolSizeOutput" class="size-label">Size</label>
                 <input type="number" id="toolSizeOutput" class="size-output-input" value="1" min="1" max="10" />
-                <label for="toolSizeSlider" class="sr-only">Size</label>
-                <input
-                  type="range"
-                  id="toolSizeSlider"
-                  class="size-slider vertical"
-                  min="1" max="10" step="1" value="1"
-                  list="toolSizeNotches"
-                  orient="vertical"
-                />
-                <datalist id="toolSizeNotches">
-                  <option value="1"></option>
-                  <option value="2"></option>
-                  <option value="3"></option>
-                  <option value="4"></option>
-                  <option value="5"></option>
-                  <option value="6"></option>
-                  <option value="7"></option>
-                  <option value="8"></option>
-                  <option value="9"></option>
-                  <option value="10"></option>
-                </datalist>
+                <div class="size-slider-wrap">
+                  <div id="toolSizeSlider" class="size-slider"></div>
+                </div>
               </div>
             </div>
 

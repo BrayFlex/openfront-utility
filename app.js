@@ -59,7 +59,17 @@ document.addEventListener("DOMContentLoaded", () => {
     const tileHeightValue = document.getElementById("tileHeightValue");
     const tileHeightUpBtn = document.getElementById("tileHeightUp");
     const tileHeightDownBtn = document.getElementById("tileHeightDown");
-    const scaleSelect = document.getElementById("scaleSelect");
+    // Scale tabs (replaces dropdown) — drives the pattern scale (encoded scale exponent 0-7)
+    const scaleTabs = document.querySelectorAll("#scaleTabs .ctrl-tab");
+    const setScale = (value) => {
+        const clamped = Math.max(0, Math.min(2, value));
+        scaleTabs.forEach((tab) => {
+            var _a;
+            const isSelected = parseInt((_a = tab.dataset.scale) !== null && _a !== void 0 ? _a : "0") === clamped;
+            tab.classList.toggle("selected", isSelected);
+            tab.setAttribute("aria-selected", isSelected ? "true" : "false");
+        });
+    };
     const invertBtn = document.getElementById("invertBtn");
     const clearBtn = document.getElementById("clearBtn");
     // Canvas tab switcher
@@ -193,8 +203,12 @@ document.addEventListener("DOMContentLoaded", () => {
         scrapRedoBtn.disabled = !scrapHistory.canRedo();
     };
     // ── Scale + output state ─────────────────────────────────────────────────
-    // Scale select drives the pattern scale (encoded scale exponent 0-7)
-    const scaleExponent = () => parseInt(scaleSelect.value);
+    // Scale tabs drive the pattern scale (encoded scale exponent 0-7)
+    const scaleExponent = () => {
+        var _a;
+        const selected = document.querySelector("#scaleTabs .ctrl-tab.selected");
+        return selected ? parseInt((_a = selected.dataset.scale) !== null && _a !== void 0 ? _a : "0") : 0;
+    };
     // ── Preview renderer ──────────────────────────────────────────────────────
     const renderPreview = createPreviewRenderer({
         canvas: previewCanvas,
@@ -272,8 +286,8 @@ document.addEventListener("DOMContentLoaded", () => {
         tileWidthValue.value = tileWidthInput.value;
         tileHeightInput.value = tileHeight.toString();
         tileHeightValue.value = tileHeightInput.value;
-        // Update scale select
-        scaleSelect.value = scale.toString();
+        // Update scale tabs
+        setScale(scale);
         // Clear any active selection so it doesn't mask the restored pattern
         grid.clearSelection();
         isApplyingHistory = true;
@@ -324,8 +338,14 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     makeStepper(tileWidthUpBtn, tileWidthDownBtn, tileWidthInput, tileWidthValue, clampW);
     makeStepper(tileHeightUpBtn, tileHeightDownBtn, tileHeightInput, tileHeightValue, clampH);
-    // ── Scale select ──────────────────────────────────────────────────────────
-    scaleSelect.addEventListener("change", () => updateOutput());
+    // ── Scale tabs ────────────────────────────────────────────────────────────
+    scaleTabs.forEach((tab) => {
+        tab.addEventListener("click", () => {
+            var _a;
+            setScale(parseInt((_a = tab.dataset.scale) !== null && _a !== void 0 ? _a : "0"));
+            updateOutput();
+        });
+    });
     // ── Invert / Clear ───────────────────────────────────────────────────────
     invertBtn.addEventListener("click", () => activeGrid().invertGrid());
     clearBtn.addEventListener("click", () => activeGrid().clearGrid());
@@ -422,11 +442,11 @@ document.addEventListener("DOMContentLoaded", () => {
         tileWidthValue,
         tileHeightValue,
         onPatternLoaded: (pattern) => {
-            // Also update scale select from decoded
+            // Also update scale tabs from decoded
             const base64 = base64Input.value;
             try {
                 const decoded = decodePatternBase64(base64);
-                scaleSelect.value = decoded.scale.toString();
+                setScale(decoded.scale);
             }
             catch ( /* ignore */_a) { /* ignore */ }
             mainGrid.generateGrid(pattern);
