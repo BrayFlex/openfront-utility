@@ -349,12 +349,11 @@
   -moz-appearance: textfield;
 }
 
-/* Slider wrapper - 300px tall, as slim as possible (numbers + ticks + track).
-   The thumb overhangs the right edge into the popover's padding, so the
-   wrapper only needs to fit numbers + ticks + track. */
+/* Slider wrapper - 300px tall, slim (40px).
+   The thumb overhangs the right edge into the popover's padding. */
 .size-slider-wrap {
   position: relative;
-  width: 34px;
+  width: 40px;
   height: 300px;
   overflow: visible;
 }
@@ -464,15 +463,16 @@
 }
 
 /* Pips (ticks + numbers) on the LEFT of the track.
+   Pips span the full width left of the track so the numbers stay centered.
    Override noUiSlider default .noUi-pips-vertical{left:100%;padding:0 10px} */
 .size-slider .noUi-pips {
   position: absolute !important;
-  right: calc(3px + 5px) !important; /* 3px track + 5px gap */
-  left: auto !important;
+  left: 0 !important;
+  right: calc(3px + 6px) !important; /* 3px track + 6px gap */
   top: 0 !important;
   bottom: 0 !important;
   height: 100% !important;
-  width: 22px !important;
+  width: auto !important;
   padding: 0 !important;
   pointer-events: none !important;
   z-index: 1 !important;
@@ -493,19 +493,20 @@
   background: color-mix(in srgb, var(--border) 80%, transparent) !important;
 }
 
-/* Numbers beside the ticks, to the left.
+/* Numbers beside the ticks, centered in the pips area.
    Override default .noUi-value-vertical{transform:translate(0,-50%);padding-left:25px}
    and RTL .noUi-rtl .noUi-value-vertical{transform:translate(0,50%)} */
 .size-slider .noUi-value {
   position: absolute !important;
-  right: 7px !important;
+  left: 0 !important;
+  right: 0 !important;
   width: auto !important;
   white-space: nowrap !important;
   font-size: 9px !important;
   font-weight: 600 !important;
   font-variant-numeric: tabular-nums !important;
   color: var(--muted) !important;
-  text-align: right !important;
+  text-align: center !important;
   transform: translateY(50%) !important; /* RTL vertical centers label on its pip */
   padding-left: 0 !important;
   pointer-events: none !important;
