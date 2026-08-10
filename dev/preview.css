@@ -41,7 +41,6 @@ body {
 .eyebrow {
   margin: 0 0 8px;
   font-size: 0.72rem;
-  text-transform: uppercase;
   letter-spacing: 0.22em;
   color: var(--muted);
   font-weight: 600;
