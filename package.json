@@ -10,5 +10,8 @@
   },
   "devDependencies": {
     "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "nouislider": "^15.8.1"
   }
 }

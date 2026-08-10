@@ -1,3 +1,5 @@
+import { create as createNoUiSlider, PipsMode } from "nouislider";
+
 export type ToolKind =
   | "pencil"
   | "circle"
@@ -25,7 +27,7 @@ const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
 
 type ToolStateOptions = {
   toolButtons: NodeListOf<HTMLButtonElement>;
-  sizeSlider: HTMLInputElement;
+  sizeSlider: HTMLElement; // noUiSlider container div
   sizeOutput: HTMLInputElement;
   sizeGroup: HTMLElement;
 };
@@ -55,6 +57,24 @@ export function createToolState(options: ToolStateOptions): ToolState {
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
 
+  // Initialize noUiSlider
+  const slider = createNoUiSlider(sizeSlider, {
+    start: [1],
+    connect: "lower",
+    direction: "rtl", // Right-to-left so 0% is at top (max value)
+    orientation: "vertical",
+    range: {
+      min: 1,
+      max: 10,
+    },
+    step: 1,
+    pips: {
+      mode: PipsMode.Steps,
+      density: 100,
+    },
+    tooltips: false,
+  });
+
   const updateSizeSlider = (tool: ToolKind) => {
     const config = TOOL_SIZE_CONFIGS[tool];
     if (!config) {
@@ -62,43 +82,35 @@ export function createToolState(options: ToolStateOptions): ToolState {
       return;
     }
     if (sizeGroup) sizeGroup.hidden = false;
-    if (sizeSlider) {
-      sizeSlider.min = String(config.min);
-      sizeSlider.max = String(config.max);
-      sizeSlider.step = String(config.step);
-      // Restore remembered size or use default
-      sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
-      
-      // Generate tick marks for the slider
-      const ticksContainer = sizeGroup?.querySelector(".size-slider-ticks");
-      if (ticksContainer) {
-        ticksContainer.innerHTML = "";
-        const range = config.max - config.min;
-        const step = config.step;
-        const numTicks = Math.floor(range / step) + 1;
-        
-        for (let i = 0; i < numTicks; i++) {
-          const value = config.min + i * step;
-          const tick = document.createElement("div");
-          tick.className = "size-slider-tick" + (value % 5 === 0 ? " major" : "");
-          // Position: 0% at top (max value), 100% at bottom (min value) for vertical slider
-          const percent = (i / (numTicks - 1)) * 100;
-          tick.style.top = `${percent}%`;
-          ticksContainer.appendChild(tick);
-        }
-      }
-    }
+    
+    // Update noUiSlider range and step
+    slider.updateOptions({
+      range: {
+        min: config.min,
+        max: config.max,
+      },
+      step: config.step,
+      pips: {
+        mode: PipsMode.Steps,
+        density: 100,
+      },
+    }, false);
+    
+    // Restore remembered size or use default
+    const value = rememberedSizes[tool] ?? config.defaultValue;
+    slider.set(value);
+    
     if (sizeOutput) {
       sizeOutput.min = String(config.min);
       sizeOutput.max = String(config.max);
-      sizeOutput.value = sizeSlider?.value ?? "1";
+      sizeOutput.value = String(value);
     }
   };
 
   function selectTool(tool: ToolKind) {
     // Save current size before switching
     if (TOOL_SIZE_CONFIGS[currentTool]) {
-      rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+      rememberedSizes[currentTool] = slider.get() as number;
     }
     
     previousTool = currentTool;
@@ -123,15 +135,14 @@ export function createToolState(options: ToolStateOptions): ToolState {
     });
   });
 
-  // Wire up size slider
-  if (sizeSlider) {
-    sizeSlider.addEventListener("input", () => {
-      if (sizeOutput) sizeOutput.value = sizeSlider.value;
-      if (TOOL_SIZE_CONFIGS[currentTool]) {
-        rememberedSizes[currentTool] = parseInt(sizeSlider.value);
-      }
-    });
-  }
+  // Wire up noUiSlider events
+  slider.on("update", (values: (string | number)[]) => {
+    const value = parseInt(values[0] as string);
+    if (sizeOutput) sizeOutput.value = String(value);
+    if (TOOL_SIZE_CONFIGS[currentTool]) {
+      rememberedSizes[currentTool] = value;
+    }
+  });
 
   // Wire up size numeric input
   if (sizeOutput) {
@@ -142,7 +153,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
       if (config) {
         val = Math.max(config.min, Math.min(config.max, val));
         sizeOutput.value = String(val);
-        if (sizeSlider) sizeSlider.value = String(val);
+        slider.set(val);
         rememberedSizes[currentTool] = val;
       }
     });
@@ -157,19 +168,19 @@ export function createToolState(options: ToolStateOptions): ToolState {
     selectTool,
     restoreTool: () => selectTool(lastNonSelectTool),
     getPencilSize: () => {
-      if (currentTool === "pencil") return parseInt(sizeSlider.value);
+      if (currentTool === "pencil") return slider.get() as number;
       return rememberedSizes["pencil"] ?? 1;
     },
     getShapeRadius: () => {
       const size = currentTool === "shape"
-        ? parseInt(sizeSlider.value)
+        ? slider.get() as number
         : (rememberedSizes["shape"] ?? 5);
       return size;
     },
     getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
     getCircleRadius: () => {
       const size = currentTool === "circle"
-        ? parseInt(sizeSlider.value)
+        ? slider.get() as number
         : (rememberedSizes["circle"] ?? 7);
       return Math.max(0, Math.floor(size / 2));
     },
@@ -177,6 +188,6 @@ export function createToolState(options: ToolStateOptions): ToolState {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    getCurrentSize: () => parseInt(sizeSlider.value),
+    getCurrentSize: () => slider.get() as number,
   };
 }
