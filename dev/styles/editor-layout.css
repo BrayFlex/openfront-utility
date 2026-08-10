@@ -365,20 +365,28 @@
   height: 100%;
 }
 
-/* noUiSlider base overrides - minimal, let noUiSlider handle layout */
+/* noUiSlider base overrides - COMPLETELY override all defaults */
 .size-slider .noUi-target {
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
+  /* Override noUiSlider's default 18px width for vertical */
+  width: 80px !important;
 }
 
 .size-slider .noUi-base {
-  /* Let noUiSlider position this */
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .size-slider .noUi-origin {
   border-radius: 0 !important;
+}
+
+/* Override noUiSlider's default vertical width */
+.size-slider .noUi-vertical {
+  width: 80px !important;
 }
 
 /* Track - thin (3px), on the right side of the slider area */
@@ -403,6 +411,7 @@
 }
 
 /* Handle (thumb) - rounded, on the RIGHT edge of track, theme-aware */
+/* Override noUiSlider's default: .noUi-vertical .noUi-handle{width:28px;height:34px;right:-6px;bottom:-17px} */
 .size-slider .noUi-handle {
   width: 22px !important;
   height: 22px !important;
@@ -414,8 +423,9 @@
   /* Position on right edge of 3px track: track right edge + 11px (half thumb) */
   right: -11px !important;
   left: auto !important;
-  /* Let noUiSlider handle vertical positioning via bottom/top */
-  transform: translateY(-50%) !important;
+  /* noUiSlider uses bottom for vertical RTL positioning, not top */
+  /* We need to let noUiSlider set bottom, but override the transform */
+  transform: none !important;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, border-color 0.1s ease !important;
   z-index: 10 !important;
   /* Remove noUiSlider default handle lines */
@@ -429,12 +439,12 @@
 }
 
 .size-slider .noUi-handle:hover {
-  transform: translateY(-50%) scale(1.15) !important;
+  transform: scale(1.15) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 .size-slider .noUi-handle:active {
-  transform: translateY(-50%) scale(1.2) !important;
+  transform: scale(1.2) !important;
 }
 
 .size-slider .noUi-handle:focus {
@@ -447,6 +457,7 @@
 }
 
 /* Pips (tick marks + values) - positioned to the LEFT of track */
+/* Override noUiSlider's default: .noUi-pips-vertical{padding:0 10px;height:100%;top:0;left:100%} */
 .size-slider .noUi-pips {
   position: absolute !important;
   /* Track is at right: 0, 3px wide. Pips go left of track with gap */
@@ -456,6 +467,8 @@
   width: 44px !important;
   pointer-events: none !important;
   z-index: 1 !important;
+  /* Override noUiSlider's left: 100% */
+  left: auto !important;
 }
 
 .size-slider .noUi-marker {
@@ -474,6 +487,7 @@
 }
 
 /* Value labels - show numbers beside pips on the left */
+/* Override noUiSlider's default: .noUi-value-vertical{transform:translate(0,-50%);padding-left:25px} */
 .size-slider .noUi-value {
   position: absolute !important;
   right: 16px !important;
@@ -486,6 +500,8 @@
   text-align: right !important;
   transform: translateY(50%) !important;
   pointer-events: none !important;
+  /* Override noUiSlider's padding-left: 25px */
+  padding-left: 0 !important;
 }
 
 .size-slider .noUi-value-large {
@@ -495,7 +511,6 @@
 }
 
 /* RTL direction for vertical (so 0% is at top = max value) */
-/* Let noUiSlider handle origin/handle positioning for RTL */
 .size-slider .noUi-vertical.noUi-rtl .noUi-origin {
   /* noUiSlider handles this */
 }
@@ -504,7 +519,7 @@
   /* Our custom positioning handles this */
   right: -11px !important;
   left: auto !important;
-  transform: translateY(-50%) !important;
+  transform: none !important;
 }
 
 /* Ensure pips container spans full height */
