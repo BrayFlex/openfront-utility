@@ -23,6 +23,7 @@
   color: var(--accent);
   font-weight: 900;
   line-height: 1;
+  margin-left: -14px;
 }
 .logo-title {
   margin: 2px 0 0;
