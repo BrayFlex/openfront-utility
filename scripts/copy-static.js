@@ -26,5 +26,12 @@ const copyStaticFiles = async (dir) => {
   }
 };
 
+// Copy noUiSlider assets
+const nouisliderDir = path.join(rootDir, "node_modules", "nouislider", "dist");
+const nouisliderOutDir = path.join(outDir, "nouislider");
+await mkdir(nouisliderOutDir, { recursive: true });
+await cp(path.join(nouisliderDir, "nouislider.min.css"), path.join(nouisliderOutDir, "nouislider.min.css"));
+await cp(path.join(nouisliderDir, "nouislider.min.mjs"), path.join(nouisliderOutDir, "nouislider.min.mjs"));
+
 await mkdir(outDir, { recursive: true });
 await copyStaticFiles(srcDir);

@@ -1,3 +1,5 @@
+import { create as createNoUiSlider, PipsMode } from "nouislider";
+
 export type ToolKind =
   | "pencil"
   | "circle"
@@ -25,7 +27,7 @@ const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
 
 type ToolStateOptions = {
   toolButtons: NodeListOf<HTMLButtonElement>;
-  sizeSlider: HTMLInputElement;
+  sizeSlider: HTMLElement; // noUiSlider container div
   sizeOutput: HTMLInputElement;
   sizeGroup: HTMLElement;
 };
@@ -55,6 +57,29 @@ export function createToolState(options: ToolStateOptions): ToolState {
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
 
+  // Initialize noUiSlider
+  const slider = createNoUiSlider(sizeSlider, {
+    start: [1],
+    connect: false, // No colored progress track - just the track and thumb
+    direction: "rtl", // Right-to-left so 0% is at top (max value)
+    orientation: "vertical",
+    range: {
+      min: 1,
+      max: 10,
+    },
+    step: 1,
+    pips: {
+      mode: PipsMode.Values,
+      values: [1], // Will be updated per tool
+      density: 100,
+      format: {
+        to: (value: number) => String(value),
+        from: (value: string) => Number(value),
+      },
+    },
+    tooltips: false,
+  });
+
   const updateSizeSlider = (tool: ToolKind) => {
     const config = TOOL_SIZE_CONFIGS[tool];
     if (!config) {
@@ -62,20 +87,47 @@ export function createToolState(options: ToolStateOptions): ToolState {
       return;
     }
     if (sizeGroup) sizeGroup.hidden = false;
-    if (sizeSlider) {
-      sizeSlider.min = String(config.min);
-      sizeSlider.max = String(config.max);
-      sizeSlider.step = String(config.step);
-      // Restore remembered size or use default
-      sizeSlider.value = String(rememberedSizes[tool] ?? config.defaultValue);
+    
+    // Generate pip values for all steps in the range
+    const pipValues: number[] = [];
+    for (let v = config.min; v <= config.max; v += config.step) {
+      pipValues.push(v);
     }
-    if (sizeOutput) sizeOutput.value = sizeSlider?.value ?? "1";
+    
+    // Update noUiSlider range, step, and pips
+    slider.updateOptions({
+      range: {
+        min: config.min,
+        max: config.max,
+      },
+      step: config.step,
+      pips: {
+        mode: PipsMode.Values,
+        values: pipValues,
+        density: 100,
+        format: {
+          to: (value: number) => String(value),
+          from: (value: string) => Number(value),
+        },
+      },
+    }, false);
+    
+    // Restore remembered size or use default
+    const value = rememberedSizes[tool] ?? config.defaultValue;
+    slider.set(value);
+    
+    if (sizeOutput) {
+      sizeOutput.min = String(config.min);
+      sizeOutput.max = String(config.max);
+      sizeOutput.value = String(value);
+    }
   };
 
   function selectTool(tool: ToolKind) {
     // Save current size before switching
     if (TOOL_SIZE_CONFIGS[currentTool]) {
-      rememberedSizes[currentTool] = parseInt(sizeSlider.value);
+      const currentValue = slider.get();
+      rememberedSizes[currentTool] = Array.isArray(currentValue) ? parseInt(currentValue[0] as string) : parseInt(currentValue as string);
     }
     
     previousTool = currentTool;
@@ -100,15 +152,14 @@ export function createToolState(options: ToolStateOptions): ToolState {
     });
   });
 
-  // Wire up size slider
-  if (sizeSlider) {
-    sizeSlider.addEventListener("input", () => {
-      if (sizeOutput) sizeOutput.value = sizeSlider.value;
-      if (TOOL_SIZE_CONFIGS[currentTool]) {
-        rememberedSizes[currentTool] = parseInt(sizeSlider.value);
-      }
-    });
-  }
+  // Wire up noUiSlider events
+  // Only update the numeric input display; do NOT save to rememberedSizes here
+  // because that would overwrite during tool switching (updateOptions triggers update events)
+  // Saving is handled explicitly in selectTool (before switch) and sizeOutput change handler
+  slider.on("update", (values: (string | number)[]) => {
+    const value = parseInt(values[0] as string);
+    if (sizeOutput) sizeOutput.value = String(value);
+  });
 
   // Wire up size numeric input
   if (sizeOutput) {
@@ -119,7 +170,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
       if (config) {
         val = Math.max(config.min, Math.min(config.max, val));
         sizeOutput.value = String(val);
-        if (sizeSlider) sizeSlider.value = String(val);
+        slider.set(val);
         rememberedSizes[currentTool] = val;
       }
     });
@@ -128,25 +179,31 @@ export function createToolState(options: ToolStateOptions): ToolState {
   // Initialize
   selectTool("pencil");
 
+  // Helper to get slider value as number
+  const getSliderValue = () => {
+    const val = slider.get();
+    return Array.isArray(val) ? parseInt(val[0] as string) : parseInt(val as string);
+  };
+
   return {
     getCurrentTool: () => currentTool,
     getPreviousTool: () => previousTool,
     selectTool,
     restoreTool: () => selectTool(lastNonSelectTool),
     getPencilSize: () => {
-      if (currentTool === "pencil") return parseInt(sizeSlider.value);
+      if (currentTool === "pencil") return getSliderValue();
       return rememberedSizes["pencil"] ?? 1;
     },
     getShapeRadius: () => {
       const size = currentTool === "shape"
-        ? parseInt(sizeSlider.value)
+        ? getSliderValue()
         : (rememberedSizes["shape"] ?? 5);
       return size;
     },
     getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
     getCircleRadius: () => {
       const size = currentTool === "circle"
-        ? parseInt(sizeSlider.value)
+        ? getSliderValue()
         : (rememberedSizes["circle"] ?? 7);
       return Math.max(0, Math.floor(size / 2));
     },
@@ -154,6 +211,6 @@ export function createToolState(options: ToolStateOptions): ToolState {
       listeners.add(listener);
       return () => listeners.delete(listener);
     },
-    getCurrentSize: () => parseInt(sizeSlider.value),
+    getCurrentSize: () => getSliderValue(),
   };
 }

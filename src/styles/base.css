@@ -41,7 +41,7 @@ body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: "Space Grotesk", "Trebuchet MS", sans-serif;
+  font-family: "DM Sans", "Trebuchet MS", sans-serif;
   line-height: 1.4;
   font-size: 13px;
 }
@@ -145,10 +145,9 @@ textarea {
 /* ── Panel title ────────────────────────────────────────────────────────── */
 .panel-title {
   color: var(--muted);
-  font-size: 14px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.04em;
-  text-transform: uppercase;
 }
 
 /* ── Modal ──────────────────────────────────────────────────────────────── */

@@ -36,6 +36,7 @@
 .canvas-controls-bar {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
@@ -113,7 +114,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2px;
+  gap: 4px;
 }
 
 .ctrl-stepper {
@@ -167,13 +168,50 @@
   background-size: 8px auto;
 }
 
-.ctrl-zoom {
+/* ── Scale tabs (replaces dropdown) ─────────────────────────────────────── */
+.ctrl-tabs {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px;
+  background: var(--surface-muted);
+}
+.ctrl-tab {
+  flex: 1;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  padding: 4px 8px;
   font-size: 13px;
   font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.ctrl-tab:hover {
   color: var(--text);
-  min-width: 44px;
-  text-align: center;
-  font-variant-numeric: tabular-nums;
+}
+.ctrl-tab.selected {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+/* ── Zoom buttons container ─────────────────────────────────────────────── */
+.ctrl-zoom-btns {
+  display: flex;
+  gap: 4px;
+}
+
+/* ── Size label in popover ──────────────────────────────────────────────── */
+.size-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  user-select: none;
 }
 
 .ctrl-range-hidden { display: none; }
@@ -195,7 +233,7 @@
   position: absolute;
   top: 12px;
   left: 12px;
-  background: rgba(255, 255, 255, 0.85);
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--border);
@@ -203,6 +241,7 @@
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
   padding: 12px;
   z-index: 50;
+  cursor: default;
   transition: opacity 0.2s ease, transform 0.2s ease;
 }
 .overlay-popover[hidden] {
@@ -215,7 +254,7 @@
   gap: 12px;
 }
 .size-output-input {
-  width: 40px;
+  width: 38px;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
@@ -223,8 +262,9 @@
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: 4px;
-  padding: 4px;
-  color: var(--fg);
+  padding: 2px;
+  margin-left: 4px;
+  color: var(--text);
   outline: none;
 }
 .size-output-input:focus {
@@ -240,16 +280,253 @@
   -moz-appearance: textfield;
 }
 
-.size-slider.vertical {
-  writing-mode: vertical-lr; /* IE/Edge */
-  direction: rtl; /* Flip direction if needed */
-  appearance: slider-vertical; /* WebKit */
-  width: 16px;
-  height: 200px;
-  margin: 0;
-  cursor: pointer;
+/* ── Vertical Size Slider Overlay ──────────────────────────────────────────── */
+/* Frosted glass overlay, 300px high, slim track, pips on left with numbers */
+
+.size-popover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  /* Almost no left padding (helps center the track); right padding halved */
+  padding: 16px 6px 16px 1px;
+  z-index: 50;
+  cursor: default;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 0;
 }
-/* Datalist styling for ticks isn't broadly supported but the native slider UI will show notches */
+
+.size-popover[hidden] {
+  display: none !important;
+}
+
+.size-popover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.size-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  user-select: none;
+}
+
+.size-output-input {
+  width: 42px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 5px 6px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.size-output-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* Hide number input spin buttons */
+.size-output-input::-webkit-outer-spin-button,
+.size-output-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.size-output-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Slider wrapper - 300px tall, slim (40px).
+   The thumb overhangs the right edge into the popover's padding. */
+.size-slider-wrap {
+  position: relative;
+  width: 40px;
+  height: 300px;
+  overflow: visible;
+}
+
+/* The slider element itself IS the noUiSlider target (same element).
+   IMPORTANT: noUiSlider adds .noUi-target / .noUi-vertical to THIS div.
+   The default .noUi-target background #FAFAFA is what creates the "white box"
+   in the center — so we MUST use the compound selector (no space) here. */
+.size-slider.noUi-target {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important; /* kills the white #FAFAFA box */
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  position: relative !important;
+  overflow: visible !important;
+}
+
+/* Override noUiSlider's default .noUi-vertical { width: 18px } */
+.size-slider.noUi-vertical {
+  width: 100% !important;
+}
+
+/* Real children (descendant selectors are correct for these) */
+.size-slider .noUi-base {
+  width: 100% !important;
+  height: 100% !important;
+  background: transparent !important;
+}
+
+.size-slider .noUi-origin {
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+
+.size-slider .noUi-connects {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* No colored progress fill */
+.size-slider .noUi-connect {
+  display: none !important;
+  background: transparent !important;
+}
+
+/* Thin vertical track drawn as a pseudo-element.
+   noUiSlider has NO .noUi-track element, so we draw the slim track ourselves.
+   Pulled in 6px from the edge so the thumb fits within the slim right padding. */
+.size-slider.noUi-target::before {
+  content: "";
+  position: absolute;
+  right: 6px;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  /* More visible in both themes (was too faint in dark mode) */
+  background: color-mix(in srgb, var(--muted) 70%, transparent);
+  border-radius: 1.5px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Handle (thumb) - rounded, on the RIGHT edge of track, theme-aware.
+   CRITICAL: noUiSlider transforms the .noUi-origin element (inline
+   translate(0, X%)) to sweep the track — NOT the .noUi-handle. So we must
+   never override the origin's transform, and we position the thumb with
+   static right/bottom offsets. Default bottom:-17px centers a 34px handle;
+   22px handle needs bottom:-11px (half of 22). */
+.size-slider .noUi-handle {
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: var(--text) !important;
+  border: 2px solid var(--surface) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer !important;
+  /* Center 22px thumb on the 3px track (now at right: 6px) */
+  right: -3.5px !important;
+  left: auto !important;
+  /* Center 22px thumb vertically on the value position */
+  bottom: -11px !important;
+  z-index: 10 !important;
+  outline: none !important;
+}
+
+/* Remove noUiSlider's default grip lines on the handle */
+.size-slider .noUi-handle::before,
+.size-slider .noUi-handle::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* Hover/active feedback via box-shadow + border only (never transform) */
+.size-slider .noUi-handle:hover,
+.size-slider .noUi-handle:active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
+  border-color: var(--accent) !important;
+}
+
+.size-slider .noUi-handle:focus {
+  outline: none !important;
+}
+
+.size-slider .noUi-handle:focus-visible {
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
+}
+
+/* Pips (ticks + numbers) on the LEFT of the track.
+   Pips span the full width left of the track so the numbers stay centered.
+   Override noUiSlider default .noUi-pips-vertical{left:100%;padding:0 10px} */
+.size-slider .noUi-pips {
+  position: absolute !important;
+  left: 0 !important;
+  /* Track sits at right:6px (3px wide) → its left edge is 9px from the right.
+     right:20px gives an 11px gap between the ticks and the track. */
+  right: 20px !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  height: 100% !important;
+  width: auto !important;
+  /* 1px left padding so the numbers don't touch the overlay's left edge */
+  padding: 0 0 0 1px !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
+}
+
+.size-slider .noUi-marker {
+  position: absolute !important;
+  right: 0 !important;
+  width: 2px !important;
+  height: 2px !important;
+  background: color-mix(in srgb, var(--muted) 90%, transparent) !important;
+  border-radius: 1px !important;
+}
+
+.size-slider .noUi-marker-large {
+  width: 2px !important;
+  height: 2px !important;
+  background: var(--muted) !important;
+}
+
+/* Numbers beside the ticks, centered in the pips area.
+   Override default .noUi-value-vertical{transform:translate(0,-50%);padding-left:25px}
+   and RTL .noUi-rtl .noUi-value-vertical{transform:translate(0,50%)} */
+.size-slider .noUi-value {
+  position: absolute !important;
+  left: 0 !important;
+  right: 0 !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  font-size: 9px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--text) !important;
+  text-align: center !important;
+  transform: translateY(50%) !important; /* RTL vertical centers label on its pip */
+  padding-left: 0 !important;
+  pointer-events: none !important;
+}
+
+.size-slider .noUi-value-large {
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
+}
+
+/* noUiSlider's own RTL-vertical origin transform drives the thumb sweep —
+   do not override .noUi-vertical.noUi-rtl .noUi-origin here. */
 
 .grid-viewport {
   position: absolute;
@@ -276,16 +553,18 @@
   opacity: 1;
 }
 .center-cross-overlay::before {
-  top: 17px;
+  top: 50%;
   left: 0;
   width: 36px;
   height: 4px;
+  transform: translateY(-50%);
 }
 .center-cross-overlay::after {
   top: 0;
-  left: 17px;
+  left: 50%;
   width: 4px;
   height: 36px;
+  transform: translateX(-50%);
 }
 
 /* Watermark is at the bottom of the canvas workspace panel */

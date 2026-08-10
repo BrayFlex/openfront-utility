@@ -25,7 +25,7 @@ export function initSubmissionModal(options: {
       </div>
       <div class="modal-body">
         <div class="modal-field">
-          <label for="submitPlayerName">Player Name</label>
+          <label for="submitPlayerName">Artist Name</label>
           <input type="text" id="submitPlayerName" placeholder="John Doe" autocomplete="off" />
         </div>
         <div class="modal-field">
@@ -79,7 +79,7 @@ export function initSubmissionModal(options: {
     const playerId = playerIdInput.value.trim();
     const patternName = patternNameInput.value.trim();
     if (!playerName || !playerId || !patternName) {
-      alert("Please fill in Player Name, Player ID, and Pattern Name.");
+      alert("Please fill in Artist Name, Player ID, and Pattern Name.");
       return;
     }
     // Save to localStorage
