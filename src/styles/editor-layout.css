@@ -756,15 +756,13 @@
   overflow-y: auto;
   min-height: 0;
 }
-.colors-header {
-  padding: 10px 14px;
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+/* Inline "Colors" label — on top of the Swap button in the column */
+.colors-inline-label {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
   color: var(--muted);
-  background: var(--surface);
-  border-bottom: 1px solid var(--border);
+  user-select: none;
 }
 .colors-body {
   padding: 14px;
@@ -773,11 +771,23 @@
   gap: 12px;
 }
 
+/* Colors control is a row of three columns: [Colors+Swap] [Primary] [Secondary] */
 .color-row {
   display: flex;
+  justify-content: center;
   align-items: flex-end;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
+}
+/* The left column stacks the "Colors" label above the Swap button */
+.color-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+.color-col .swap-btn {
+  align-self: center;
 }
 .color-field {
   display: flex;
@@ -790,13 +800,11 @@
 }
 .color-label {
   font-size: 11px;
-  font-weight: 500;
+  font-weight: 700;
   color: var(--muted);
-  text-transform: uppercase;
   letter-spacing: 0.04em;
 }
 .swap-btn {
-  align-self: flex-end;
   padding: 4px 12px;
   font-size: 12px;
 }

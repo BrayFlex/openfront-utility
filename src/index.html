@@ -320,9 +320,12 @@
 
           <!-- Colors section -->
           <div class="colors-section">
-            <div class="colors-header">Colors</div>
             <div class="colors-body">
               <div class="color-row">
+                <div class="color-col">
+                  <span class="colors-inline-label">Colors:</span>
+                  <button id="swapColorsBtn" class="swap-btn">⇄ Swap</button>
+                </div>
                 <div class="color-field">
                   <label for="previewPrimaryColor" class="color-label">Primary</label>
                   <input type="color" id="previewPrimaryColor" value="#ffffff" />
@@ -331,7 +334,6 @@
                   <label for="previewSecondaryColor" class="color-label">Secondary</label>
                   <input type="color" id="previewSecondaryColor" value="#000000" />
                 </div>
-                <button id="swapColorsBtn" class="swap-btn">⇄ Swap</button>
               </div>
               <div class="selected-preset" id="selectedPresetLabel">
                 <span class="selected-preset-name">Custom Palette</span>
