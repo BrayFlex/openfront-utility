@@ -386,40 +386,37 @@
   border-radius: 0;
 }
 
-/* Track - slim, centered, frosted glass look */
-/* Force noUiSlider internals to not add extra width */
+/* Track - slim, frosted glass look, on the RIGHT side */
+/* Let noUiSlider handle its own internal layout for target/base/origin */
+/* We only style the visual elements: track, handle, pips */
+
 .size-slider .noUi-target {
-  width: 4px !important;
-  height: 100% !important;
   background: transparent !important;
-  left: 50% !important;
-  transform: translateX(-50%) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
 }
 
 .size-slider .noUi-base {
-  width: 4px !important;
-  height: 100% !important;
-  left: 0 !important;
+  /* Let noUiSlider position this */
 }
 
 .size-slider .noUi-origin {
-  width: 4px !important;
-  height: 100% !important;
   border-radius: 0 !important;
-  left: 0 !important;
 }
 
+/* Track - thin (3px), on the right side of the slider area */
 .size-slider .noUi-track {
-  width: 4px !important;
+  width: 3px !important;
   height: 100% !important;
-  background: color-mix(in srgb, var(--border) 40%, transparent) !important;
-  border-radius: 2px !important;
+  background: color-mix(in srgb, var(--border) 50%, transparent) !important;
+  border-radius: 1.5px !important;
   border: none !important;
-  left: 0 !important;
+  /* In RTL vertical, track is on the right */
+  right: 0 !important;
+  left: auto !important;
   top: 0 !important;
   bottom: 0 !important;
-  max-width: 4px !important;
-  min-width: 4px !important;
 }
 
 /* No connect/fill - just the track */
@@ -429,8 +426,7 @@
   width: 0 !important;
 }
 
-/* Handle (thumb) - rounded, centered on track, theme-aware */
-/* Override noUiSlider default handle styles */
+/* Handle (thumb) - rounded, on the RIGHT edge of track, theme-aware */
 .size-slider .noUi-handle {
   width: 22px !important;
   height: 22px !important;
@@ -439,10 +435,11 @@
   border: 2px solid var(--surface) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
   cursor: pointer !important;
-  left: 50% !important;
-  /* Center vertically on the track/pips */
-  top: 50% !important;
-  transform: translate(-50%, -50%) !important;
+  /* Position on right edge of 3px track: track right edge + 11px (half thumb) */
+  right: -11px !important;
+  left: auto !important;
+  /* Let noUiSlider handle vertical positioning via bottom/top */
+  transform: translateY(-50%) !important;
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, border-color 0.1s ease !important;
   z-index: 10 !important;
   /* Remove noUiSlider default handle lines */
@@ -456,12 +453,12 @@
 }
 
 .size-slider .noUi-handle:hover {
-  transform: translate(-50%, -50%) scale(1.15) !important;
+  transform: translateY(-50%) scale(1.15) !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 .size-slider .noUi-handle:active {
-  transform: translate(-50%, -50%) scale(1.2) !important;
+  transform: translateY(-50%) scale(1.2) !important;
 }
 
 .size-slider .noUi-handle:focus {
@@ -476,7 +473,8 @@
 /* Pips (tick marks + values) - positioned to the LEFT of track */
 .size-slider .noUi-pips {
   position: absolute !important;
-  left: calc(50% - 2px - 44px) !important;
+  /* Track is at right: 0, 3px wide. Pips go left of track with gap */
+  right: calc(3px + 8px) !important; /* 3px track + 8px gap */
   top: 0 !important;
   bottom: 0 !important;
   width: 44px !important;
@@ -521,33 +519,34 @@
 }
 
 /* RTL direction for vertical (so 0% is at top = max value) */
+/* Let noUiSlider handle origin/handle positioning for RTL */
 .size-slider .noUi-vertical.noUi-rtl .noUi-origin {
-  left: auto !important;
-  right: 0 !important;
+  /* noUiSlider handles this */
 }
 
 .size-slider .noUi-vertical.noUi-rtl .noUi-handle {
-  left: 50% !important;
-  right: auto !important;
-  transform: translate(-50%, -50%) !important;
+  /* Our custom positioning handles this */
+  right: -11px !important;
+  left: auto !important;
+  transform: translateY(-50%) !important;
 }
 
-/* Ensure pips align with handle positions - noUiSlider places pips at percentage positions */
-/* The pips container needs to match the track's vertical span exactly */
+/* Ensure pips container spans full height */
 .size-slider .noUi-pips {
   top: 0 !important;
   bottom: 0 !important;
   height: 100% !important;
 }
 
-/* Force the slider wrapper to be the exact width needed */
+/* Slider wrapper - wide enough for pips + gap + track + thumb */
 .size-slider-wrap {
-  width: 56px !important;
+  width: 80px !important; /* 44px pips + 8px gap + 3px track + 22px thumb + padding */
+  height: 300px !important;
 }
 
 /* Ensure the slider element itself is constrained */
 .size-slider {
-  width: 56px !important;
+  width: 80px !important;
   height: 300px !important;
 }
 
