@@ -349,14 +349,12 @@
   -moz-appearance: textfield;
 }
 
-/* Slider wrapper - 300px tall, centered */
+/* Slider wrapper - 300px tall, full width for pips + track + thumb */
 .size-slider-wrap {
   position: relative;
-  width: 56px;
+  width: 80px; /* 44px pips + 8px gap + 3px track + 22px thumb + padding */
   height: 300px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  /* No flex centering - let noUiSlider fill the wrapper */
 }
 
 /* The slider element itself */
@@ -371,22 +369,30 @@
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  /* Override noUiSlider's default 18px width for vertical */
-  width: 80px !important;
+  width: 100% !important;
+  height: 100% !important;
 }
 
 .size-slider .noUi-base {
   width: 100% !important;
   height: 100% !important;
+  background: transparent !important;
 }
 
 .size-slider .noUi-origin {
   border-radius: 0 !important;
+  background: transparent !important;
 }
 
 /* Override noUiSlider's default vertical width */
 .size-slider .noUi-vertical {
-  width: 80px !important;
+  width: 100% !important;
+}
+
+/* Ensure connects container is transparent */
+.size-slider .noUi-connects {
+  background: transparent !important;
+  border-radius: 0 !important;
 }
 
 /* Track - thin (3px), on the right side of the slider area */
