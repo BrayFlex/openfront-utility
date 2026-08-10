@@ -282,9 +282,8 @@
 /* ── Size Slider (Vertical) ────────────────────────────────────────────────── */
 /* Uses writing-mode: bt-lr for true vertical orientation (bottom-to-top, left-to-right) */
 /* Neumorphic/soft UI style with tactile notches */
-
 /* ── noUiSlider Custom Styles (Vertical Size Slider) ───────────────────────── */
-/* Neumorphic/soft UI style with theme compliance */
+/* Clean, minimal styling with full vertical travel */
 
 .size-slider-wrap {
   position: relative;
@@ -316,83 +315,43 @@
   border-radius: 0;
 }
 
-/* Track - neumorphic recessed */
+/* Track - simple, clean */
 .size-slider .noUi-track {
-  width: 6px;
+  width: 4px;
   height: 100%;
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--surface) 90%, var(--bg)) 0%,
-      var(--surface) 50%,
-      color-mix(in srgb, var(--surface) 85%, var(--bg)) 100%
-    );
-  border-radius: 3px;
+  background: color-mix(in srgb, var(--border) 40%, transparent);
+  border-radius: 2px;
   border: none;
-  box-shadow:
-    inset 1px 1px 3px color-mix(in srgb, var(--bg) 50%, black),
-    inset -1px -1px 3px color-mix(in srgb, var(--surface) 90%, white),
-    inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
 }
 
 /* Connect (filled portion) - accent color */
 .size-slider .noUi-connect {
-  background:
-    linear-gradient(180deg,
-      var(--accent) 0%,
-      color-mix(in srgb, var(--accent) 80%, black) 100%
-    );
-  border-radius: 3px;
-  box-shadow:
-    inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
+  background: var(--accent);
+  border-radius: 2px;
 }
 
-/* Handle (thumb) - neumorphic raised button */
+/* Handle (thumb) - clean circle, centered on track */
 .size-slider .noUi-handle {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%,
-      color-mix(in srgb, var(--accent) 100%, white) 0%,
-      var(--accent) 60%,
-      color-mix(in srgb, var(--accent) 70%, black) 100%
-    );
-  border: none;
-  box-shadow:
-    /* Neumorphic raised effect */
-    -3px -3px 6px color-mix(in srgb, var(--surface) 90%, white),
-    3px 3px 6px color-mix(in srgb, var(--bg) 50%, black),
-    /* Accent glow */
-    0 0 0 2px var(--surface),
-    0 0 8px 2px color-mix(in srgb, var(--accent) 40%, transparent);
+  background: var(--accent);
+  border: 2px solid var(--surface);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   cursor: pointer;
-  transform: translate(-50%, -50%);
+  /* Center the 20px handle on the 4px track */
+  right: -8px; /* (20 - 4) / 2 = 8px offset from track right edge */
+  transform: translateY(-50%);
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
-  right: -9px; /* Center on 6px track */
 }
 
 .size-slider .noUi-handle:hover {
-  transform: translate(-50%, -50%) scale(1.1);
-  box-shadow:
-    -4px -4px 8px color-mix(in srgb, var(--surface) 90%, white),
-    4px 4px 8px color-mix(in srgb, var(--bg) 50%, black),
-    0 0 0 2px var(--surface),
-    0 0 12px 3px color-mix(in srgb, var(--accent) 50%, transparent);
+  transform: translateY(-50%) scale(1.15);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
 }
 
 .size-slider .noUi-handle:active {
-  transform: translate(-50%, -50%) scale(0.95);
-  box-shadow:
-    inset -2px -2px 4px color-mix(in srgb, var(--surface) 90%, white),
-    inset 2px 2px 4px color-mix(in srgb, var(--bg) 50%, black),
-    0 0 0 2px var(--surface),
-    0 0 6px 2px color-mix(in srgb, var(--accent) 60%, transparent);
-  background:
-    radial-gradient(circle at 30% 30%,
-      color-mix(in srgb, var(--accent) 100%, white) 0%,
-      color-mix(in srgb, var(--accent) 85%, black) 60%,
-      color-mix(in srgb, var(--accent) 60%, black) 100%
-    );
+  transform: translateY(-50%) scale(1.25);
 }
 
 /* Focus states */
@@ -408,10 +367,10 @@
 /* Pips (tick marks) - positioned to the left of track */
 .size-slider .noUi-pips {
   position: absolute;
-  right: calc(50% + 14px); /* Track center at 50%, track is 6px wide, so right edge at 53%. Pips at ~67px from left */
+  right: calc(50% + 12px); /* Track center at 50%, track is 4px wide, so right edge at 52%. Pips at ~64px from left */
   top: 0;
   bottom: 0;
-  width: 12px;
+  width: 10px;
   pointer-events: none;
   z-index: 1;
 }
@@ -423,62 +382,16 @@
   height: 1px;
   background: color-mix(in srgb, var(--border) 50%, transparent);
   border-radius: 1px;
-  /* Neumorphic inset effect */
-  box-shadow:
-    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
-    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
 }
 
 .size-slider .noUi-marker-large {
   width: 12px;
   height: 2px;
   background: color-mix(in srgb, var(--border) 80%, transparent);
-  box-shadow:
-    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
-    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
 }
 
 .size-slider .noUi-value {
   display: none; /* Hide value labels */
-}
-
-/* Horizontal orientation overrides (not used but included for completeness) */
-.size-slider .noUi-horizontal {
-  width: 200px;
-  height: 28px;
-}
-
-.size-slider .noUi-horizontal .noUi-track {
-  width: 100%;
-  height: 6px;
-}
-
-.size-slider .noUi-horizontal .noUi-handle {
-  right: auto;
-  bottom: -9px;
-  transform: translate(-50%, -50%);
-}
-
-.size-slider .noUi-horizontal .noUi-pips {
-  right: auto;
-  bottom: calc(50% + 14px);
-  top: auto;
-  left: 0;
-  right: 0;
-  width: auto;
-  height: 12px;
-}
-
-.size-slider .noUi-horizontal .noUi-marker {
-  width: 1px;
-  height: 8px;
-  bottom: 0;
-  right: auto;
-}
-
-.size-slider .noUi-horizontal .noUi-marker-large {
-  width: 2px;
-  height: 12px;
 }
 
 /* RTL direction for vertical (so 0% is at top = max value) */
@@ -488,7 +401,7 @@
 }
 
 .size-slider .noUi-vertical.noUi-rtl .noUi-handle {
-  right: -9px;
+  right: -8px;
   left: auto;
 }
 
