@@ -320,15 +320,15 @@
 }
 
 .size-output-input {
-  width: 50px;
+  width: 42px;
   text-align: center;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  padding: 6px 8px;
+  padding: 5px 6px;
   color: var(--text);
   outline: none;
   transition: border-color 0.15s, box-shadow 0.15s;
@@ -349,10 +349,12 @@
   -moz-appearance: textfield;
 }
 
-/* Slider wrapper - 300px tall, sized for pips + gap + track + thumb */
+/* Slider wrapper - 300px tall, as slim as possible (numbers + ticks + track).
+   The thumb overhangs the right edge into the popover's padding, so the
+   wrapper only needs to fit numbers + ticks + track. */
 .size-slider-wrap {
   position: relative;
-  width: 84px; /* 40px pips + 8px gap + 3px track + 22px thumb + padding */
+  width: 34px;
   height: 300px;
   overflow: visible;
 }
@@ -465,12 +467,12 @@
    Override noUiSlider default .noUi-pips-vertical{left:100%;padding:0 10px} */
 .size-slider .noUi-pips {
   position: absolute !important;
-  right: calc(3px + 8px) !important; /* 3px track + 8px gap */
+  right: calc(3px + 5px) !important; /* 3px track + 5px gap */
   left: auto !important;
   top: 0 !important;
   bottom: 0 !important;
   height: 100% !important;
-  width: 40px !important;
+  width: 22px !important;
   padding: 0 !important;
   pointer-events: none !important;
   z-index: 1 !important;
@@ -479,14 +481,14 @@
 .size-slider .noUi-marker {
   position: absolute !important;
   right: 0 !important;
-  width: 8px !important;
+  width: 5px !important;
   height: 1px !important;
   background: color-mix(in srgb, var(--border) 50%, transparent) !important;
   border-radius: 1px !important;
 }
 
 .size-slider .noUi-marker-large {
-  width: 12px !important;
+  width: 8px !important;
   height: 2px !important;
   background: color-mix(in srgb, var(--border) 80%, transparent) !important;
 }
@@ -496,10 +498,10 @@
    and RTL .noUi-rtl .noUi-value-vertical{transform:translate(0,50%)} */
 .size-slider .noUi-value {
   position: absolute !important;
-  right: 14px !important;
+  right: 7px !important;
   width: auto !important;
   white-space: nowrap !important;
-  font-size: 10px !important;
+  font-size: 9px !important;
   font-weight: 600 !important;
   font-variant-numeric: tabular-nums !important;
   color: var(--muted) !important;
