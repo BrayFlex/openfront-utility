@@ -283,6 +283,9 @@
 /* Uses writing-mode: bt-lr for true vertical orientation (bottom-to-top, left-to-right) */
 /* Neumorphic/soft UI style with tactile notches */
 
+/* ── noUiSlider Custom Styles (Vertical Size Slider) ───────────────────────── */
+/* Neumorphic/soft UI style with theme compliance */
+
 .size-slider-wrap {
   position: relative;
   width: 48px;
@@ -292,70 +295,29 @@
   justify-content: center;
 }
 
-/* Tick marks container - positioned to the LEFT of the track */
-.size-slider-ticks {
-  position: absolute;
-  right: calc(50% + 14px); /* Track is at 50%, 4px wide, so right edge at 52%. Ticks at ~66px from left */
-  top: 10px;
-  bottom: 10px;
-  width: 12px;
-  pointer-events: none;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  padding-right: 4px;
-}
-
-.size-slider-ticks::before,
-.size-slider-ticks::after {
-  content: "";
-  flex: 1;
-  max-height: 0;
-}
-
-/* Individual tick marks - generated via JS based on min/max */
-.size-slider-tick {
-  position: absolute;
-  right: 0;
-  width: 8px;
-  height: 1px;
-  background: color-mix(in srgb, var(--border) 50%, transparent);
-  border-radius: 1px;
-  pointer-events: none;
-  /* Neumorphic inset effect */
-  box-shadow:
-    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
-    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
-}
-
-.size-slider-tick.major {
-  width: 12px;
-  height: 2px;
-  background: color-mix(in srgb, var(--border) 80%, transparent);
-  box-shadow:
-    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
-    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
-}
-
-/* Native vertical slider using writing-mode - truly vertical, not rotated */
-.size-slider {
-  -webkit-appearance: none;
-  appearance: none;
-  /* writing-mode: bt-lr makes the slider vertical (bottom-to-top, left-to-right) */
-  writing-mode: bt-lr;
-  /* In WebKit, we also need -webkit-appearance: slider-vertical for the track to render vertically */
-  -webkit-appearance: slider-vertical;
-  width: 48px;
-  height: 200px;
+/* noUiSlider base overrides */
+.size-slider .noUi-target {
+  width: 100%;
+  height: 100%;
+  border: none;
+  box-shadow: none;
   background: transparent;
-  cursor: pointer;
-  /* Padding to keep thumb within visual bounds */
-  padding: 10px 0;
-  box-sizing: content-box;
+  border-radius: 0;
 }
 
-/* WebKit/Blink track - vertical orientation, neumorphic recessed track */
-.size-slider::-webkit-slider-runnable-track {
+.size-slider .noUi-base {
+  width: 100%;
+  height: 100%;
+}
+
+.size-slider .noUi-origin {
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+}
+
+/* Track - neumorphic recessed */
+.size-slider .noUi-track {
   width: 6px;
   height: 100%;
   background:
@@ -366,17 +328,26 @@
     );
   border-radius: 3px;
   border: none;
-  /* Neumorphic inset shadow */
   box-shadow:
     inset 1px 1px 3px color-mix(in srgb, var(--bg) 50%, black),
     inset -1px -1px 3px color-mix(in srgb, var(--surface) 90%, white),
     inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
 }
 
-/* WebKit/Blink thumb - centered on track, neumorphic raised button */
-.size-slider::-webkit-slider-thumb {
-  -webkit-appearance: none;
-  appearance: none;
+/* Connect (filled portion) - accent color */
+.size-slider .noUi-connect {
+  background:
+    linear-gradient(180deg,
+      var(--accent) 0%,
+      color-mix(in srgb, var(--accent) 80%, black) 100%
+    );
+  border-radius: 3px;
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* Handle (thumb) - neumorphic raised button */
+.size-slider .noUi-handle {
   width: 24px;
   height: 24px;
   border-radius: 50%;
@@ -395,14 +366,13 @@
     0 0 0 2px var(--surface),
     0 0 8px 2px color-mix(in srgb, var(--accent) 40%, transparent);
   cursor: pointer;
-  /* Center the 24px thumb on the 6px track: track center is at 3px from left, thumb center at 12px, so margin-left = -9px */
-  /* But with writing-mode bt-lr, the coordinate system is rotated. margin-top centers vertically on track */
-  margin-top: -12px; /* Center vertically: -thumbHeight/2 */
+  transform: translate(-50%, -50%);
   transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  right: -9px; /* Center on 6px track */
 }
 
-.size-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.1);
+.size-slider .noUi-handle:hover {
+  transform: translate(-50%, -50%) scale(1.1);
   box-shadow:
     -4px -4px 8px color-mix(in srgb, var(--surface) 90%, white),
     4px 4px 8px color-mix(in srgb, var(--bg) 50%, black),
@@ -410,8 +380,8 @@
     0 0 12px 3px color-mix(in srgb, var(--accent) 50%, transparent);
 }
 
-.size-slider:active::-webkit-slider-thumb {
-  transform: scale(0.95);
+.size-slider .noUi-handle:active {
+  transform: translate(-50%, -50%) scale(0.95);
   box-shadow:
     inset -2px -2px 4px color-mix(in srgb, var(--surface) 90%, white),
     inset 2px 2px 4px color-mix(in srgb, var(--bg) 50%, black),
@@ -425,90 +395,101 @@
     );
 }
 
-/* Firefox track - vertical, neumorphic */
-.size-slider::-moz-range-track {
-  width: 6px;
-  height: 100%;
-  background:
-    linear-gradient(180deg,
-      color-mix(in srgb, var(--surface) 90%, var(--bg)) 0%,
-      var(--surface) 50%,
-      color-mix(in srgb, var(--surface) 85%, var(--bg)) 100%
-    );
-  border-radius: 3px;
-  border: none;
-  box-shadow:
-    inset 1px 1px 3px color-mix(in srgb, var(--bg) 50%, black),
-    inset -1px -1px 3px color-mix(in srgb, var(--surface) 90%, white),
-    inset 0 0 0 1px color-mix(in srgb, var(--border) 30%, transparent);
-}
-
-/* Firefox thumb - vertical, neumorphic */
-.size-slider::-moz-range-thumb {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 30%,
-      color-mix(in srgb, var(--accent) 100%, white) 0%,
-      var(--accent) 60%,
-      color-mix(in srgb, var(--accent) 70%, black) 100%
-    );
-  border: none;
-  box-shadow:
-    -3px -3px 6px color-mix(in srgb, var(--surface) 90%, white),
-    3px 3px 6px color-mix(in srgb, var(--bg) 50%, black),
-    0 0 0 2px var(--surface),
-    0 0 8px 2px color-mix(in srgb, var(--accent) 40%, transparent);
-  cursor: pointer;
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
-}
-
-.size-slider::-moz-range-thumb:hover {
-  transform: scale(1.1);
-  box-shadow:
-    -4px -4px 8px color-mix(in srgb, var(--surface) 90%, white),
-    4px 4px 8px color-mix(in srgb, var(--bg) 50%, black),
-    0 0 0 2px var(--surface),
-    0 0 12px 3px color-mix(in srgb, var(--accent) 50%, transparent);
-}
-
-.size-slider:active::-moz-range-thumb {
-  transform: scale(0.95);
-  box-shadow:
-    inset -2px -2px 4px color-mix(in srgb, var(--surface) 90%, white),
-    inset 2px 2px 4px color-mix(in srgb, var(--bg) 50%, black),
-    0 0 0 2px var(--surface),
-    0 0 6px 2px color-mix(in srgb, var(--accent) 60%, transparent);
-  background:
-    radial-gradient(circle at 30% 30%,
-      color-mix(in srgb, var(--accent) 100%, white) 0%,
-      color-mix(in srgb, var(--accent) 85%, black) 60%,
-      color-mix(in srgb, var(--accent) 60%, black) 100%
-    );
-}
-
-/* Firefox focus */
-.size-slider:focus-visible::-moz-range-thumb {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-/* WebKit focus */
-.size-slider:focus-visible::-webkit-slider-thumb {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
-}
-
-/* Hide the default focus ring on the input itself */
-.size-slider:focus {
+/* Focus states */
+.size-slider .noUi-handle:focus {
   outline: none;
 }
 
-.size-slider:focus-visible {
+.size-slider .noUi-handle:focus-visible {
   outline: 2px solid var(--accent);
-  outline-offset: 4px;
-  border-radius: 4px;
+  outline-offset: 3px;
+}
+
+/* Pips (tick marks) - positioned to the left of track */
+.size-slider .noUi-pips {
+  position: absolute;
+  right: calc(50% + 14px); /* Track center at 50%, track is 6px wide, so right edge at 53%. Pips at ~67px from left */
+  top: 0;
+  bottom: 0;
+  width: 12px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.size-slider .noUi-marker {
+  position: absolute;
+  right: 0;
+  width: 8px;
+  height: 1px;
+  background: color-mix(in srgb, var(--border) 50%, transparent);
+  border-radius: 1px;
+  /* Neumorphic inset effect */
+  box-shadow:
+    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
+    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
+}
+
+.size-slider .noUi-marker-large {
+  width: 12px;
+  height: 2px;
+  background: color-mix(in srgb, var(--border) 80%, transparent);
+  box-shadow:
+    1px 1px 2px color-mix(in srgb, var(--bg) 60%, black),
+    -1px -1px 2px color-mix(in srgb, var(--surface) 80%, white);
+}
+
+.size-slider .noUi-value {
+  display: none; /* Hide value labels */
+}
+
+/* Horizontal orientation overrides (not used but included for completeness) */
+.size-slider .noUi-horizontal {
+  width: 200px;
+  height: 28px;
+}
+
+.size-slider .noUi-horizontal .noUi-track {
+  width: 100%;
+  height: 6px;
+}
+
+.size-slider .noUi-horizontal .noUi-handle {
+  right: auto;
+  bottom: -9px;
+  transform: translate(-50%, -50%);
+}
+
+.size-slider .noUi-horizontal .noUi-pips {
+  right: auto;
+  bottom: calc(50% + 14px);
+  top: auto;
+  left: 0;
+  right: 0;
+  width: auto;
+  height: 12px;
+}
+
+.size-slider .noUi-horizontal .noUi-marker {
+  width: 1px;
+  height: 8px;
+  bottom: 0;
+  right: auto;
+}
+
+.size-slider .noUi-horizontal .noUi-marker-large {
+  width: 2px;
+  height: 12px;
+}
+
+/* RTL direction for vertical (so 0% is at top = max value) */
+.size-slider .noUi-vertical.noUi-rtl .noUi-origin {
+  left: auto;
+  right: 0;
+}
+
+.size-slider .noUi-vertical.noUi-rtl .noUi-handle {
+  right: -9px;
+  left: auto;
 }
 
 .grid-viewport {
