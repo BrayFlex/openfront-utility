@@ -279,22 +279,87 @@
   -moz-appearance: textfield;
 }
 
-/* ── Size Slider (Vertical) ────────────────────────────────────────────────── */
-/* Uses writing-mode: bt-lr for true vertical orientation (bottom-to-top, left-to-right) */
-/* Neumorphic/soft UI style with tactile notches */
-/* ── noUiSlider Custom Styles (Vertical Size Slider) ───────────────────────── */
-/* Clean, minimal styling with full vertical travel */
+/* ── Vertical Size Slider Overlay ──────────────────────────────────────────── */
+/* Frosted glass overlay, 300px high, slim track, pips on left with numbers */
 
+.size-popover {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 16px 12px;
+  z-index: 50;
+  cursor: default;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  min-width: 60px;
+}
+
+.size-popover[hidden] {
+  display: none !important;
+}
+
+.size-popover-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.size-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  user-select: none;
+}
+
+.size-output-input {
+  width: 50px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  background: color-mix(in srgb, var(--surface) 90%, transparent);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  padding: 6px 8px;
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.size-output-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+}
+
+/* Hide number input spin buttons */
+.size-output-input::-webkit-outer-spin-button,
+.size-output-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.size-output-input[type=number] {
+  -moz-appearance: textfield;
+}
+
+/* Slider wrapper - 300px tall, centered */
 .size-slider-wrap {
   position: relative;
-  width: 48px;
-  height: 200px;
+  width: 56px;
+  height: 300px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-/* Ensure the slider element itself has dimensions */
+/* The slider element itself */
 .size-slider {
   width: 100%;
   height: 100%;
@@ -321,94 +386,169 @@
   border-radius: 0;
 }
 
-/* Track - simple, clean */
+/* Track - slim, centered, frosted glass look */
+/* Force noUiSlider internals to not add extra width */
+.size-slider .noUi-target {
+  width: 4px !important;
+  height: 100% !important;
+  background: transparent !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+}
+
+.size-slider .noUi-base {
+  width: 4px !important;
+  height: 100% !important;
+  left: 0 !important;
+}
+
+.size-slider .noUi-origin {
+  width: 4px !important;
+  height: 100% !important;
+  border-radius: 0 !important;
+  left: 0 !important;
+}
+
 .size-slider .noUi-track {
-  width: 4px;
-  height: 100%;
-  background: color-mix(in srgb, var(--border) 40%, transparent);
-  border-radius: 2px;
-  border: none;
+  width: 4px !important;
+  height: 100% !important;
+  background: color-mix(in srgb, var(--border) 40%, transparent) !important;
+  border-radius: 2px !important;
+  border: none !important;
+  left: 0 !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  max-width: 4px !important;
+  min-width: 4px !important;
 }
 
-/* Connect (filled portion) - accent color */
+/* No connect/fill - just the track */
 .size-slider .noUi-connect {
-  background: var(--accent);
-  border-radius: 2px;
+  display: none !important;
+  background: transparent !important;
+  width: 0 !important;
 }
 
-/* Handle (thumb) - clean circle, centered on track */
+/* Handle (thumb) - rounded, centered on track, theme-aware */
+/* Override noUiSlider default handle styles */
 .size-slider .noUi-handle {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: var(--accent);
-  border: 2px solid var(--surface);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-  cursor: pointer;
-  /* Center the 20px handle on the 4px track */
-  right: -8px; /* (20 - 4) / 2 = 8px offset from track right edge */
-  transform: translateY(-50%);
-  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease;
+  width: 22px !important;
+  height: 22px !important;
+  border-radius: 50% !important;
+  background: var(--text) !important;
+  border: 2px solid var(--surface) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25) !important;
+  cursor: pointer !important;
+  left: 50% !important;
+  /* Center vertically on the track/pips */
+  top: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  transition: transform 0.1s ease, box-shadow 0.1s ease, background 0.1s ease, border-color 0.1s ease !important;
+  z-index: 10 !important;
+  /* Remove noUiSlider default handle lines */
+  outline: none !important;
+}
+
+.size-slider .noUi-handle::before,
+.size-slider .noUi-handle::after {
+  display: none !important;
+  content: none !important;
 }
 
 .size-slider .noUi-handle:hover {
-  transform: translateY(-50%) scale(1.15);
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.3);
+  transform: translate(-50%, -50%) scale(1.15) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35) !important;
 }
 
 .size-slider .noUi-handle:active {
-  transform: translateY(-50%) scale(1.25);
+  transform: translate(-50%, -50%) scale(1.2) !important;
 }
 
-/* Focus states */
 .size-slider .noUi-handle:focus {
-  outline: none;
+  outline: none !important;
 }
 
 .size-slider .noUi-handle:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 3px;
+  outline: 2px solid var(--accent) !important;
+  outline-offset: 3px !important;
 }
 
-/* Pips (tick marks) - positioned to the left of track */
+/* Pips (tick marks + values) - positioned to the LEFT of track */
 .size-slider .noUi-pips {
-  position: absolute;
-  right: calc(50% + 12px); /* Track center at 50%, track is 4px wide, so right edge at 52%. Pips at ~64px from left */
-  top: 0;
-  bottom: 0;
-  width: 10px;
-  pointer-events: none;
-  z-index: 1;
+  position: absolute !important;
+  left: calc(50% - 2px - 44px) !important;
+  top: 0 !important;
+  bottom: 0 !important;
+  width: 44px !important;
+  pointer-events: none !important;
+  z-index: 1 !important;
 }
 
 .size-slider .noUi-marker {
-  position: absolute;
-  right: 0;
-  width: 8px;
-  height: 1px;
-  background: color-mix(in srgb, var(--border) 50%, transparent);
-  border-radius: 1px;
+  position: absolute !important;
+  right: 0 !important;
+  width: 10px !important;
+  height: 1px !important;
+  background: color-mix(in srgb, var(--border) 50%, transparent) !important;
+  border-radius: 1px !important;
 }
 
 .size-slider .noUi-marker-large {
-  width: 12px;
-  height: 2px;
-  background: color-mix(in srgb, var(--border) 80%, transparent);
+  width: 14px !important;
+  height: 2px !important;
+  background: color-mix(in srgb, var(--border) 80%, transparent) !important;
 }
 
+/* Value labels - show numbers beside pips on the left */
 .size-slider .noUi-value {
-  display: none; /* Hide value labels */
+  position: absolute !important;
+  right: 16px !important;
+  width: auto !important;
+  white-space: nowrap !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+  font-variant-numeric: tabular-nums !important;
+  color: var(--muted) !important;
+  text-align: right !important;
+  transform: translateY(50%) !important;
+  pointer-events: none !important;
+}
+
+.size-slider .noUi-value-large {
+  font-weight: 700 !important;
+  color: var(--text) !important;
+  font-size: 11px !important;
 }
 
 /* RTL direction for vertical (so 0% is at top = max value) */
 .size-slider .noUi-vertical.noUi-rtl .noUi-origin {
-  left: auto;
-  right: 0;
+  left: auto !important;
+  right: 0 !important;
 }
 
 .size-slider .noUi-vertical.noUi-rtl .noUi-handle {
-  right: -8px;
-  left: auto;
+  left: 50% !important;
+  right: auto !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+/* Ensure pips align with handle positions - noUiSlider places pips at percentage positions */
+/* The pips container needs to match the track's vertical span exactly */
+.size-slider .noUi-pips {
+  top: 0 !important;
+  bottom: 0 !important;
+  height: 100% !important;
+}
+
+/* Force the slider wrapper to be the exact width needed */
+.size-slider-wrap {
+  width: 56px !important;
+}
+
+/* Ensure the slider element itself is constrained */
+.size-slider {
+  width: 56px !important;
+  height: 300px !important;
 }
 
 .grid-viewport {
