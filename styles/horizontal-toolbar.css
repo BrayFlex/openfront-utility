@@ -82,7 +82,6 @@
 .info-btn {
   background: transparent;
   border: none;
-  font-size: 16px;
   cursor: pointer;
   padding: 4px;
   border-radius: 50%;
@@ -186,6 +185,7 @@
   width: 26px;
   height: 24px;
   font-size: 13px;
+  font-family: "DM Mono", monospace;
   border: 1px solid var(--border);
   background: var(--surface);
   padding: 0;
@@ -193,6 +193,9 @@
 .transform-btn:hover:not(:disabled) {
   border-color: var(--accent);
   color: var(--accent);
+}
+.transform-btn.flip-btn {
+  font-family: inherit;
 }
 
 /* ── Size Button ────────────────────────────────────────────────────────── */

@@ -7,6 +7,7 @@ import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
+import { initInfoModal } from "./app/infoModal.js";
 import { decodePatternBase64, generatePatternBase64, } from "./app/patternEncoding.js";
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
@@ -665,17 +666,7 @@ document.addEventListener("DOMContentLoaded", () => {
         zoomValue: zoomValueEl,
     });
     // ── Info Modal ────────────────────────────────────────────────────────────
-    const infoModal = document.getElementById("infoModal");
-    const infoModalBtn = document.getElementById("infoModalBtn");
-    const closeInfoModalBtn = document.getElementById("closeInfoModalBtn");
-    if (infoModal && infoModalBtn && closeInfoModalBtn) {
-        infoModalBtn.addEventListener("click", () => infoModal.hidden = false);
-        closeInfoModalBtn.addEventListener("click", () => infoModal.hidden = true);
-        infoModal.addEventListener("click", (e) => {
-            if (e.target === infoModal)
-                infoModal.hidden = true;
-        });
-    }
+    initInfoModal();
     // ── Pane resize ────────────────────────────────────────────────────────────
     initPaneResizeControls({
         workspaceSplit: document.querySelector(".workspace-split"),
