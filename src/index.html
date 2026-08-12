@@ -34,7 +34,13 @@
                 <span class="theme-toggle-icon theme-toggle-moon">⏾</span>
               </span>
             </label>
-            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Tool Information">ⓘ</button>
+            <button id="infoModalBtn" class="info-btn" aria-label="Pattern Utility Information" title="Tool Information">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+            </button>
           </div>
         </div>
 
@@ -146,11 +152,11 @@
               <button id="rotateLeftBtn"  class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
               <button id="shiftUpBtn"     class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
               <button id="rotateRightBtn" class="tool-btn transform-btn" disabled title="Rotate Right">↻</button>
-              <button id="flipVBtn"       class="tool-btn transform-btn" disabled title="Flip Vertical">↕</button>
+              <button id="flipVBtn"       class="tool-btn transform-btn flip-btn" disabled title="Flip Vertical">↕</button>
               <button id="shiftLeftBtn"   class="tool-btn transform-btn" disabled title="Shift Left">←</button>
               <button id="shiftDownBtn"   class="tool-btn transform-btn" disabled title="Shift Down">↓</button>
               <button id="shiftRightBtn"  class="tool-btn transform-btn" disabled title="Shift Right">→</button>
-              <button id="flipHBtn"       class="tool-btn transform-btn" disabled title="Flip Horizontal">↔</button>
+              <button id="flipHBtn"       class="tool-btn transform-btn flip-btn" disabled title="Flip Horizontal">↔</button>
             </div>
           </div>
 
@@ -364,57 +370,143 @@
 
   <!-- Information Modal -->
   <div id="infoModal" class="modal-overlay" hidden>
-    <div class="modal-panel" style="max-width: 800px;max-height: 600px;">
+    <div class="modal-panel" style="max-width: 800px; height: min(600px, 85vh);">
       <div class="modal-header">
-        <h2 class="modal-title">Helpful Information</h2>
+        <h2 class="modal-title">Pattern Utility - Information Panel</h2>
         <button id="closeInfoModalBtn" class="modal-close" aria-label="Close">&times;</button>
       </div>
-      <div class="modal-body" style="font-size: 13px; line-height: 1.6; user-select: text;">
-        <p>⚠️ <strong>This tool is in beta, I give no guarantee of stability, uptime, maintenance or permanence-<br>
-          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;that being said all links are backwards compatible and the code is open source.</strong><br></p>
+      <div class="info-tabs" role="tablist" aria-label="Information sections">
+        <button class="info-tab selected" data-tab="about" role="tab" aria-selected="true">About</button>
+        <button class="info-tab" data-tab="guide" role="tab" aria-selected="false">Guide</button>
+        <button class="info-tab" data-tab="controls" role="tab" aria-selected="false">Controls</button>
+        <button class="info-tab" data-tab="links" role="tab" aria-selected="false">Links</button>
+        <button class="info-tab" data-tab="changelog" role="tab" aria-selected="false">Changelog</button>
+      </div>
+      <div class="modal-body info-panel" data-panel="about">
+        <p>
+          <strong>Pattern Utility</strong> is a free, open-source 1-bit pattern editor for
+          <a href="https://openfront.io" target="_blank">OpenFront</a>. Design a pattern, preview how it
+          looks in-game, and submit it for review — all from one place.
+        </p>
 
-        <h3>Links:</h3>
-        <p>🗳️ <strong>Submit a Pattern</strong><br>
-        Use this form to submit your pattern for review:<br>
-        🔗 <a href="https://forms.gle/e2kH8eBUd7Zho4rYA" target="_blank">https://forms.gle/e2kH8eBUd7Zho4rYA</a></p>
+        <h3>What you can do here</h3>
+        <ul style="padding-left: 20px; margin: 8px 0;">
+          <li>Draw with <strong>Pencil, Circle, Shape, Line, Fill and Shade</strong> tools, with a size slider that adapts to each tool.</li>
+          <li>Select part of your pattern to <strong>cut, copy, paste, shift, rotate or flip</strong> it.</li>
+          <li>Use the <strong>Test Canvas</strong> as a scratchpad while you work on the main pattern.</li>
+          <li>Preview your pattern against different scale sizes and colours before submitting.</li>
+          <li>Import/Export patterns as JSON (or copy the URL) — and when satisfied <strong>Submit</strong> your pattern.</li>
+        </ul>
 
-        <p>🗃️ <strong>Submission Status Tracker</strong><br>
-        Check here to see if your submission has been reviewed, accepted, or rejected:<br>
-        🔗 <a href="https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing" target="_blank">https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing</a></p>
-
-        <p>🎨 <strong>Create, Edit & Preview Pattern Tools</strong><br>
-        Use these tools to preview how your pattern looks in-game before submitting:<br>
-        🔗 <a href="https://aotumuri.github.io/openfront-utility/" target="_blank">https://aotumuri.github.io/openfront-utility/</a><br>
-        🔗 <a href="https://brayflex.github.io/openfront-utility/" target="_blank">https://brayflex.github.io/openfront-utility/</a></p>
-
-        <p>🖼️ <strong>Converter for normal images and other drawing apps</strong><br>
-        <a href="https://niconacho2020.github.io/projects/pattern/" target="_blank">https://niconacho2020.github.io/projects/pattern/</a></p>
-
-        <p>💬 <strong>Feedback & Suggestions</strong><br>
-        Submit an issue or suggestion on GitHub discussions:<br>
-        🔗 <a href="https://github.com/BrayFlex/openfront-utility/discussions" target="_blank">https://github.com/BrayFlex/openfront-utility/discussions</a></p>
-
-        <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
-        
-        <h3>Final Testing & In-Game Preview Instructions:</h3>
-        <ol style="padding-left: 20px; margin-top: 8px;">
-          <li>In the pattern preview tool press <strong>Console</strong> (Copy Dev localStorage)</li>
-          <li>Go to <a href="https://main.openfront.dev/" target="_blank">https://main.openfront.dev/</a></li>
-          <li>Right click on the page and select "Inspect" / <code>F12</code></li>
-          <li>In the top bar of the Inspector click the "Console" tab</li>
-          <li>Directly paste into the console ( after the<code>&gt</code>)</li>
-          <li>Open a solo game and see how the pattern looks.</li>
-        </ol>
+        <p>⚠️ <em>This tool is in beta. I can't guarantee stability, uptime, maintenance or
+          permanence — but all links are backwards compatible and the code is open source.</em></p>
 
         <p>
-          I <i>recommend</i> testing not just FFA but also Teams as the primary is replaced in teams and you
-          want to ensure your secondary won't be confused with other team colors. 
-          Currently you can test 2 Teams to see Red and Quads to see Orange/Yellow. You have to use your own judgement for the other team colors.
-          <br> TLDR; If your pattern uses a color for secondary and most of your pattern is that color it <i>may</i> be declined as it is confusing in team games.
+          Head over to the <strong>Guide</strong>, <strong>Controls</strong> or <strong>Links</strong>
+          tabs for step-by-step testing instructions, keyboard shortcuts and useful resources.
         </p>
-        
-        <div style="text-align: center; margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px;">
+
+        <p>💬 <strong>Feedback &amp; Suggestions</strong><br>
+          Something broken or missing? Submit an issue or suggestion on
+          <a href="https://github.com/BrayFlex/openfront-utility/discussions" target="_blank">GitHub Discussions</a>.</p>
+
+        <div style="text-align: center; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--border); color: var(--muted); font-size: 11px;">
           Made with 🍫 by Aotumuri &amp; BrayFlex
+        </div>
+      </div>
+      <div class="modal-body info-panel" data-panel="guide" hidden>
+        <h3>Final Testing & In-Game Preview Instructions:</h3>
+        <ol style="padding-left: 20px; margin-top: 8px;">
+          <li>In the pattern preview tool press the <strong>Console</strong> button (to copy Dev LocalStorage String)</li>
+          <li>Go to <a href="https://main.openfront.dev/" target="_blank">https://main.openfront.dev/</a></li>
+          <li>Right click on the page and select "Inspect" / <code>or press F12</code></li>
+          <li>In the top bar of the Inspector click the "Console" tab</li>
+          <li>Directly paste into the console (after the <code>&gt</code>) the LocalStorage you copied.</li>
+          <li>Open a solo game and see how the pattern looks.</li>
+        </ol>
+        <p>
+          You can test your pattern at any point while drawing, and the basic preview updates live as you work.
+        </p>
+
+        <h3>Coloring</h3>
+        <p>
+          In Team Modes your primary colour is replaced, so make sure your secondary still stands out.
+          Conversely, if most of your overall pattern is the secondary colour it may be confusing in team games.
+        </p>
+        <p>
+          You can test 2 Teams to see Red and Quads to see Orange/Yellow; for the other team colours
+          you'll have to use your own judgement. 
+        </p>
+
+        <h3>Advisory</h3>
+        <p>
+          Patterns that are too similar to the background or team colours may be rejected.
+        </p>
+        <p>
+          Patterns that are too confusing or similar to structures may be rejected.
+        </p>
+      </div>
+      <div class="modal-body info-panel" data-panel="controls" hidden>
+        <h3>Keyboard Shortcuts</h3>
+        <table class="controls-table">
+          <tbody>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Z</kbd></td><td>Undo</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Shift</kbd> + <kbd>Z</kbd></td><td>Redo</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>C</kbd></td><td>Copy selection</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>X</kbd></td><td>Cut selection</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>V</kbd></td><td>Paste clipboard</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>D</kbd></td><td>Deselect</td></tr>
+            <tr><td><kbd>Backspace</kbd> / <kbd>Delete</kbd></td><td>Clear selection</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>I</kbd></td><td>Invert pixels (selection, or whole canvas)</td></tr>
+            <tr><td><kbd>Shift</kbd> + <kbd>I</kbd></td><td>Invert selection area</td></tr>
+            <tr><td><kbd>Shift</kbd> (hold)</td><td>Temporarily switch into selection mode</td></tr>
+            <tr><td><kbd>Space</kbd> / <kbd>Ctrl</kbd> (hold) + drag</td><td>Pan the canvas (grab hand)</td></tr>
+            <tr><td><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></td><td>Pan the canvas by 5 cells</td></tr>
+            <tr><td>Mouse wheel</td><td>Zoom the canvas</td></tr>
+          </tbody>
+        </table>
+        <p style="margin-top: 12px; color: var(--muted); font-size: 12px;">
+          Shift-click or hold Shift with any drawing tool to temporarily use selection mode.
+        </p>
+      </div>
+      <div class="modal-body info-panel" data-panel="links" hidden>
+        <p class="links-intro">Useful links and resources for creating, submitting and previewing patterns.</p>
+        <div class="links-list">
+          <div class="link-card">
+            <strong>🗳️ Submit a Pattern</strong>
+            <p>Use this form to submit your pattern for review:</p>
+            <a href="https://forms.gle/e2kH8eBUd7Zho4rYA" target="_blank">https://forms.gle/e2kH8eBUd7Zho4rYA</a>
+          </div>
+          <div class="link-card">
+            <strong>🗃️ Submission Status Tracker</strong>
+            <p>Check here to see if your submission has been reviewed, accepted, or rejected:</p>
+            <a href="https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing" target="_blank">https://docs.google.com/spreadsheets/d/1JB9uOKfXy1HIIm0ipQ6WL1zOQWL5S2RsCIgk84K-XwQ/edit?usp=sharing</a>
+          </div>
+          <div class="link-card">
+            <strong>🎨 Create, Edit &amp; Preview Pattern Tools</strong>
+            <p>Use these tools to preview how your pattern looks in-game before submitting:</p>
+            <a href="https://aotumuri.github.io/openfront-utility/" target="_blank">https://aotumuri.github.io/openfront-utility/</a>
+            <a href="https://brayflex.github.io/openfront-utility/" target="_blank">https://brayflex.github.io/openfront-utility/</a>
+          </div>
+          <div class="link-card">
+            <strong>🖼️ Converter for normal images and other drawing apps</strong>
+            <a href="https://niconacho2020.github.io/projects/pattern/" target="_blank">https://niconacho2020.github.io/projects/pattern/</a>
+          </div>
+          <div class="link-card">
+            <strong>🔗 Original Repository</strong>
+            <p>OpenFront Utility, by Aotumuri:</p>
+            <a href="https://github.com/Aotumuri/openfront-utility" target="_blank">https://github.com/Aotumuri/openfront-utility</a>
+          </div>
+          <div class="link-card">
+            <strong>🔗 This Repository (Fork)</strong>
+            <p>BrayFlex's fork with additional improvements:</p>
+            <a href="https://github.com/BrayFlex/openfront-utility" target="_blank">https://github.com/BrayFlex/openfront-utility</a>
+          </div>
+        </div>
+      </div>
+      <div class="modal-body info-panel" data-panel="changelog" hidden>
+        <div id="changelogContent" class="changelog-content">
+          <p style="color: var(--muted);">Loading changelog…</p>
         </div>
       </div>
     </div>

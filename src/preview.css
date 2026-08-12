@@ -85,7 +85,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 10px;
-  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-family: "DM Mono", "Courier New", monospace;
   background: #f9f7f3;
   color: var(--text);
   resize: vertical;
@@ -170,7 +170,7 @@ textarea:focus-visible {
 }
 
 .pattern-code {
-  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-family: "DM Mono", "Courier New", monospace;
   font-size: 12px;
   word-break: break-word;
   color: #2d3a40;

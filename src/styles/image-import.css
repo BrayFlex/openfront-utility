@@ -157,7 +157,7 @@ body.image-import-open {
 .image-threshold-value {
   min-width: 3ch;
   text-align: right;
-  font-family: "IBM Plex Mono", "Courier New", monospace;
+  font-family: "DM Mono", "Courier New", monospace;
   color: var(--muted);
 }
 

@@ -10,6 +10,7 @@ import { setupGridGuides } from "./app/gridGuides.js";
 import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
+import { initInfoModal } from "./app/infoModal.js";
 import {
   decodePatternBase64,
   generatePatternBase64,
@@ -724,16 +725,7 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ── Info Modal ────────────────────────────────────────────────────────────
-  const infoModal = document.getElementById("infoModal");
-  const infoModalBtn = document.getElementById("infoModalBtn");
-  const closeInfoModalBtn = document.getElementById("closeInfoModalBtn");
-  if (infoModal && infoModalBtn && closeInfoModalBtn) {
-    infoModalBtn.addEventListener("click", () => infoModal.hidden = false);
-    closeInfoModalBtn.addEventListener("click", () => infoModal.hidden = true);
-    infoModal.addEventListener("click", (e) => {
-      if (e.target === infoModal) (infoModal as HTMLElement).hidden = true;
-    });
-  }
+  initInfoModal();
 
   // ── Pane resize ────────────────────────────────────────────────────────────
   initPaneResizeControls({
