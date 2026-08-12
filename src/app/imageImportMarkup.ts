@@ -154,7 +154,7 @@ const overlayMarkup = `
             </div>
 
             <div id="imageImportTargetPanel" class="image-mode-panel" hidden>
-              <div class="row color-row">
+              <div class="row">
                 <label for="imageImportTargetColor">Target</label>
                 <input type="color" id="imageImportTargetColor" value="#24313a" />
               </div>

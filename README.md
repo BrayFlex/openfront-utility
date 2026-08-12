@@ -1,12 +1,12 @@
-# 1-Bit Pattern JSON Generator & Preview, intended for https://OpenFront.io Artists
+# 1-Bit Pattern Design Application with Preview and Image JSON Generation, intended for https://OpenFront.io Artists
 
-This project is a tool for generating and previewing Openfront.io patterns in Base64 format.
+This project is a tool for generating and previewing Openfront patterns in Base64 format.
 
 It runs a workflow to deploy to GitHub Pages: https://brayflex.github.io/openfront-utility/
 
 Forked from: https://github.com/Aotumuri/openfront-utility
 
-It currently exists as a separate fork because I wanted to make changes and improvements based soley on my own vision.
+It currently exists as a separate fork because I wanted to make changes and improvements based solely on my own vision.
 
 It is in beta and will likely have issues & bugs.
 
