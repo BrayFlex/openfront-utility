@@ -2,6 +2,12 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
+## August 12, 2026 — Information modal tabs
+The **Info** popup now has three tabs:
+- **Information** — everything that was there before (links, testing instructions, credits).
+- **Controls** — a clean list of all keyboard shortcuts (undo/redo, copy/cut/paste, deselect, invert, panning, zoom, and shift-to-select).
+- **Changelog** — pulls the latest `CHANGELOG.md` straight from GitHub and renders it right in the app.
+
 ## August 10, 2026 — Redesigned Colors Section of the Preview Panel
 The panel is now more compact in both fixed and floating preview and the text style matches other labels.
 
