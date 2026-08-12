@@ -36,8 +36,8 @@ export function setupHistoryShortcuts(options: KeyboardShortcutOptions) {
     // Backspace / Delete — erase cells within selection
     if (!mod && (key === "backspace" || key === "delete")) { event.preventDefault(); onClearSelection(); return; }
 
-    // i — invert bits of selection (or full canvas if no selection)
-    if (!mod && !event.shiftKey && key === "i") { event.preventDefault(); onInvert(); return; }
+    // Ctrl+i — invert bits of selection (or full canvas if no selection)
+    if (mod && !event.shiftKey && key === "i") { event.preventDefault(); onInvert(); return; }
 
     // Shift+i — invert the selection itself
     if (!mod && event.shiftKey && key === "i") { event.preventDefault(); onInvertSelection(); return; }

@@ -2,11 +2,20 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
-## August 12, 2026 — Information modal tabs
-The **Info** popup now has three tabs:
-- **Information** — everything that was there before (links, testing instructions, credits).
-- **Controls** — a clean list of all keyboard shortcuts (undo/redo, copy/cut/paste, deselect, invert, panning, zoom, and shift-to-select).
-- **Changelog** — pulls the latest `CHANGELOG.md` straight from GitHub and renders it right in the app.
+## August 12, 2026 — DM Mono font
+The monospace font everywhere (canvas size numbers, shape buttons, image-import threshold and the preview code view) switched from **IBM Plex Mono** to **DM Mono**, matching the DM Sans look of the rest of the interface.
+
+## August 12, 2026 — Invert shortcut now Ctrl+I
+- Inverting pixels is now **Ctrl/Cmd+I** (was plain `I`), matching the other clipboard-style shortcuts.
+- The **Controls** tab was tidied up: panning via Space or Ctrl is now a single line.
+
+## August 12, 2026 — Reworked Info panel into five tabs
+The **Info** modal was broken down into five focused tabs:
+- **About** — the beta disclaimer, how patterns work, team-colour tips, and credits.
+- **Guide** — step-by-step instructions for testing your pattern in-game.
+- **Controls** — every keyboard shortcut in a clean table.
+- **Links** — all useful resources (submit form, status tracker, pattern tools, converter, feedback) in tidy cards.
+- **Changelog** — the latest changes pulled straight from GitHub.
 
 ## August 10, 2026 — Redesigned Colors Section of the Preview Panel
 The panel is now more compact in both fixed and floating preview and the text style matches other labels.
