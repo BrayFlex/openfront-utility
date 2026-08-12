@@ -49,8 +49,8 @@ export function setupHistoryShortcuts(options) {
             onClearSelection();
             return;
         }
-        // i — invert bits of selection (or full canvas if no selection)
-        if (!mod && !event.shiftKey && key === "i") {
+        // Ctrl+i — invert bits of selection (or full canvas if no selection)
+        if (mod && !event.shiftKey && key === "i") {
             event.preventDefault();
             onInvert();
             return;
