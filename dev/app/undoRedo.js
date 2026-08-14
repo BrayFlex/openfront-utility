@@ -1,9 +1,11 @@
-export function createHistoryManager(maxEntries = 200) {
+export function createHistoryManager(maxEntries = 200, toKey) {
     let past = [];
     let future = [];
     let current = null;
-    const record = (base64) => {
-        if (current === base64)
+    const keyOf = (value) => toKey ? toKey(value) : value;
+    const record = (value) => {
+        const valueKey = keyOf(value);
+        if (current !== null && keyOf(current) === valueKey)
             return;
         if (current !== null) {
             past.push(current);
@@ -11,7 +13,7 @@ export function createHistoryManager(maxEntries = 200) {
                 past = past.slice(past.length - maxEntries);
             }
         }
-        current = base64;
+        current = value;
         future = [];
     };
     const undo = () => {

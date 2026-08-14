@@ -2,7 +2,7 @@ import { getCircleCells } from "./circleGeometry.js";
 import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, flipSelectionH, flipSelectionV, } from "./patternTransforms.js";
 // ─── Implementation ───────────────────────────────────────────────────────────
 export function createGridManager(options) {
-    const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, clipboard, drawingTools: initialDrawingTools, onPatternChange, } = options;
+    const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, clipboard, drawingTools: initialDrawingTools, fixedWidth, fixedHeight, onPatternChange, } = options;
     // ── State ─────────────────────────────────────────────────────────────────
     let drawingTools = initialDrawingTools !== null && initialDrawingTools !== void 0 ? initialDrawingTools : null;
     let tileWidth = parseInt(tileWidthInput.value);
@@ -421,8 +421,8 @@ export function createGridManager(options) {
     // ── Grid generation ───────────────────────────────────────────────────────
     function generateGrid(pattern) {
         var _a, _b, _c, _d, _e, _f;
-        tileWidth = parseInt(tileWidthInput.value);
-        tileHeight = parseInt(tileHeightInput.value);
+        tileWidth = fixedWidth !== null && fixedWidth !== void 0 ? fixedWidth : parseInt(tileWidthInput.value);
+        tileHeight = fixedHeight !== null && fixedHeight !== void 0 ? fixedHeight : parseInt(tileHeightInput.value);
         setLineStart(null);
         clearCirclePreview();
         clearStarPreview();
@@ -600,18 +600,26 @@ export function createGridManager(options) {
     }
     // ── Input listeners ───────────────────────────────────────────────────────
     tileWidthInput.addEventListener("input", () => {
+        if (fixedWidth !== undefined)
+            return;
         tileWidthValue.value = tileWidthInput.value;
         generateGrid();
     });
     tileHeightInput.addEventListener("input", () => {
+        if (fixedHeight !== undefined)
+            return;
         tileHeightValue.value = tileHeightInput.value;
         generateGrid();
     });
     tileWidthValue.addEventListener("change", () => {
+        if (fixedWidth !== undefined)
+            return;
         tileWidthInput.value = tileWidthValue.value;
         generateGrid();
     });
     tileHeightValue.addEventListener("change", () => {
+        if (fixedHeight !== undefined)
+            return;
         tileHeightInput.value = tileHeightValue.value;
         generateGrid();
     });
