@@ -135,8 +135,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const resetViewBtn = document.getElementById("resetViewBtn") as HTMLButtonElement;
   const zoomValueEl = document.getElementById("zoomValue") as HTMLOutputElement;
 
-  const toolbox = document.getElementById("toolbox");
-
   if (!colorPresetContainer) throw new Error("Missing #colorPresetContainer");
   const previewCtx = previewCanvas.getContext("2d");
   if (!previewCtx) throw new Error("2D context not supported");
@@ -213,7 +211,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ── Guide state ───────────────────────────────────────────────────────────
   let handleGuideChange = () => {};
-  const guideState = setupGridGuides(toolbox, () => handleGuideChange());
+  const guideState = setupGridGuides(
+    document.getElementById("canvasControlsBar"),
+    () => handleGuideChange()
+  );
 
   // ── MAIN grid manager ─────────────────────────────────────────────────────
   const mainGrid = createGridManager({
@@ -236,10 +237,10 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   mainGrid.setDrawingTools(mainDrawingTools);
   handleGuideChange = () => {
-    // Regenerate whichever canvas is visible so guide toggles don't resize the
-    // main canvas from the scrap canvas's fixed dimensions.
-    if (isScrapActive) scrapGrid.generateGrid();
-    else mainGrid.generateGrid();
+    // Refresh both canvases so guide/center toggles stay in sync on the main
+    // and test canvases without resizing either one.
+    mainGrid.refreshGuides();
+    scrapGrid.refreshGuides();
   };
 
   // ── SCRAP grid manager ────────────────────────────────────────────────────

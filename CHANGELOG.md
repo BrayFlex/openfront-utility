@@ -2,11 +2,18 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
-## August 14, 2026 — Test Canvas & Preview fixes
+## August 14, 2026 — Guides, Ruler & toolbar polish
+- Guide controls are now a tidy **Grid / Center / Ruler** toggle group with a more subtle tab-like style.
+- The **Grid and Center toggles now stay in sync across both the Main and Test canvases** without resizing either one.
+- Added an outside **ruler** around the drawable canvas — ticks on every line with numbers every 5 — plus a **Show/Hide Ruler** toggle. Center ticks appear on all four sides when Center is on, independent of the ruler.
+- Moved the **Invert/Clear** buttons into the toolbar and the **Grid/Center/Ruler** toggles into the secondary toolbar (they swapped places), stacking Invert/Clear to save space.
+- Tidied the top bar: extra top/bottom padding, smaller export buttons, and consistent 12px font across the main controls.
+
+## August 13, 2026 — Test Canvas & Preview fixes
 - The **Test Canvas** is now a fixed 128×128 scratchpad with its own independent pan/zoom, so drawing there never silently changes the size of your main canvas.
 - Fixed **Undo/Redo on the Test Canvas** (it previously couldn't record your steps because a 128×128 pattern can't be compressed into the standard pattern code).
 - The preview panel now renders correctly no matter which canvas is active.
-- Neat little **toasts** (bottom-corner notifications) now confirm when you copy the JSON, console string, or preview link, and the Test Canvas tab shows a short tip on first use.
+- Helpful little **toasts** (bottom-corner notifications) now confirm when you copy the JSON, console string, or preview link, and the Test Canvas tab shows a short tip on first use.
 
 ## August 12, 2026 — DM Mono font
 The monospace font everywhere (canvas size numbers, shape buttons, image-import threshold and the preview code view) switched from **IBM Plex Mono** to **DM Mono**, matching the DM Sans look of the rest of the interface.
@@ -15,7 +22,7 @@ The monospace font everywhere (canvas size numbers, shape buttons, image-import 
 - Inverting pixels is now **Ctrl/Cmd+I** (was plain `I`), matching the other clipboard-style shortcuts.
 - The **Controls** tab was tidied up: panning via Space or Ctrl is now a single line.
 
-## August 12, 2026 — Reworked Info panel into five tabs
+## August 11, 2026 — Reworked Info panel into five tabs
 The **Info** modal was broken down into five focused tabs:
 - **About** — the beta disclaimer, how patterns work, team-colour tips, and credits.
 - **Guide** — step-by-step instructions for testing your pattern in-game.
