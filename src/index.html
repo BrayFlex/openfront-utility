@@ -160,6 +160,16 @@
             </div>
           </div>
 
+          <div class="tool-strip-separator"></div>
+
+          <!-- Invert / Clear (stacked) -->
+          <div class="tool-strip-group">
+            <div class="ctrl-col invert-clear-col">
+              <button id="invertBtn" class="ctrl-btn ctrl-btn-sm" title="Invert canvas (or selection)">Invert</button>
+              <button id="clearBtn"  class="ctrl-btn ctrl-btn-sm" title="Clear canvas">Clear</button>
+            </div>
+          </div>
+
           <!-- Guide buttons injected here by gridGuides.ts -->
 
         </div><!-- end .tool-strip -->
@@ -198,11 +208,7 @@
         <section class="canvas-panel" aria-label="Pattern canvas">
 
           <!-- Canvas controls bar -->
-          <div class="canvas-controls-bar">
-
-            <!-- Invert / Clear -->
-            <button id="invertBtn" class="ctrl-btn" title="Invert canvas (or selection)">Invert</button>
-            <button id="clearBtn"  class="ctrl-btn" title="Clear canvas">Clear</button>
+          <div class="canvas-controls-bar" id="canvasControlsBar">
 
             <div class="canvas-controls-divider"></div>
 
@@ -286,14 +292,22 @@
 
             <div id="gridViewport" class="grid-viewport">
               <!-- Main canvas -->
-              <div id="mainGridWrap">
+              <div id="mainGridWrap" class="grid-frame">
+                <div class="grid-ruler grid-ruler-top"></div>
+                <div class="grid-ruler grid-ruler-left"></div>
                 <div id="grid" class="grid"></div>
+                <div class="grid-ruler grid-ruler-bottom"></div>
+                <div class="grid-ruler grid-ruler-right"></div>
               </div>
             </div>
             <!-- Scrap canvas (own viewport so it is panned/zoomed independently) -->
             <div id="scrapViewport" class="grid-viewport" hidden>
-              <div id="scrapGridWrap">
+              <div id="scrapGridWrap" class="grid-frame">
+                <div class="grid-ruler grid-ruler-top"></div>
+                <div class="grid-ruler grid-ruler-left"></div>
                 <div id="scrapGrid" class="grid scrap-grid"></div>
+                <div class="grid-ruler grid-ruler-bottom"></div>
+                <div class="grid-ruler grid-ruler-right"></div>
               </div>
             </div>
           </div>

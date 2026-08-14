@@ -56,7 +56,7 @@
   color: var(--muted);
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 600;
   cursor: pointer;
 }
@@ -80,9 +80,19 @@
   border: 1px solid var(--border);
   padding: 4px 10px;
   border-radius: 4px;
-  font-size: 13px;
+  font-size: 12px;
 }
 .ctrl-btn:hover { border-color: var(--accent); }
+
+/* Stacked Invert / Clear buttons — compact to save vertical space */
+.invert-clear-col {
+  gap: 3px;
+}
+.ctrl-btn-sm {
+  padding: 2px 9px;
+  font-size: 12px;
+  line-height: 1.4;
+}
 
 /* Size button when placed in the secondary toolbar */
 .ctrl-size-btn {
@@ -592,6 +602,61 @@
   background: #fdfdfd;
   border-color: #aeb5b8;
   opacity: 0.95;
+}
+
+/* ── Outside ruler frame ────────────────────────────────────────────────── */
+.grid-frame {
+  display: grid;
+  grid-template-columns: var(--cell-size) auto var(--cell-size);
+  grid-template-rows: var(--cell-size) auto var(--cell-size);
+  width: max-content;
+  --cell-size: 20px;
+}
+.grid-frame > .grid { grid-area: 2 / 2; }
+
+/* Collapse the ruler tracks when the ruler guide is toggled off */
+.grid-frame.ruler-off {
+  grid-template-columns: 0 auto 0;
+  grid-template-rows: 0 auto 0;
+}
+
+.grid-ruler {
+  position: relative;
+  overflow: hidden;
+  pointer-events: none;
+  user-select: none;
+  background: var(--surface-muted);
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+}
+.grid-ruler-top    { grid-area: 1 / 2; border-bottom: 1px solid var(--border); }
+.grid-ruler-bottom { grid-area: 3 / 2; border-top: 1px solid var(--border); }
+.grid-ruler-left   { grid-area: 2 / 1; border-right: 1px solid var(--border); }
+.grid-ruler-right  { grid-area: 2 / 3; border-left: 1px solid var(--border); }
+
+.grid-ruler-tick {
+  position: absolute;
+  background: var(--muted);
+  opacity: 0.7;
+}
+.grid-ruler-tick-v { width: 1px; }
+.grid-ruler-tick-h { height: 1px; }
+.grid-ruler-tick-major {
+  background: var(--border-strong);
+  opacity: 1;
+}
+.grid-ruler-tick-center {
+  background: var(--danger);
+  opacity: 1;
+}
+.grid-ruler-label {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 400;
+  color: var(--muted);
+  pointer-events: none;
 }
 
 .cell {
