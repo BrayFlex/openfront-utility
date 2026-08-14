@@ -5,10 +5,10 @@ export function setupGridGuides(toolbox, onChange) {
     container.style.gap = "4px";
     container.style.marginLeft = "4px";
     const blackGuideBtn = document.createElement("button");
-    blackGuideBtn.textContent = "Grid Guide";
+    blackGuideBtn.textContent = "Grid";
     blackGuideBtn.id = "gridGuideBlackBtn";
     const centerGuideBtn = document.createElement("button");
-    centerGuideBtn.textContent = "Center Guide";
+    centerGuideBtn.textContent = "Center";
     centerGuideBtn.id = "gridGuideCenterBtn";
     if (toolbox) {
         // Add separator before guides

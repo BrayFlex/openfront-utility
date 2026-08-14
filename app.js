@@ -17,6 +17,7 @@ import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
 import { initThemeToggle } from "./app/themeToggle.js";
+import { showToast } from "./app/toast.js";
 document.addEventListener("DOMContentLoaded", () => {
     var _a, _b;
     const themeToggleEl = document.getElementById("themeToggle");
@@ -76,8 +77,8 @@ document.addEventListener("DOMContentLoaded", () => {
     // Canvas tab switcher
     const canvasTabMain = document.getElementById("canvasTabMain");
     const canvasTabScrap = document.getElementById("canvasTabScrap");
-    const mainGridWrap = document.getElementById("mainGridWrap");
-    const scrapGridWrap = document.getElementById("scrapGridWrap");
+    const mainViewport = document.getElementById("gridViewport");
+    const scrapViewport = document.getElementById("scrapViewport");
     // Import
     const base64Input = document.getElementById("base64Input");
     const loadBtn = document.getElementById("loadBtn");
@@ -125,20 +126,58 @@ document.addEventListener("DOMContentLoaded", () => {
     const clipboard = createClipboardManager();
     // ── Canvas switcher state ─────────────────────────────────────────────────
     let isScrapActive = false;
+    let workspaceRefresh = () => { };
     const switchCanvas = (scrap) => {
         isScrapActive = scrap;
-        mainGridWrap.hidden = scrap;
-        scrapGridWrap.hidden = !scrap;
+        mainViewport.hidden = scrap;
+        scrapViewport.hidden = !scrap;
         canvasTabMain.classList.toggle("selected", !scrap);
         canvasTabScrap.classList.toggle("selected", scrap);
         undoBtn.hidden = scrap;
         redoBtn.hidden = scrap;
         scrapUndoBtn.hidden = !scrap;
         scrapRedoBtn.hidden = !scrap;
+        // The test canvas is a fixed 128×128 scratch pad — size controls are locked
+        // while it is active and always show its fixed dimensions.
+        const sizeControls = [
+            tileWidthInput, tileWidthValue, tileWidthUpBtn, tileWidthDownBtn,
+            tileHeightInput, tileHeightValue, tileHeightUpBtn, tileHeightDownBtn,
+        ];
+        sizeControls.forEach((c) => (c.disabled = scrap));
+        if (scrap) {
+            const w = scrapGrid.getTileWidth();
+            const h = scrapGrid.getTileHeight();
+            tileWidthInput.value = String(w);
+            tileWidthValue.value = String(w);
+            tileHeightInput.value = String(h);
+            tileHeightValue.value = String(h);
+        }
+        else {
+            const w = mainGrid.getTileWidth();
+            const h = mainGrid.getTileHeight();
+            tileWidthInput.value = String(w);
+            tileWidthValue.value = String(w);
+            tileHeightInput.value = String(h);
+            tileHeightValue.value = String(h);
+        }
+        workspaceRefresh();
         updateOutput();
     };
     canvasTabMain.addEventListener("click", () => switchCanvas(false));
-    canvasTabScrap.addEventListener("click", () => switchCanvas(true));
+    canvasTabScrap.addEventListener("click", () => {
+        switchCanvas(true);
+        showScrapToast();
+    });
+    // ── Scrap (test) canvas first-use toast ───────────────────────────────────
+    let scrapToastShown = false;
+    const SCRAP_TOAST_DURATION = 6000;
+    const showScrapToast = () => {
+        if (scrapToastShown)
+            return;
+        scrapToastShown = true;
+        showToast("<strong>Test Canvas</strong> — a fixed 128×128 scratch pad. " +
+            "Anything drawn here is temporary and won't be saved or affect the main canvas.", SCRAP_TOAST_DURATION);
+    };
     const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
     const shapeTypeSelect = document.getElementById("shapeType");
     if (shapeTypeSelect) {
@@ -169,9 +208,18 @@ document.addEventListener("DOMContentLoaded", () => {
         setCellActive: mainGrid.setCellActive,
     });
     mainGrid.setDrawingTools(mainDrawingTools);
-    handleGuideChange = () => mainGrid.generateGrid();
+    handleGuideChange = () => {
+        // Regenerate whichever canvas is visible so guide toggles don't resize the
+        // main canvas from the scrap canvas's fixed dimensions.
+        if (isScrapActive)
+            scrapGrid.generateGrid();
+        else
+            mainGrid.generateGrid();
+    };
     // ── SCRAP grid manager ────────────────────────────────────────────────────
-    // Scrap uses its own tile size inputs (we share the same inputs for simplicity)
+    // The test canvas is a fixed 128×128 scratch pad that ignores the shared
+    // size inputs, so it is never adjusted by (or adjusts) the main canvas.
+    const SCRAP_SIZE = 128;
     const scrapGrid = createGridManager({
         gridDiv: scrapGridDiv,
         tileWidthInput,
@@ -181,6 +229,8 @@ document.addEventListener("DOMContentLoaded", () => {
         guideState,
         toolState,
         clipboard,
+        fixedWidth: SCRAP_SIZE,
+        fixedHeight: SCRAP_SIZE,
         onPatternChange: () => { if (isScrapActive)
             updateOutput(); },
     });
@@ -195,7 +245,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const activeGrid = () => (isScrapActive ? scrapGrid : mainGrid);
     // ── History managers ──────────────────────────────────────────────────────
     const mainHistory = createHistoryManager();
-    const scrapHistory = createHistoryManager();
+    // The test canvas can't be base64-encoded (128×128 exceeds the format's
+    // height limit), so its history stores raw pattern matrices instead.
+    const scrapHistory = createHistoryManager(200, (p) => p.map((row) => row.join("")).join("|"));
     let isApplyingHistory = false;
     const updateHistoryButtons = () => {
         undoBtn.disabled = !mainHistory.canUndo();
@@ -239,10 +291,25 @@ document.addEventListener("DOMContentLoaded", () => {
         applyPreviewZoom();
     });
     // ── Output update ─────────────────────────────────────────────────────────
+    const clonePattern = (pattern) => pattern.map((row) => [...row]);
     let updateOutput = () => { };
     updateOutput = () => {
         const grid = activeGrid();
         const pattern = grid.getCurrentPattern();
+        const primary = previewPrimaryColor.value;
+        // Test canvas: render + record directly from the raw pattern. It can't be
+        // base64-encoded (128×128 exceeds the format's height limit), so we skip
+        // the URL hash and encoding entirely for it.
+        if (isScrapActive) {
+            renderPreview(pattern, true);
+            if (previewCanvasWrap) {
+                previewCanvasWrap.style.background = primary;
+            }
+            if (!isApplyingHistory)
+                scrapHistory.record(clonePattern(pattern));
+            updateHistoryButtons();
+            return;
+        }
         const scale = scaleExponent();
         let base64;
         try {
@@ -251,30 +318,23 @@ document.addEventListener("DOMContentLoaded", () => {
         catch (_a) {
             return;
         }
-        const primary = previewPrimaryColor.value;
         const secondary = previewSecondaryColor.value;
-        renderPreview(base64, isScrapActive);
+        renderPreview(base64, false);
         if (previewCanvasWrap) {
             previewCanvasWrap.style.background = primary;
         }
         // Update URL hash from MAIN canvas only
-        if (!isScrapActive) {
-            const params = new URLSearchParams({
-                primary: primary.replace("#", ""),
-                secondary: secondary.replace("#", ""),
-            });
-            window.history.replaceState(null, "", `#${base64}?${params}`);
-            if (!isApplyingHistory)
-                mainHistory.record(base64);
-        }
-        else {
-            if (!isApplyingHistory)
-                scrapHistory.record(base64);
-        }
+        const params = new URLSearchParams({
+            primary: primary.replace("#", ""),
+            secondary: secondary.replace("#", ""),
+        });
+        window.history.replaceState(null, "", `#${base64}?${params}`);
+        if (!isApplyingHistory)
+            mainHistory.record(base64);
         updateHistoryButtons();
     };
     // ── Undo / Redo ───────────────────────────────────────────────────────────
-    const applyHistoryState = (base64, grid) => {
+    const applyMainHistoryState = (base64) => {
         let decoded;
         try {
             decoded = decodePatternBase64(base64);
@@ -290,33 +350,39 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update scale tabs
         setScale(scale);
         // Clear any active selection so it doesn't mask the restored pattern
-        grid.clearSelection();
+        mainGrid.clearSelection();
         isApplyingHistory = true;
-        grid.generateGrid(pattern);
+        mainGrid.generateGrid(pattern);
+        isApplyingHistory = false;
+    };
+    const applyScrapHistoryState = (pattern) => {
+        scrapGrid.clearSelection();
+        isApplyingHistory = true;
+        scrapGrid.generateGrid(pattern);
         isApplyingHistory = false;
     };
     const handleUndo = () => {
         if (isScrapActive) {
             const s = scrapHistory.undo();
             if (s)
-                applyHistoryState(s, scrapGrid);
+                applyScrapHistoryState(s);
         }
         else {
             const s = mainHistory.undo();
             if (s)
-                applyHistoryState(s, mainGrid);
+                applyMainHistoryState(s);
         }
     };
     const handleRedo = () => {
         if (isScrapActive) {
             const s = scrapHistory.redo();
             if (s)
-                applyHistoryState(s, scrapGrid);
+                applyScrapHistoryState(s);
         }
         else {
             const s = mainHistory.redo();
             if (s)
-                applyHistoryState(s, mainGrid);
+                applyMainHistoryState(s);
         }
     };
     undoBtn.addEventListener("click", handleUndo);
@@ -425,15 +491,20 @@ document.addEventListener("DOMContentLoaded", () => {
         const pattern = mainGrid.getCurrentPattern();
         return generatePatternBase64(pattern, mainGrid.getTileWidth(), mainGrid.getTileHeight(), scaleExponent());
     };
-    copyJsonBtn.addEventListener("click", () => copyText(getOutputBase64()));
+    copyJsonBtn.addEventListener("click", () => {
+        copyText(getOutputBase64());
+        showToast("Pattern JSON copied to clipboard.");
+    });
     copyDevStorageBtn.addEventListener("click", () => {
         const b64 = getOutputBase64();
         copyText(buildDevStorageOutput(b64, previewPrimaryColor.value, previewSecondaryColor.value));
+        showToast("Dev LocalStorage string copied to clipboard.");
     });
     copyPreviewBtn.addEventListener("click", () => {
         const b64 = getOutputBase64();
         const link = buildPreviewLink(window.location.href, b64, previewPrimaryColor.value, previewSecondaryColor.value);
         copyText(link);
+        showToast("Preview link copied to clipboard.");
     });
     // ── Import ────────────────────────────────────────────────────────────────
     const loadFromBase64 = createPatternLoader({
@@ -657,14 +728,18 @@ document.addEventListener("DOMContentLoaded", () => {
         saveFloatState();
     }));
     // ── Workspace (zoom/pan) controls ─────────────────────────────────────────
-    initWorkspaceControls({
+    // Each canvas keeps its own zoom/pan state and is controlled independently.
+    workspaceRefresh = initWorkspaceControls({
         workspace: document.getElementById("canvasWorkspace"),
-        viewport: document.getElementById("gridViewport"),
+        viewports: [
+            { element: mainViewport, isActive: () => !isScrapActive },
+            { element: scrapViewport, isActive: () => isScrapActive },
+        ],
         zoomInButton: zoomInBtn,
         zoomOutButton: zoomOutBtn,
         resetButton: resetViewBtn,
         zoomValue: zoomValueEl,
-    });
+    }).refresh;
     // ── Info Modal ────────────────────────────────────────────────────────────
     initInfoModal();
     // ── Pane resize ────────────────────────────────────────────────────────────
