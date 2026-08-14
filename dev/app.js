@@ -116,7 +116,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const zoomOutBtn = document.getElementById("zoomOutBtn");
     const resetViewBtn = document.getElementById("resetViewBtn");
     const zoomValueEl = document.getElementById("zoomValue");
-    const toolbox = document.getElementById("toolbox");
     if (!colorPresetContainer)
         throw new Error("Missing #colorPresetContainer");
     const previewCtx = previewCanvas.getContext("2d");
@@ -187,7 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // ── Guide state ───────────────────────────────────────────────────────────
     let handleGuideChange = () => { };
-    const guideState = setupGridGuides(toolbox, () => handleGuideChange());
+    const guideState = setupGridGuides(document.getElementById("canvasControlsBar"), () => handleGuideChange());
     // ── MAIN grid manager ─────────────────────────────────────────────────────
     const mainGrid = createGridManager({
         gridDiv,
@@ -209,12 +208,10 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     mainGrid.setDrawingTools(mainDrawingTools);
     handleGuideChange = () => {
-        // Regenerate whichever canvas is visible so guide toggles don't resize the
-        // main canvas from the scrap canvas's fixed dimensions.
-        if (isScrapActive)
-            scrapGrid.generateGrid();
-        else
-            mainGrid.generateGrid();
+        // Refresh both canvases so guide/center toggles stay in sync on the main
+        // and test canvases without resizing either one.
+        mainGrid.refreshGuides();
+        scrapGrid.refreshGuides();
     };
     // ── SCRAP grid manager ────────────────────────────────────────────────────
     // The test canvas is a fixed 128×128 scratch pad that ignores the shared

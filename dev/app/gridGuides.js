@@ -1,29 +1,35 @@
-export function setupGridGuides(toolbox, onChange) {
-    const container = document.createElement("div");
-    container.style.display = "flex";
-    container.style.flexDirection = "column";
-    container.style.gap = "4px";
-    container.style.marginLeft = "4px";
+export function setupGridGuides(container, onChange) {
+    const guideGroup = document.createElement("div");
+    guideGroup.className = "guide-btn-group";
     const blackGuideBtn = document.createElement("button");
-    blackGuideBtn.textContent = "Grid";
     blackGuideBtn.id = "gridGuideBlackBtn";
+    blackGuideBtn.textContent = "Grid";
+    blackGuideBtn.title = "Show or hide the grid guide lines";
     const centerGuideBtn = document.createElement("button");
-    centerGuideBtn.textContent = "Center";
     centerGuideBtn.id = "gridGuideCenterBtn";
-    if (toolbox) {
+    centerGuideBtn.textContent = "Center";
+    centerGuideBtn.title = "Show or hide the center guide";
+    const rulerGuideBtn = document.createElement("button");
+    rulerGuideBtn.id = "gridGuideRulerBtn";
+    rulerGuideBtn.textContent = "Ruler";
+    rulerGuideBtn.title = "Show or hide the outside ruler";
+    if (container) {
         // Add separator before guides
         const sep = document.createElement("div");
-        sep.className = "tool-strip-separator";
-        toolbox.appendChild(sep);
-        container.appendChild(blackGuideBtn);
-        container.appendChild(centerGuideBtn);
-        toolbox.appendChild(container);
+        sep.className = "canvas-controls-divider";
+        container.appendChild(sep);
+        guideGroup.appendChild(blackGuideBtn);
+        guideGroup.appendChild(centerGuideBtn);
+        guideGroup.appendChild(rulerGuideBtn);
+        container.appendChild(guideGroup);
     }
     let gridGuideBlack = false;
     let gridGuideCenter = false;
+    let gridGuideRuler = false;
     function updateGuideBtnStyle() {
         blackGuideBtn.className = "guide-btn " + (gridGuideBlack ? "guide-btn-on" : "guide-btn-off");
         centerGuideBtn.className = "guide-btn " + (gridGuideCenter ? "guide-btn-on" : "guide-btn-off");
+        rulerGuideBtn.className = "guide-btn " + (gridGuideRuler ? "guide-btn-on" : "guide-btn-off");
     }
     blackGuideBtn.onclick = () => {
         gridGuideBlack = !gridGuideBlack;
@@ -35,9 +41,15 @@ export function setupGridGuides(toolbox, onChange) {
         updateGuideBtnStyle();
         onChange();
     };
+    rulerGuideBtn.onclick = () => {
+        gridGuideRuler = !gridGuideRuler;
+        updateGuideBtnStyle();
+        onChange();
+    };
     updateGuideBtnStyle();
     return {
         isBlackEnabled: () => gridGuideBlack,
         isCenterEnabled: () => gridGuideCenter,
+        isRulerEnabled: () => gridGuideRuler,
     };
 }

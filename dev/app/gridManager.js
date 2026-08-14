@@ -39,9 +39,12 @@ export function createGridManager(options) {
         return Number.isFinite(s) && s > 0 ? s : 1;
     };
     const applyGridSizing = () => {
+        var _a;
         const cellSize = baseCellSize * getGridScale();
         gridDiv.style.setProperty("--cell-size", `${cellSize}px`);
         gridDiv.style.gridTemplateColumns = `repeat(${tileWidth}, var(--cell-size))`;
+        // Keep the ruler frame tracks in sync with the cell size.
+        (_a = gridDiv.parentElement) === null || _a === void 0 ? void 0 : _a.style.setProperty("--cell-size", `${cellSize}px`);
     };
     const setCellActive = (x, y, active) => {
         var _a, _b;
@@ -418,6 +421,157 @@ export function createGridManager(options) {
         clearLinePreview();
         clearPastePreview();
     });
+    // ── Guides: center overlay + outside rulers ───────────────────────────────
+    const updateCenterOverlay = () => {
+        let centerCross = gridDiv.querySelector('.center-cross-overlay');
+        if (!centerCross) {
+            centerCross = document.createElement("div");
+            centerCross.className = "center-cross-overlay";
+            gridDiv.appendChild(centerCross);
+        }
+        if (guideState.isCenterEnabled()) {
+            centerCross.style.display = "block";
+            centerCross.style.top = "50%";
+            centerCross.style.left = "50%";
+        }
+        else {
+            centerCross.style.display = "none";
+        }
+    };
+    // Ruler ticks + labels on the outside of the drawable grid. Top/left rulers
+    // mark every grid line (numbered every 5). Center ticks render on all four
+    // sides when the center guide is enabled — and show even without the ruler.
+    const renderRulers = () => {
+        const frame = gridDiv.parentElement;
+        if (!frame)
+            return;
+        const topRuler = frame.querySelector(".grid-ruler-top");
+        const bottomRuler = frame.querySelector(".grid-ruler-bottom");
+        const leftRuler = frame.querySelector(".grid-ruler-left");
+        const rightRuler = frame.querySelector(".grid-ruler-right");
+        if (!topRuler || !bottomRuler || !leftRuler || !rightRuler)
+            return;
+        const rulerEnabled = guideState.isRulerEnabled();
+        const centerEnabled = guideState.isCenterEnabled();
+        // Keep the ruler strips visible if either the ruler or the center ticks are shown
+        frame.classList.toggle("ruler-off", !rulerEnabled && !centerEnabled);
+        [topRuler, bottomRuler, leftRuler, rightRuler].forEach((r) => r.replaceChildren());
+        // Nothing to render when both toggles are off
+        if (!rulerEnabled && !centerEnabled)
+            return;
+        const cellSize = baseCellSize * getGridScale();
+        const tickMinor = Math.max(4, cellSize * 0.45);
+        // Numbers sit at the outer edge of the strip; the increment ticks span from
+        // the grid side up to the numbers but never intersect them.
+        const numberZone = Math.max(10, cellSize * 0.5);
+        const labelPos = Math.floor(numberZone / 2);
+        if (rulerEnabled) {
+            // Top + bottom rulers: vertical ticks at each column boundary
+            for (const ruler of [topRuler, bottomRuler]) {
+                for (let i = 0; i <= tileWidth; i++) {
+                    const x = i * cellSize;
+                    const major = i % 5 === 0;
+                    const tick = document.createElement("div");
+                    tick.className =
+                        "grid-ruler-tick grid-ruler-tick-v" + (major ? " grid-ruler-tick-major" : "");
+                    if (major) {
+                        tick.style.left = `${x}px`;
+                        tick.style.top = `${numberZone}px`;
+                        tick.style.height = `${cellSize - numberZone}px`;
+                    }
+                    else {
+                        tick.style.left = `${x}px`;
+                        tick.style.top = `${cellSize - tickMinor}px`;
+                        tick.style.height = `${tickMinor}px`;
+                    }
+                    ruler.appendChild(tick);
+                    if (major && i > 0) {
+                        const label = document.createElement("div");
+                        label.className = "grid-ruler-label";
+                        label.textContent = String(i);
+                        label.style.left = `${x}px`;
+                        label.style.top = `${labelPos}px`;
+                        ruler.appendChild(label);
+                    }
+                }
+            }
+            // Left + right rulers: horizontal ticks at each row boundary
+            for (const ruler of [leftRuler, rightRuler]) {
+                for (let i = 0; i <= tileHeight; i++) {
+                    const y = i * cellSize;
+                    const major = i % 5 === 0;
+                    const tick = document.createElement("div");
+                    tick.className =
+                        "grid-ruler-tick grid-ruler-tick-h" + (major ? " grid-ruler-tick-major" : "");
+                    if (major) {
+                        tick.style.top = `${y}px`;
+                        tick.style.left = `${numberZone}px`;
+                        tick.style.width = `${cellSize - numberZone}px`;
+                    }
+                    else {
+                        tick.style.top = `${y}px`;
+                        tick.style.left = `${cellSize - tickMinor}px`;
+                        tick.style.width = `${tickMinor}px`;
+                    }
+                    ruler.appendChild(tick);
+                    if (major && i > 0) {
+                        const label = document.createElement("div");
+                        label.className = "grid-ruler-label";
+                        label.textContent = String(i);
+                        label.style.top = `${y}px`;
+                        label.style.left = `${labelPos}px`;
+                        ruler.appendChild(label);
+                    }
+                }
+            }
+        }
+        // Center ruler ticks — one on each side when the center guide is on.
+        if (centerEnabled) {
+            const centerX = (tileWidth / 2) * cellSize;
+            const centerY = (tileHeight / 2) * cellSize;
+            const addCenterTick = (ruler, vertical, pos) => {
+                const tick = document.createElement("div");
+                tick.className = "grid-ruler-tick grid-ruler-tick-center";
+                if (vertical) {
+                    tick.style.left = `${pos}px`;
+                    tick.style.top = "0";
+                    tick.style.height = "100%";
+                    tick.style.width = "2px";
+                }
+                else {
+                    tick.style.top = `${pos}px`;
+                    tick.style.left = "0";
+                    tick.style.width = "100%";
+                    tick.style.height = "2px";
+                }
+                ruler.appendChild(tick);
+            };
+            addCenterTick(topRuler, true, centerX);
+            addCenterTick(bottomRuler, true, centerX);
+            addCenterTick(leftRuler, false, centerY);
+            addCenterTick(rightRuler, false, centerY);
+        }
+    };
+    // Re-apply guide/center/ruler visuals to the existing grid (no rebuild).
+    const refreshGuides = () => {
+        var _a;
+        for (let y = 0; y < tileHeight; y++) {
+            for (let x = 0; x < tileWidth; x++) {
+                const cell = (_a = cellMatrix[y]) === null || _a === void 0 ? void 0 : _a[x];
+                if (!cell)
+                    continue;
+                cell.classList.remove("guide-v", "guide-h");
+                if (guideState.isBlackEnabled()) {
+                    if (x !== 0 && x % 5 === 0)
+                        cell.classList.add("guide-v");
+                    if (y !== 0 && y % 5 === 0)
+                        cell.classList.add("guide-h");
+                }
+            }
+        }
+        updateCenterOverlay();
+        renderRulers();
+    };
     // ── Grid generation ───────────────────────────────────────────────────────
     function generateGrid(pattern) {
         var _a, _b, _c, _d, _e, _f;
@@ -444,20 +598,7 @@ export function createGridManager(options) {
         }
         currentWidth = tileWidth;
         currentHeight = tileHeight;
-        let centerCross = gridDiv.querySelector('.center-cross-overlay');
-        if (!centerCross) {
-            centerCross = document.createElement("div");
-            centerCross.className = "center-cross-overlay";
-            gridDiv.appendChild(centerCross);
-        }
-        if (guideState.isCenterEnabled()) {
-            centerCross.style.display = "block";
-            centerCross.style.top = "50%";
-            centerCross.style.left = "50%";
-        }
-        else {
-            centerCross.style.display = "none";
-        }
+        updateCenterOverlay();
         let lastCell;
         for (let y = 0; y < tileHeight; y++) {
             for (let x = 0; x < tileWidth; x++) {
@@ -596,6 +737,7 @@ export function createGridManager(options) {
             }
         }
         cellMatrix = nextMatrix;
+        renderRulers();
         onPatternChange();
     }
     // ── Input listeners ───────────────────────────────────────────────────────
@@ -670,6 +812,7 @@ export function createGridManager(options) {
     }
     return {
         generateGrid,
+        refreshGuides,
         getCurrentPattern,
         clearGrid,
         getTileWidth: () => tileWidth,
