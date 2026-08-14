@@ -96,9 +96,6 @@
   color: var(--text);
 }
 
-.theme-toggle input:checked + .theme-toggle-slider {
-  background-color: #1e3a5f;
-}
 .theme-toggle input:checked + .theme-toggle-slider:before {
   transform: translateX(24px);
 }
