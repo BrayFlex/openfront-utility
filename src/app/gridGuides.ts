@@ -14,11 +14,11 @@ export function setupGridGuides(
   container.style.marginLeft = "4px";
 
   const blackGuideBtn = document.createElement("button");
-  blackGuideBtn.textContent = "Grid Guide";
+  blackGuideBtn.textContent = "Grid";
   blackGuideBtn.id = "gridGuideBlackBtn";
 
   const centerGuideBtn = document.createElement("button");
-  centerGuideBtn.textContent = "Center Guide";
+  centerGuideBtn.textContent = "Center";
   centerGuideBtn.id = "gridGuideCenterBtn";
 
   if (toolbox) {

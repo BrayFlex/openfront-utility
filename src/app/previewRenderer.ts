@@ -9,6 +9,21 @@ type PreviewRendererOptions = {
   secondaryColorInput: HTMLInputElement;
 };
 
+type PatternSource = { isSet: (x: number, y: number) => boolean };
+
+function patternSourceFromBase64(base64: string): PatternSource {
+  const decoder = new PatternDecoder(base64);
+  return { isSet: (x, y) => decoder.isSet(x, y) };
+}
+
+function patternSourceFromMatrix(pattern: number[][]): PatternSource {
+  const height = pattern.length;
+  const width = pattern[0]?.length ?? 0;
+  return {
+    isSet: (x, y) => (pattern[y % height]?.[x % width] ?? 0) === 1,
+  };
+}
+
 function hexToRgb(hex: string): RgbColor {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
@@ -19,8 +34,11 @@ function hexToRgb(hex: string): RgbColor {
 export function createPreviewRenderer(options: PreviewRendererOptions) {
   const { canvas, context, primaryColorInput, secondaryColorInput } = options;
 
-  return function renderPreview(pattern: string, isScrap = false) {
-    const decoder = new PatternDecoder(pattern);
+  return function renderPreview(pattern: string | number[][], isScrap = false) {
+    const source =
+      typeof pattern === "string"
+        ? patternSourceFromBase64(pattern)
+        : patternSourceFromMatrix(pattern);
     const width = 512;
     const height = 512;
     canvas.width = width;
@@ -34,7 +52,7 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
     let i = 0;
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
-        if (decoder.isSet(x, y)) {
+        if (source.isSet(x, y)) {
           data[i++] = secondaryRgb.r;
           data[i++] = secondaryRgb.g;
           data[i++] = secondaryRgb.b;

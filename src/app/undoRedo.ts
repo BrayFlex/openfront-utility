@@ -1,25 +1,32 @@
-export type HistoryManager = {
-  record: (base64: string) => void;
-  undo: () => string | null;
-  redo: () => string | null;
+export type HistoryManager<T = string> = {
+  record: (value: T) => void;
+  undo: () => T | null;
+  redo: () => T | null;
   canUndo: () => boolean;
   canRedo: () => boolean;
 };
 
-export function createHistoryManager(maxEntries = 200): HistoryManager {
-  let past: string[] = [];
-  let future: string[] = [];
-  let current: string | null = null;
+export function createHistoryManager<T = string>(
+  maxEntries = 200,
+  toKey?: (value: T) => string
+): HistoryManager<T> {
+  let past: T[] = [];
+  let future: T[] = [];
+  let current: T | null = null;
 
-  const record = (base64: string) => {
-    if (current === base64) return;
+  const keyOf = (value: T) =>
+    toKey ? toKey(value) : (value as unknown as string);
+
+  const record = (value: T) => {
+    const valueKey = keyOf(value);
+    if (current !== null && keyOf(current) === valueKey) return;
     if (current !== null) {
       past.push(current);
       if (past.length > maxEntries) {
         past = past.slice(past.length - maxEntries);
       }
     }
-    current = base64;
+    current = value;
     future = [];
   };
 
