@@ -26,13 +26,29 @@
   text-overflow: ellipsis;
 }
 
+.selected-preset-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.favorite-btn {
+  font-size: 18px;
+  padding: 0px 5px;
+}
+
+.favorite-btn.is-favorited {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
 .color-preset-details summary {
   font-size: 13px;
   font-weight: 600;
   color: var(--muted);
   cursor: pointer;
-  margin-top: 10px;
-  margin-bottom: 6px;
+  margin-bottom: 4px;
   user-select: none;
 }
 .color-preset-details summary:hover {
