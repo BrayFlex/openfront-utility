@@ -30,12 +30,21 @@ export function setupGridGuides(
     // Add separator before guides
     const sep = document.createElement("div");
     sep.className = "canvas-controls-divider";
-    container.appendChild(sep);
 
     guideGroup.appendChild(blackGuideBtn);
     guideGroup.appendChild(centerGuideBtn);
     guideGroup.appendChild(rulerGuideBtn);
-    container.appendChild(guideGroup);
+
+    // Place the guide toggles just left of the Main/Test canvas tabs, with a
+    // separator between them and the tabs.
+    const tabs = container.querySelector<HTMLElement>(".canvas-tabs");
+    if (tabs) {
+      container.insertBefore(guideGroup, tabs);
+      container.insertBefore(sep, tabs);
+    } else {
+      container.appendChild(sep);
+      container.appendChild(guideGroup);
+    }
   }
 
   let gridGuideBlack = false;
