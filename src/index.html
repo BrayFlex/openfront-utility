@@ -289,12 +289,14 @@
               <div id="mainGridWrap">
                 <div id="grid" class="grid"></div>
               </div>
-            <!-- Scrap canvas -->
-            <div id="scrapGridWrap" hidden>
-              <div id="scrapGrid" class="grid scrap-grid"></div>
+            </div>
+            <!-- Scrap canvas (own viewport so it is panned/zoomed independently) -->
+            <div id="scrapViewport" class="grid-viewport" hidden>
+              <div id="scrapGridWrap">
+                <div id="scrapGrid" class="grid scrap-grid"></div>
+              </div>
             </div>
           </div>
-        </div>
         <!-- Watermark -->
         <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
 
@@ -440,10 +442,25 @@
 
         <h3>Advisory</h3>
         <p>
+          Patterns below a minimum quality may be rejected and low effort patterns will be rejected.
+        </p>
+        <p>
+          Patterns that are too similar to existing patterns may be rejected.
+        </p>
+        <p>
           Patterns that are too similar to the background or team colours may be rejected.
         </p>
         <p>
           Patterns that are too confusing or similar to structures may be rejected.
+        </p>
+        <p>
+          Patterns with <strong>explicit content</strong> will be rejected.
+        </p>
+        <p>
+          Patterns containing <strong>letters or numbers</strong> are very likely to be rejected.
+        </p>
+        <p>
+          Patterns that are too close to <strong>copyrighted or trademarked designs</strong> will be rejected.
         </p>
       </div>
       <div class="modal-body info-panel" data-panel="controls" hidden>

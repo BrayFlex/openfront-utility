@@ -1,6 +1,11 @@
+type ViewportConfig = {
+  element: HTMLElement;
+  isActive: () => boolean;
+};
+
 type WorkspaceControlsOptions = {
   workspace: HTMLElement;
-  viewport: HTMLElement;
+  viewports: ViewportConfig[];
   zoomInButton: HTMLButtonElement;
   zoomOutButton: HTMLButtonElement;
   resetButton: HTMLButtonElement;
@@ -24,11 +29,21 @@ function isEditableTarget(target: EventTarget | null) {
 }
 
 export function initWorkspaceControls(options: WorkspaceControlsOptions) {
-  const { workspace, viewport, zoomInButton, zoomOutButton, resetButton, zoomValue } =
+  const { workspace, viewports, zoomInButton, zoomOutButton, resetButton, zoomValue } =
     options;
-  let zoom = 1;
-  let panX = 0;
-  let panY = 0;
+
+  const state = viewports.map((vp) => ({
+    viewport: vp.element,
+    isActive: vp.isActive,
+    zoom: 1,
+    panX: 0,
+    panY: 0,
+  }));
+
+  // Each canvas (main / test) keeps its own zoom/pan state; only the visible
+  // canvas is affected by gestures, wheel, arrow keys and the zoom buttons.
+  const getActive = () => state.find((s) => s.isActive()) ?? state[0];
+
   let panPointerId: number | null = null;
   let panStartX = 0;
   let panStartY = 0;
@@ -42,36 +57,40 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
 
   const render = () => {
-    viewport.style.transform = `translate(calc(-50% + ${panX}px), calc(-50% + ${panY}px)) scale(${zoom})`;
-    zoomValue.value = `${Math.round(zoom * 100)}%`;
+    for (const s of state) {
+      s.viewport.style.transform = `translate(calc(-50% + ${s.panX}px), calc(-50% + ${s.panY}px)) scale(${s.zoom})`;
+    }
+    zoomValue.value = `${Math.round(getActive().zoom * 100)}%`;
   };
 
   const setZoom = (nextZoom: number, anchor?: { clientX: number; clientY: number }) => {
+    const active = getActive();
     const clampedZoom = clampZoom(nextZoom);
-    if (clampedZoom === zoom) return;
+    if (clampedZoom === active.zoom) return;
     if (anchor) {
       const workspaceRect = workspace.getBoundingClientRect();
-      const viewportWidth = viewport.offsetWidth;
-      const viewportHeight = viewport.offsetHeight;
+      const viewportWidth = active.viewport.offsetWidth;
+      const viewportHeight = active.viewport.offsetHeight;
       const anchorX = anchor.clientX - workspaceRect.left;
       const anchorY = anchor.clientY - workspaceRect.top;
       const localX =
-        (anchorX - workspaceRect.width / 2 + viewportWidth / 2 - panX) / zoom;
+        (anchorX - workspaceRect.width / 2 + viewportWidth / 2 - active.panX) / active.zoom;
       const localY =
-        (anchorY - workspaceRect.height / 2 + viewportHeight / 2 - panY) / zoom;
-      panX =
+        (anchorY - workspaceRect.height / 2 + viewportHeight / 2 - active.panY) / active.zoom;
+      active.panX =
         anchorX - workspaceRect.width / 2 + viewportWidth / 2 - localX * clampedZoom;
-      panY =
+      active.panY =
         anchorY - workspaceRect.height / 2 + viewportHeight / 2 - localY * clampedZoom;
     }
-    zoom = clampedZoom;
+    active.zoom = clampedZoom;
     render();
   };
 
   const reset = () => {
-    zoom = 1;
-    panX = 0;
-    panY = 0;
+    const active = getActive();
+    active.zoom = 1;
+    active.panX = 0;
+    active.panY = 0;
     render();
   };
 
@@ -82,26 +101,28 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     event.altKey ||
     event.metaKey ||
     event.target === workspace ||
-    event.target === viewport;
+    viewports.some((v) => event.target === v.element);
 
   workspace.addEventListener("pointerdown", (event) => {
     if (!isPanGesture(event)) return;
     event.preventDefault();
     event.stopPropagation();
     didKeyPan = isSpacePressed || isCtrlPressed;
+    const active = getActive();
     panPointerId = event.pointerId;
     panStartX = event.clientX;
     panStartY = event.clientY;
-    startPanX = panX;
-    startPanY = panY;
+    startPanX = active.panX;
+    startPanY = active.panY;
     workspace.classList.add("is-panning");
     workspace.setPointerCapture(event.pointerId);
   }, { capture: true });
 
   workspace.addEventListener("pointermove", (event) => {
     if (panPointerId !== event.pointerId) return;
-    panX = startPanX + event.clientX - panStartX;
-    panY = startPanY + event.clientY - panStartY;
+    const active = getActive();
+    active.panX = startPanX + event.clientX - panStartX;
+    active.panY = startPanY + event.clientY - panStartY;
     render();
   });
 
@@ -142,10 +163,11 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     }
 
     // Arrow key panning — 5 cells (100px at base scale)
-    if (event.code === "ArrowUp")    { event.preventDefault(); panY += ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowDown")  { event.preventDefault(); panY -= ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowLeft")  { event.preventDefault(); panX += ARROW_PAN_STEP; render(); return; }
-    if (event.code === "ArrowRight") { event.preventDefault(); panX -= ARROW_PAN_STEP; render(); return; }
+    const active = getActive();
+    if (event.code === "ArrowUp")    { event.preventDefault(); active.panY += ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowDown")  { event.preventDefault(); active.panY -= ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowLeft")  { event.preventDefault(); active.panX += ARROW_PAN_STEP; render(); return; }
+    if (event.code === "ArrowRight") { event.preventDefault(); active.panX -= ARROW_PAN_STEP; render(); return; }
   });
 
   document.addEventListener("keyup", (event) => {
@@ -171,7 +193,7 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     (event) => {
       event.preventDefault();
       const direction = event.deltaY > 0 ? -1 : 1;
-      setZoom(zoom + direction * ZOOM_STEP, {
+      setZoom(getActive().zoom + direction * ZOOM_STEP, {
         clientX: event.clientX,
         clientY: event.clientY,
       });
@@ -179,10 +201,10 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
     { passive: false }
   );
 
-  zoomInButton.addEventListener("click", () => setZoom(zoom + ZOOM_STEP));
-  zoomOutButton.addEventListener("click", () => setZoom(zoom - ZOOM_STEP));
+  zoomInButton.addEventListener("click", () => setZoom(getActive().zoom + ZOOM_STEP));
+  zoomOutButton.addEventListener("click", () => setZoom(getActive().zoom - ZOOM_STEP));
   resetButton.addEventListener("click", reset);
 
   render();
-  return { reset };
+  return { reset, refresh: render };
 }

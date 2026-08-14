@@ -61,6 +61,9 @@ type GridManagerOptions = {
   toolState: ToolState;
   clipboard?: ClipboardManager;
   drawingTools?: DrawingTools;
+  /** When set, the grid ignores the shared size inputs and uses a fixed size. */
+  fixedWidth?: number;
+  fixedHeight?: number;
   onPatternChange: () => void;
 };
 
@@ -78,6 +81,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     toolState,
     clipboard,
     drawingTools: initialDrawingTools,
+    fixedWidth,
+    fixedHeight,
     onPatternChange,
   } = options;
 
@@ -511,8 +516,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Grid generation ───────────────────────────────────────────────────────
   function generateGrid(pattern?: number[][]) {
-    tileWidth = parseInt(tileWidthInput.value);
-    tileHeight = parseInt(tileHeightInput.value);
+    tileWidth = fixedWidth ?? parseInt(tileWidthInput.value);
+    tileHeight = fixedHeight ?? parseInt(tileHeightInput.value);
     setLineStart(null);
     clearCirclePreview();
     clearStarPreview();
@@ -705,18 +710,22 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Input listeners ───────────────────────────────────────────────────────
   tileWidthInput.addEventListener("input", () => {
+    if (fixedWidth !== undefined) return;
     tileWidthValue.value = tileWidthInput.value;
     generateGrid();
   });
   tileHeightInput.addEventListener("input", () => {
+    if (fixedHeight !== undefined) return;
     tileHeightValue.value = tileHeightInput.value;
     generateGrid();
   });
   tileWidthValue.addEventListener("change", () => {
+    if (fixedWidth !== undefined) return;
     tileWidthInput.value = tileWidthValue.value;
     generateGrid();
   });
   tileHeightValue.addEventListener("change", () => {
+    if (fixedHeight !== undefined) return;
     tileHeightInput.value = tileHeightValue.value;
     generateGrid();
   });

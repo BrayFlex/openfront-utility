@@ -2,6 +2,12 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
+## August 14, 2026 — Test Canvas & Preview fixes
+- The **Test Canvas** is now a fixed 128×128 scratchpad with its own independent pan/zoom, so drawing there never silently changes the size of your main canvas.
+- Fixed **Undo/Redo on the Test Canvas** (it previously couldn't record your steps because a 128×128 pattern can't be compressed into the standard pattern code).
+- The preview panel now renders correctly no matter which canvas is active.
+- Neat little **toasts** (bottom-corner notifications) now confirm when you copy the JSON, console string, or preview link, and the Test Canvas tab shows a short tip on first use.
+
 ## August 12, 2026 — DM Mono font
 The monospace font everywhere (canvas size numbers, shape buttons, image-import threshold and the preview code view) switched from **IBM Plex Mono** to **DM Mono**, matching the DM Sans look of the rest of the interface.
 
