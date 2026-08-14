@@ -2,6 +2,10 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
+## August 14, 2026 — Favorite Colours
+- Added a **★ star button** next to the Color Code button so you can **favorite your current color palette** (preset or custom) with one click — tap again to remove it.
+- Favorited colors appear in a new **Favorites** list above the Color Presets, so you can quickly jump back to the palettes you use most. Custom palettes are listed as **"custom"**, and your favorites are remembered between sessions.
+
 ## August 14, 2026 — Guides, Ruler & toolbar polish
 - Guide controls are now a tidy **Grid / Center / Ruler** toggle group with a more subtle tab-like style.
 - The **Grid and Center toggles now stay in sync across both the Main and Test canvases** without resizing either one.

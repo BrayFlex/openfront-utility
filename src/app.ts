@@ -124,6 +124,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewZoomOutBtn = document.getElementById("previewZoomOutBtn") as HTMLButtonElement;
   const previewZoomValue = document.getElementById("previewZoomValue") as HTMLOutputElement;
   const copyColorsBtn = document.getElementById("copyColorsBtn") as HTMLButtonElement;
+  const favoriteColorsBtn = document.getElementById("favoriteColorsBtn") as HTMLButtonElement;
+  const favoritesContainer = document.getElementById("favoritesContainer") as HTMLDivElement;
   const previewCanvasWrap = document.getElementById("previewCanvasWrap") as HTMLElement;
 
   // Submission
@@ -902,6 +904,8 @@ document.addEventListener("DOMContentLoaded", () => {
     primaryColorInput: previewPrimaryColor,
     secondaryColorInput: previewSecondaryColor,
     selectedLabel: selectedPresetLabel,
+    favoriteButton: favoriteColorsBtn,
+    favoritesContainer,
     initialColors,
     onChange: () => updateOutput(),
   });

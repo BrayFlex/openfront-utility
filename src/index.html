@@ -359,8 +359,15 @@
               </div>
               <div class="selected-preset" id="selectedPresetLabel">
                 <span class="selected-preset-name">Custom Palette</span>
-                <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">⧉ Color Code</button>
+                <div class="selected-preset-actions">
+                  <button id="favoriteColorsBtn" class="copy-colors-btn favorite-btn" title="Favorite current colors" aria-label="Favorite current colors">☆</button>
+                  <button id="copyColorsBtn" class="copy-colors-btn" title="Copy color codes" aria-label="Copy color codes">⧉ Color Code</button>
+                </div>
               </div>
+              <details class="color-preset-details" id="favoritesDetails">
+                <summary>Favorites</summary>
+                <div id="favoritesContainer" class="color-preset-container"></div>
+              </details>
               <details class="color-preset-details" open>
                 <summary>Color Presets</summary>
                 <div id="colorPresetContainer" class="color-preset-container loading">

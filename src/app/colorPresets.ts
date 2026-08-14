@@ -6,14 +6,24 @@ type ColorPreset = {
 
 type ColorPresetMap = Record<string, ColorPreset>;
 
+type FavoriteEntry = {
+  key: string | null;
+  primary: string;
+  secondary: string;
+};
+
 type ColorPresetOptions = {
   container: HTMLDivElement;
   primaryColorInput: HTMLInputElement;
   secondaryColorInput: HTMLInputElement;
   selectedLabel?: HTMLElement | null;
+  favoriteButton?: HTMLButtonElement | null;
+  favoritesContainer?: HTMLDivElement | null;
   onChange: () => void;
   initialColors?: { primary: string; secondary: string } | null;
 };
+
+const FAVORITES_STORAGE_KEY = "openfront.colorFavorites";
 
 const COLOR_PRESET_URL = "color-presets.json";
 
@@ -23,6 +33,8 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     primaryColorInput,
     secondaryColorInput,
     selectedLabel,
+    favoriteButton,
+    favoritesContainer,
     onChange,
     initialColors,
   } = options;
@@ -30,6 +42,147 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   let presetButtons: Record<string, HTMLButtonElement> = {};
   let customPresetButton: HTMLButtonElement | null = null;
   let currentPresetKey: string | null = null;
+  let favorites: FavoriteEntry[] = loadFavorites();
+
+  function loadFavorites(): FavoriteEntry[] {
+    try {
+      const raw = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return [];
+      return parsed.filter(
+        (entry): entry is FavoriteEntry =>
+          !!entry &&
+          typeof entry.primary === "string" &&
+          typeof entry.secondary === "string" &&
+          (entry.key === null || typeof entry.key === "string")
+      );
+    } catch {
+      return [];
+    }
+  }
+
+  function saveFavorites() {
+    try {
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function currentColorsMatch(entry: FavoriteEntry): boolean {
+    return (
+      entry.primary === primaryColorInput.value &&
+      entry.secondary === secondaryColorInput.value
+    );
+  }
+
+  function isCurrentFavorite(): boolean {
+    if (currentPresetKey) {
+      return favorites.some((entry) => entry.key === currentPresetKey);
+    }
+    return favorites.some(
+      (entry) => entry.key === null && currentColorsMatch(entry)
+    );
+  }
+
+  function updateFavoriteButton() {
+    if (!favoriteButton) return;
+    favoriteButton.textContent = isCurrentFavorite() ? "★" : "☆";
+    favoriteButton.classList.toggle("is-favorited", isCurrentFavorite());
+  }
+
+  function toggleFavorite() {
+    if (currentPresetKey) {
+      const index = favorites.findIndex(
+        (entry) => entry.key === currentPresetKey
+      );
+      if (index >= 0) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push({
+          key: currentPresetKey,
+          primary: primaryColorInput.value,
+          secondary: secondaryColorInput.value,
+        });
+      }
+    } else {
+      const index = favorites.findIndex(
+        (entry) => entry.key === null && currentColorsMatch(entry)
+      );
+      if (index >= 0) {
+        favorites.splice(index, 1);
+      } else {
+        favorites.push({
+          key: null,
+          primary: primaryColorInput.value,
+          secondary: secondaryColorInput.value,
+        });
+      }
+    }
+    saveFavorites();
+    renderFavorites();
+    updateFavoriteButton();
+  }
+
+  function favoriteName(entry: FavoriteEntry): string {
+    if (!entry.key) return "custom";
+    return colorPresets[entry.key]?.name ?? entry.key;
+  }
+
+  function renderFavorites() {
+    if (!favoritesContainer) return;
+    favoritesContainer.innerHTML = "";
+    if (favorites.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "color-preset-placeholder";
+      empty.textContent = "No favorites yet";
+      favoritesContainer.appendChild(empty);
+      return;
+    }
+    for (const entry of favorites) {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "color-preset-item";
+
+      const swatches = document.createElement("span");
+      swatches.className = "color-preset-swatches";
+
+      const primarySwatch = document.createElement("span");
+      primarySwatch.className = "color-preset-swatch";
+      primarySwatch.style.backgroundColor = entry.primary;
+
+      const secondarySwatch = document.createElement("span");
+      secondarySwatch.className = "color-preset-swatch";
+      secondarySwatch.style.backgroundColor = entry.secondary;
+
+      swatches.appendChild(primarySwatch);
+      swatches.appendChild(secondarySwatch);
+
+      const name = document.createElement("span");
+      name.className = "color-preset-name";
+      name.textContent = favoriteName(entry);
+
+      button.appendChild(swatches);
+      button.appendChild(name);
+
+      button.addEventListener("click", () => applyFavorite(entry));
+      favoritesContainer.appendChild(button);
+    }
+  }
+
+  function applyFavorite(entry: FavoriteEntry) {
+    if (entry.key && colorPresets[entry.key]) {
+      applyPreset(entry.key);
+      return;
+    }
+    primaryColorInput.value = entry.primary;
+    secondaryColorInput.value = entry.secondary;
+    setSelectedPreset(null);
+    updateCustomButtonSwatches();
+    updateFavoriteButton();
+    onChange();
+  }
 
   async function loadColorPresets(): Promise<ColorPresetMap> {
     if (Object.keys(colorPresets).length > 0) {
@@ -67,6 +220,7 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     if (customPresetButton) {
       customPresetButton.classList.toggle("selected", key === null);
     }
+    updateFavoriteButton();
   }
 
   function updateCustomButtonSwatches() {
@@ -215,6 +369,10 @@ export function initColorPresetControls(options: ColorPresetOptions) {
   primaryColorInput.addEventListener("input", handleCustomColorInput);
   secondaryColorInput.addEventListener("input", handleCustomColorInput);
 
+  if (favoriteButton) {
+    favoriteButton.addEventListener("click", toggleFavorite);
+  }
+
   void (async () => {
     container.classList.add("loading");
     const presets = await loadColorPresets();
@@ -245,6 +403,8 @@ export function initColorPresetControls(options: ColorPresetOptions) {
     }
 
     updateCustomButtonSwatches();
+    renderFavorites();
+    updateFavoriteButton();
     onChange();
   })();
 
