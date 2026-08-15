@@ -8,6 +8,7 @@ import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
 import { initInfoModal } from "./app/infoModal.js";
+import { initMapSimulation, TEAM_COLOR_HEXES } from "./app/mapSimulation.js";
 import { decodePatternBase64, generatePatternBase64, } from "./app/patternEncoding.js";
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
@@ -111,6 +112,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const favoriteColorsBtn = document.getElementById("favoriteColorsBtn");
     const favoritesContainer = document.getElementById("favoritesContainer");
     const previewCanvasWrap = document.getElementById("previewCanvasWrap");
+    // Map simulation
+    const mapSimBtn = document.getElementById("mapSimBtn");
+    const mapPopover = document.getElementById("mapPopover");
+    const mapSimToggle = document.getElementById("mapSimToggle");
+    const mapList = document.getElementById("mapList");
+    const mapPopoverNote = document.getElementById("mapPopoverNote");
+    const mapTeamToggle = document.getElementById("mapShowTeamColors");
+    const mapTeamColorsWrap = document.getElementById("mapTeamColors");
+    const mapTeamColorsCanvas = document.getElementById("mapTeamColorsCanvas");
     // Submission
     const submitPatternBtn = document.getElementById("submitPatternBtn");
     // Workspace zoom
@@ -262,6 +272,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return selected ? parseInt((_a = selected.dataset.scale) !== null && _a !== void 0 ? _a : "0") : 0;
     };
     // ── Preview renderer ──────────────────────────────────────────────────────
+    let simMapRef = null;
+    let teamColorsRef = null;
+    // Background shown behind the preview canvas. In simulate-map mode the
+    // panel is the map's impassable/background colour (#3c3c3c), not the
+    // pattern's primary colour, so zooming out never bleeds primary into view.
+    const setPreviewWrapBackground = () => {
+        if (!previewCanvasWrap)
+            return;
+        previewCanvasWrap.style.background = simMapRef ? "#3c3c3c" : previewPrimaryColor.value;
+    };
     const renderPreview = createPreviewRenderer({
         canvas: previewCanvas,
         context: previewCtx,
@@ -269,6 +289,8 @@ document.addEventListener("DOMContentLoaded", () => {
         secondaryColorInput: previewSecondaryColor,
         canvasWrap: previewCanvasWrap,
         getZoom: () => previewZoom,
+        getSimMap: () => simMapRef,
+        getTeamColors: () => teamColorsRef,
     });
     // ── Preview zoom ──────────────────────────────────────────────────────────
     // Zoom is the displayed CSS px per tile cell (× the encoded pattern scale).
@@ -309,7 +331,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         if (previewCanvasWrap) {
-            previewCanvasWrap.style.background = previewPrimaryColor.value;
+            setPreviewWrapBackground();
         }
     };
     // Re-render whenever the preview panel is resized so the tile layout stays an
@@ -332,7 +354,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isScrapActive) {
             renderPreview(pattern, true);
             if (previewCanvasWrap) {
-                previewCanvasWrap.style.background = primary;
+                setPreviewWrapBackground();
             }
             if (!isApplyingHistory)
                 scrapHistory.record(clonePattern(pattern));
@@ -350,7 +372,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const secondary = previewSecondaryColor.value;
         renderPreview(base64, false);
         if (previewCanvasWrap) {
-            previewCanvasWrap.style.background = primary;
+            setPreviewWrapBackground();
         }
         // Update URL hash from MAIN canvas only
         const params = new URLSearchParams({
@@ -775,6 +797,22 @@ document.addEventListener("DOMContentLoaded", () => {
     initPaneResizeControls({
         workspaceSplit: document.querySelector(".workspace-split"),
         previewHandle: document.getElementById("previewResizeHandle"),
+    });
+    // ── Map simulation ─────────────────────────────────────────────────────────
+    initMapSimulation({
+        button: mapSimBtn,
+        popover: mapPopover,
+        toggle: mapSimToggle,
+        list: mapList,
+        note: mapPopoverNote,
+        teamToggle: mapTeamToggle,
+        onChange: (sim) => {
+            simMapRef = sim.enabled && sim.meta
+                ? { image: sim.image, mask: sim.mask, width: sim.meta.width, height: sim.meta.height }
+                : null;
+            teamColorsRef = sim.teamColors ? TEAM_COLOR_HEXES : null;
+            renderPreviewOnly();
+        },
     });
     // ── Image import overlay ──────────────────────────────────────────────────
     initImageImportOverlay({
