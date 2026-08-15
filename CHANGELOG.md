@@ -2,6 +2,14 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
+## August 15, 2026 — Crisper, pixel-perfect preview
+The preview panel got a big clarity upgrade:
+- The pattern now **repeats right to the edges** of the panel, at any size or zoom level — resizing the panel just reveals more of the pattern instead of stretching it.
+- **Zoom controls the pattern size** 50% up to 500% 
+- **Fixed Monitor Interpolation** by adding a formula to calculate how to display pattern **sharp and pixel-perfect** at every level and every screen size — no more mis-sized, blurry or smudged edges (avoids half pixel rounding).
+- The preview area now takes up about **two-thirds of the panel's height**, giving your pattern more room to shine.
+- Fixed an edge case where the pattern could stop just short of the panel's borders at certain zoom levels.
+
 ## August 14, 2026 — Favorite Colours
 - Added a **★ star button** next to the Color Code button so you can **favorite your current color palette** (preset or custom) with one click — tap again to remove it.
 - Favorited colors appear in a new **Favorites** list above the Color Presets, so you can quickly jump back to the palettes you use most. Custom palettes are listed as **"custom"**, and your favorites are remembered between sessions.

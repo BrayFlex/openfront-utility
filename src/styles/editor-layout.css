@@ -797,7 +797,7 @@
 }
 
 .preview-canvas-wrap {
-  flex: 1;
+  flex: 2;
   min-height: 0;
   display: flex;
   justify-content: center;
@@ -806,13 +806,8 @@
 }
 
 #preview {
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  aspect-ratio: 1;
   background: #fff;
   image-rendering: pixelated;
-  transform-origin: center;
 }
 
 /* Colors Section */
