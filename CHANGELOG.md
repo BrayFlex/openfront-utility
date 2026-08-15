@@ -7,7 +7,7 @@ The preview panel got a big clarity upgrade:
 - The pattern now **repeats right to the edges** of the panel, at any size or zoom level — resizing the panel just reveals more of the pattern instead of stretching it.
 - **Zoom controls the pattern size** 50% up to 500% 
 - **Fixed Monitor Interpolation** by adding a formula to calculate how to display pattern **sharp and pixel-perfect** at every level and every screen size — no more mis-sized, blurry or smudged edges (avoids half pixel rounding).
-- The preview area now takes up about **two-thirds of the panel's height**, giving your pattern more room to shine.
+- The preview area now takes up about **~~2/3rds~~ 60% of the panel's height**, giving your pattern more room to shine.
 - Fixed an edge case where the pattern could stop just short of the panel's borders at certain zoom levels.
 
 ## August 14, 2026 — Favorite Colours
