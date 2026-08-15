@@ -267,30 +267,60 @@ document.addEventListener("DOMContentLoaded", () => {
         context: previewCtx,
         primaryColorInput: previewPrimaryColor,
         secondaryColorInput: previewSecondaryColor,
+        canvasWrap: previewCanvasWrap,
+        getZoom: () => previewZoom,
     });
     // ── Preview zoom ──────────────────────────────────────────────────────────
-    let previewZoom = 1;
-    const PREVIEW_ZOOM_MIN = 0.5;
-    const PREVIEW_ZOOM_MAX = 4;
-    const PREVIEW_ZOOM_STEP = 0.5;
-    const applyPreviewZoom = () => {
-        previewCanvas.style.transform = `scale(${previewZoom})`;
-        previewCanvas.style.transformOrigin = "center";
+    // Zoom is the displayed CSS px per tile cell (× the encoded pattern scale).
+    // The renderer draws at device-pixel resolution, so every zoom level stays
+    // pixel-exact — including 50% — on high-DPI displays.
+    const PREVIEW_ZOOM_LEVELS = [0.5, 1, 2, 3, 4, 5];
+    let previewZoomIndex = 1;
+    let previewZoom = PREVIEW_ZOOM_LEVELS[previewZoomIndex];
+    const updatePreviewZoomLabel = () => {
         previewZoomValue.textContent = `${Math.round(previewZoom * 100)}%`;
+    };
+    const setPreviewZoom = (index) => {
+        previewZoomIndex = Math.max(0, Math.min(PREVIEW_ZOOM_LEVELS.length - 1, index));
+        previewZoom = PREVIEW_ZOOM_LEVELS[previewZoomIndex];
+        updatePreviewZoomLabel();
+        renderPreviewOnly();
+    };
+    previewZoomInBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex + 1));
+    previewZoomOutBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex - 1));
+    // ── Output update ─────────────────────────────────────────────────────────
+    const clonePattern = (pattern) => pattern.map((row) => [...row]);
+    // Re-renders the preview bitmap only — no history/URL side effects. Safe to
+    // call on panel resizes and zoom changes without polluting undo history.
+    const renderPreviewOnly = () => {
+        const grid = activeGrid();
+        const pattern = grid.getCurrentPattern();
+        if (isScrapActive) {
+            renderPreview(pattern, true);
+        }
+        else {
+            const scale = scaleExponent();
+            try {
+                const base64 = generatePatternBase64(pattern, grid.getTileWidth(), grid.getTileHeight(), scale);
+                renderPreview(base64, false);
+            }
+            catch (_a) {
+                return;
+            }
+        }
         if (previewCanvasWrap) {
             previewCanvasWrap.style.background = previewPrimaryColor.value;
         }
     };
-    previewZoomInBtn.addEventListener("click", () => {
-        previewZoom = Math.min(PREVIEW_ZOOM_MAX, previewZoom + PREVIEW_ZOOM_STEP);
-        applyPreviewZoom();
-    });
-    previewZoomOutBtn.addEventListener("click", () => {
-        previewZoom = Math.max(PREVIEW_ZOOM_MIN, previewZoom - PREVIEW_ZOOM_STEP);
-        applyPreviewZoom();
-    });
-    // ── Output update ─────────────────────────────────────────────────────────
-    const clonePattern = (pattern) => pattern.map((row) => [...row]);
+    // Re-render whenever the preview panel is resized so the tile layout stays an
+    // integer multiple of the pattern tile at the current zoom.
+    if (typeof ResizeObserver !== "undefined" && previewCanvasWrap) {
+        new ResizeObserver(() => {
+            if (previewCanvasWrap.clientWidth > 0 && previewCanvasWrap.clientHeight > 0) {
+                renderPreviewOnly();
+            }
+        }).observe(previewCanvasWrap);
+    }
     let updateOutput = () => { };
     updateOutput = () => {
         const grid = activeGrid();
