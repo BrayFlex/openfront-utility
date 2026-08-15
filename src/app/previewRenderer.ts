@@ -9,6 +9,8 @@ type PreviewRendererOptions = {
   secondaryColorInput: HTMLInputElement;
   canvasWrap: HTMLElement;
   getZoom: () => number;
+  getSimMap?: () => { image: HTMLImageElement | null; mask: HTMLImageElement | null; width: number; height: number } | null;
+  getTeamColors?: () => string[] | null;
 };
 
 type PatternSource = {
@@ -17,6 +19,9 @@ type PatternSource = {
   tileHeight: number;
   scale: number;
 };
+
+// In-game territory fill opacity (render-settings.json > mapOverlay.territoryAlpha).
+const TERRITORY_ALPHA = 0.588;
 
 function patternSourceFromBase64(base64: string): PatternSource {
   const decoder = new PatternDecoder(base64);
@@ -49,7 +54,22 @@ function hexToRgb(hex: string): RgbColor {
 }
 
 export function createPreviewRenderer(options: PreviewRendererOptions) {
-  const { canvas, context, primaryColorInput, secondaryColorInput, canvasWrap, getZoom } = options;
+  const { canvas, context, primaryColorInput, secondaryColorInput, canvasWrap, getZoom, getSimMap, getTeamColors } = options;
+
+  // Returns the team color that should replace the primary for a pixel at
+  // (x, y) in the canvas of the given width/height. Sections are radial wedges
+  // from the canvas centre, matching the popover's team-color wheel.
+  const teamPrimaryFor = (teamColors: string[] | null, x: number, y: number, width: number, height: number): RgbColor | null => {
+    if (!teamColors || teamColors.length === 0) return null;
+    const dx = x - width / 2;
+    const dy = y - height / 2;
+    // atan2 returns -PI..PI measured from the +x axis; rotate so 0 points up
+    // and sectors progress clockwise, matching the wheel's wedge layout.
+    let angle = Math.atan2(dy, dx) + Math.PI / 2;
+    angle = ((angle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
+    const idx = Math.floor((angle / (Math.PI * 2)) * teamColors.length) % teamColors.length;
+    return hexToRgb(teamColors[idx]);
+  };
 
   return function renderPreview(pattern: string | number[][], isScrap = false) {
     const source =
@@ -60,6 +80,17 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
     const wrapRect = canvasWrap.getBoundingClientRect();
     const availW = wrapRect.width;
     const availH = wrapRect.height;
+
+    const primaryRgb = hexToRgb(primaryColorInput.value);
+    const secondaryRgb = hexToRgb(secondaryColorInput.value);
+    const teamColors = getTeamColors?.() ?? null;
+
+    const simMap = getSimMap?.() ?? null;
+
+    if (simMap && simMap.image && simMap.mask) {
+      renderMapSimulation(source, simMap, primaryRgb, secondaryRgb, availW, availH, teamColors);
+      return;
+    }
 
     // Displayed size of one tile cell in CSS px (zoom × encoded pattern scale).
     const zoomScale = Math.max(0.5, getZoom()) * (1 << source.scale);
@@ -94,9 +125,6 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
     canvas.style.width = `${(width * deviceScale) / dpr}px`;
     canvas.style.height = `${(height * deviceScale) / dpr}px`;
 
-    const primaryRgb = hexToRgb(primaryColorInput.value);
-    const secondaryRgb = hexToRgb(secondaryColorInput.value);
-
     const imageData = context.createImageData(width, height);
     const data = imageData.data;
     let i = 0;
@@ -109,9 +137,12 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
           data[i++] = secondaryRgb.g;
           data[i++] = secondaryRgb.b;
         } else {
-          data[i++] = primaryRgb.r;
-          data[i++] = primaryRgb.g;
-          data[i++] = primaryRgb.b;
+          const primary = teamColors
+            ? teamPrimaryFor(teamColors, x, y, width, height) ?? primaryRgb
+            : primaryRgb;
+          data[i++] = primary.r;
+          data[i++] = primary.g;
+          data[i++] = primary.b;
         }
         data[i++] = 255;
       }
@@ -133,4 +164,89 @@ export function createPreviewRenderer(options: PreviewRendererOptions) {
       context.restore();
     }
   };
+
+  /**
+   * Draw the map filling the preview panel (cover) and overlay the pattern at
+   * the in-game scale: one pattern cell covers 2^scale map tiles, primary for
+   * bit-0 cells and secondary for bit-1 cells, both blended at the in-game
+   * territory alpha over land only (the grayscale land mask picks land).
+   */
+  function renderMapSimulation(
+    source: PatternSource,
+    simMap: NonNullable<ReturnType<NonNullable<PreviewRendererOptions["getSimMap"]>>>,
+    primaryRgb: RgbColor,
+    secondaryRgb: RgbColor,
+    availW: number,
+    availH: number,
+    teamColors: string[] | null,
+  ) {
+    const { image, mask, width: mapW, height: mapH } = simMap;
+    const dpr = window.devicePixelRatio || 1;
+    const zoomScale = Math.max(0.5, getZoom());
+
+    // Scale the map to cover the panel ("match the current pattern preview
+    // size display"), preserving aspect ratio. Zoom magnifies the map and the
+    // pattern together, exactly like zooming the in-game map.
+    const cover = Math.max(availW / mapW, availH / mapH) * zoomScale;
+    const dispW = Math.round(mapW * cover * dpr);
+    const dispH = Math.round(mapH * cover * dpr);
+
+    canvas.width = dispW;
+    canvas.height = dispH;
+    canvas.style.width = `${dispW / dpr}px`;
+    canvas.style.height = `${dispH / dpr}px`;
+    // In-game impassable / outside-map background so no primary colour shows
+    // through sub-pixel gaps when zoomed out.
+    canvas.style.background = "#3c3c3c";
+
+    context.imageSmoothingEnabled = false;
+    context.drawImage(image!, 0, 0, dispW, dispH);
+    const imageData = context.getImageData(0, 0, dispW, dispH);
+    const data = imageData.data;
+
+    // Read the land mask into a separate buffer (offscreen canvas) so it can't
+    // clobber the map's RGB; only land (white) tiles get pattern overlay.
+    let maskData: Uint8ClampedArray | undefined;
+    if (mask) {
+      const off = document.createElement("canvas");
+      off.width = dispW;
+      off.height = dispH;
+      const offCtx = off.getContext("2d", { willReadFrequently: true });
+      if (offCtx) {
+        offCtx.imageSmoothingEnabled = false;
+        offCtx.drawImage(mask, 0, 0, dispW, dispH);
+        maskData = offCtx.getImageData(0, 0, dispW, dispH).data;
+      }
+    }
+
+    // Map tiles per CSS px — with the same cover scale the pattern uses.
+    const tilePx = cover;
+    const scale = source.scale;
+
+    for (let py = 0; py < dispH; py++) {
+      const yCss = py / dpr;
+      for (let px = 0; px < dispW; px++) {
+        const idx = (py * dispW + px) * 4;
+        // Land mask from the grayscale mask's red channel; water/impassable stay untouched.
+        if (!maskData || maskData[idx] < 128) continue;
+
+        const xCss = px / dpr;
+        const tileX = Math.floor(xCss / tilePx);
+        const tileY = Math.floor(yCss / tilePx);
+        const cx = tileX >> scale;
+        const cy = tileY >> scale;
+
+        const primary = teamColors
+          ? teamPrimaryFor(teamColors, px, py, dispW, dispH) ?? primaryRgb
+          : primaryRgb;
+        const c = source.isSetCell(cx, cy) ? secondaryRgb : primary;
+        data[idx] = Math.round(c.r * TERRITORY_ALPHA + data[idx] * (1 - TERRITORY_ALPHA));
+        data[idx + 1] = Math.round(c.g * TERRITORY_ALPHA + data[idx + 1] * (1 - TERRITORY_ALPHA));
+        data[idx + 2] = Math.round(c.b * TERRITORY_ALPHA + data[idx + 2] * (1 - TERRITORY_ALPHA));
+        data[idx + 3] = 255;
+      }
+    }
+
+    context.putImageData(imageData, 0, 0);
+  }
 }

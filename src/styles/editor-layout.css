@@ -325,7 +325,6 @@
 .size-label {
   font-size: 11px;
   font-weight: 700;
-  text-transform: uppercase;
   letter-spacing: 0.06em;
   color: var(--muted);
   user-select: none;
@@ -530,9 +529,9 @@
 }
 
 .size-slider .noUi-value-large {
-  font-weight: 700 !important;
+  font-weight: 600 !important;
   color: var(--text) !important;
-  font-size: 11px !important;
+  font-size: 9px !important;
 }
 
 /* noUiSlider's own RTL-vertical origin transform drives the thumb sweep —
@@ -701,6 +700,7 @@
 
 /* ── Preview Panel ──────────────────────────────────────────────────────── */
 .preview-panel {
+  position: relative;
   display: flex;
   flex-direction: column;
   background: var(--surface);
@@ -808,6 +808,157 @@
 #preview {
   background: #fff;
   image-rendering: pixelated;
+}
+
+/* ── Map simulation button + popover ─────────────────────────────────────── */
+.preview-map-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.preview-map-btn:hover {
+  border-color: var(--accent);
+}
+.preview-map-btn.active {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 18%, transparent);
+}
+
+.map-popover {
+  position: absolute;
+  top: 44px;
+  right: 12px;
+  width: 256px;
+  max-height: 70%;
+  overflow-y: auto;
+  z-index: 60;
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.map-popover[hidden] {
+  display: none !important;
+}
+
+.map-popover-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+.map-popover-title {
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.map-sim-toggle {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+  cursor: pointer;
+  user-select: none;
+}
+.map-sim-toggle input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.map-sim-switch {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background-color: var(--muted);
+  transition: 0.25s;
+  border-radius: 20px;
+}
+.map-sim-switch:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.25s;
+  border-radius: 50%;
+}
+.map-sim-toggle input:checked + .map-sim-switch {
+  background-color: var(--accent);
+}
+.map-sim-toggle input:checked + .map-sim-switch:before {
+  transform: translateX(16px);
+}
+
+.map-popover-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--muted);
+  margin: 0;
+}
+
+.map-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.map-list + .map-popover-header {
+  margin-top: 10px;
+}
+.map-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text);
+  font-size: 12px;
+  text-align: left;
+  cursor: pointer;
+  width: 100%;
+}
+.map-option:hover {
+  background: color-mix(in srgb, var(--surface-muted) 70%, transparent);
+}
+.map-option.selected {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+.map-option .map-option-name {
+  flex: 1;
+  font-weight: 600;
+}
+.map-option .map-option-size {
+  font-size: 10px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.map-popover-note {
+  font-size: 11px;
+  color: var(--muted);
+  margin: 0;
+}
+.map-popover-note code {
+  font-size: 10px;
 }
 
 /* Colors Section */

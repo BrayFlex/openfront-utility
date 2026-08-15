@@ -2,12 +2,19 @@
 
 *Note: some changes may be missing prior to September 2026 due to my lack of documentation.*
 
+## August 16, 2026 — Simulate In-Game Map & Team Colors
+Two big additions to the Preview panel:
+
+- **Simulate Map (🗺 button)** — opens a popover where you can pick from **9 real in-game maps** (World, Alps, Two Lakes, Arctic, Mare Nostrum, Gulf of St. Lawrence, Australia, Baikal, and South America). Your pattern is layered over the map using the game's own terrain colours and territory-fill style, drawn **only on land**, and kept in sync with the pattern zoom — so it looks just like the in-game map view.
+- **Show Team Colors** — a toggle (now sitting below the map list with its own description) that shows what your pattern looks like in **team games**: the primary colour is swapped out for each team's colour in radial pie-style wedges radiating from the centre, so you can eyeball all 7 team colours at once.
+- Behind the scenes fix, the preview background turns to the map's dark colour while a map is shown, so your primary colour no longer bleeds through at the edges when you zoom out.
+
 ## August 15, 2026 — Crisper, pixel-perfect preview
 The preview panel got a big clarity upgrade:
 - The pattern now **repeats right to the edges** of the panel, at any size or zoom level — resizing the panel just reveals more of the pattern instead of stretching it.
 - **Zoom controls the pattern size** 50% up to 500% 
 - **Fixed Monitor Interpolation** by adding a formula to calculate how to display pattern **sharp and pixel-perfect** at every level and every screen size — no more mis-sized, blurry or smudged edges (avoids half pixel rounding).
-- The preview area now takes up about **~~2/3rds~~ 60% of the panel's height**, giving your pattern more room to shine.
+- The preview area now takes up about **60% of the panel's height**, giving your pattern more room to shine.
 - Fixed an edge case where the pattern could stop just short of the panel's borders at certain zoom levels.
 
 ## August 14, 2026 — Favorite Colours
