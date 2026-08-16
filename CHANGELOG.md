@@ -2,6 +2,9 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## August 16, 2026 — New Dashboard Submit
+- The **Submit** button no longer pops up a form modal. Clicking it now opens the **OpenFront Dashboard Submission Form Page** in a new tab with your pattern already filled in — ready to fill out, review and submit.
+
 ## August 16, 2026 — Simulate In-Game Map & Team Colors
 Three big additions to the Preview panel:
 
