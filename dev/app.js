@@ -22,7 +22,6 @@ import { decodePatternBase64, generatePatternBase64, } from "./app/patternEncodi
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
-import { initSubmissionModal } from "./app/submissionModal.js";
 import { createToolState } from "./app/toolState.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
@@ -878,16 +877,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         },
     });
-    // ── Submission modal ──────────────────────────────────────────────────────
-    const submissionModal = initSubmissionModal({
-        getPrimaryColor: () => previewPrimaryColor.value,
-        getSecondaryColor: () => previewSecondaryColor.value,
-        getPatternUrl: () => {
-            const b64 = getOutputBase64();
-            return buildPreviewLink(window.location.href, b64, previewPrimaryColor.value, previewSecondaryColor.value);
-        }
+    // ── Submission ────────────────────────────────────────────────────────────
+    submitPatternBtn.addEventListener("click", () => {
+        const b64 = getOutputBase64();
+        const submitUrl = new URL("https://dashboard.openfront.io/submit");
+        submitUrl.searchParams.set("pattern", b64);
+        window.open(submitUrl.toString(), "_blank");
     });
-    submitPatternBtn.addEventListener("click", () => submissionModal.open());
     // ── URL hash load + initial state ─────────────────────────────────────────
     const normalizeHex = (v) => {
         if (!v)
