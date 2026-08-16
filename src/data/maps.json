@@ -1,0 +1,74 @@
+[
+  {
+    "slug": "world",
+    "name": "World",
+    "width": 2000,
+    "height": 1000,
+    "file": "maps/world.png",
+    "landFile": "maps/world-land.png"
+  },
+  {
+    "slug": "alps",
+    "name": "Alps",
+    "width": 2000,
+    "height": 1836,
+    "file": "maps/alps.png",
+    "landFile": "maps/alps-land.png"
+  },
+  {
+    "slug": "twolakes",
+    "name": "Two Lakes",
+    "width": 2100,
+    "height": 1840,
+    "file": "maps/twolakes.png",
+    "landFile": "maps/twolakes-land.png"
+  },
+  {
+    "slug": "arctic",
+    "name": "Arctic",
+    "width": 1828,
+    "height": 1828,
+    "file": "maps/arctic.png",
+    "landFile": "maps/arctic-land.png"
+  },
+  {
+    "slug": "marenostrum",
+    "name": "Mare Nostrum",
+    "width": 2848,
+    "height": 1448,
+    "file": "maps/marenostrum.png",
+    "landFile": "maps/marenostrum-land.png"
+  },
+  {
+    "slug": "gulfofstlawrence",
+    "name": "Gulf of St. Lawrence",
+    "width": 1620,
+    "height": 1348,
+    "file": "maps/gulfofstlawrence.png",
+    "landFile": "maps/gulfofstlawrence-land.png"
+  },
+  {
+    "slug": "baikal",
+    "name": "Baikal (compact)",
+    "width": 1250,
+    "height": 782,
+    "file": "maps/baikal.png",
+    "landFile": "maps/baikal-land.png"
+  },
+  {
+    "slug": "australia",
+    "name": "Australia",
+    "width": 2000,
+    "height": 1500,
+    "file": "maps/australia.png",
+    "landFile": "maps/australia-land.png"
+  },
+  {
+    "slug": "southamerica",
+    "name": "South America (compact)",
+    "width": 872,
+    "height": 1188,
+    "file": "maps/southamerica.png",
+    "landFile": "maps/southamerica-land.png"
+  }
+]

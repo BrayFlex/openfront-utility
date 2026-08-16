@@ -11,6 +11,7 @@ import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
 import { initInfoModal } from "./app/infoModal.js";
+import { initMapSimulation, TEAM_COLOR_HEXES } from "./app/mapSimulation.js";
 import {
   decodePatternBase64,
   generatePatternBase64,
@@ -123,10 +124,21 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewZoomInBtn = document.getElementById("previewZoomInBtn") as HTMLButtonElement;
   const previewZoomOutBtn = document.getElementById("previewZoomOutBtn") as HTMLButtonElement;
   const previewZoomValue = document.getElementById("previewZoomValue") as HTMLOutputElement;
+  const copyPreviewImageBtn = document.getElementById("copyPreviewImageBtn") as HTMLButtonElement;
   const copyColorsBtn = document.getElementById("copyColorsBtn") as HTMLButtonElement;
   const favoriteColorsBtn = document.getElementById("favoriteColorsBtn") as HTMLButtonElement;
   const favoritesContainer = document.getElementById("favoritesContainer") as HTMLDivElement;
   const previewCanvasWrap = document.getElementById("previewCanvasWrap") as HTMLElement;
+
+  // Map simulation
+  const mapSimBtn = document.getElementById("mapSimBtn") as HTMLButtonElement;
+  const mapPopover = document.getElementById("mapPopover") as HTMLDivElement;
+  const mapSimToggle = document.getElementById("mapSimToggle") as HTMLInputElement;
+  const mapList = document.getElementById("mapList") as HTMLDivElement;
+  const mapPopoverNote = document.getElementById("mapPopoverNote") as HTMLParagraphElement;
+  const mapTeamToggle = document.getElementById("mapShowTeamColors") as HTMLInputElement;
+  const mapTeamColorsWrap = document.getElementById("mapTeamColors") as HTMLDivElement;
+  const mapTeamColorsCanvas = document.getElementById("mapTeamColorsCanvas") as HTMLCanvasElement;
 
   // Submission
   const submitPatternBtn = document.getElementById("submitPatternBtn") as HTMLButtonElement;
@@ -299,6 +311,22 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   // ── Preview renderer ──────────────────────────────────────────────────────
+  let simMapRef: {
+    image: HTMLImageElement | null;
+    mask: HTMLImageElement | null;
+    width: number;
+    height: number;
+  } | null = null;
+  let teamColorsRef: string[] | null = null;
+
+  // Background shown behind the preview canvas. In simulate-map mode the
+  // panel is the map's impassable/background colour (#3c3c3c), not the
+  // pattern's primary colour, so zooming out never bleeds primary into view.
+  const setPreviewWrapBackground = () => {
+    if (!previewCanvasWrap) return;
+    previewCanvasWrap.style.background = simMapRef ? "#3c3c3c" : previewPrimaryColor.value;
+  };
+
   const renderPreview = createPreviewRenderer({
     canvas: previewCanvas,
     context: previewCtx,
@@ -306,6 +334,8 @@ document.addEventListener("DOMContentLoaded", () => {
     secondaryColorInput: previewSecondaryColor,
     canvasWrap: previewCanvasWrap,
     getZoom: () => previewZoom,
+    getSimMap: () => simMapRef,
+    getTeamColors: () => teamColorsRef,
   });
 
   // ── Preview zoom ──────────────────────────────────────────────────────────
@@ -337,6 +367,27 @@ document.addEventListener("DOMContentLoaded", () => {
     setPreviewZoom(previewZoomIndex - 1)
   );
 
+  // ── Copy preview image ────────────────────────────────────────────────────
+  // Copies the preview canvas exactly as displayed to the clipboard as a PNG.
+  copyPreviewImageBtn.addEventListener("click", async () => {
+    if (previewCanvas.width === 0 || previewCanvas.height === 0) return;
+    try {
+      const blob = await new Promise<Blob | null>((resolve) =>
+        previewCanvas.toBlob(resolve, "image/png")
+      );
+      if (!blob) {
+        showToast("Could not copy preview image.");
+        return;
+      }
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+      showToast("Preview image copied to clipboard.");
+    } catch {
+      showToast("Could not copy preview image.");
+    }
+  });
+
   // ── Output update ─────────────────────────────────────────────────────────
   const clonePattern = (pattern: number[][]) => pattern.map((row) => [...row]);
 
@@ -364,7 +415,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (previewCanvasWrap) {
-      previewCanvasWrap.style.background = previewPrimaryColor.value;
+      setPreviewWrapBackground();
     }
   };
 
@@ -390,7 +441,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isScrapActive) {
       renderPreview(pattern, true);
       if (previewCanvasWrap) {
-        previewCanvasWrap.style.background = primary;
+        setPreviewWrapBackground();
       }
       if (!isApplyingHistory) scrapHistory.record(clonePattern(pattern));
       updateHistoryButtons();
@@ -409,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     renderPreview(base64, false);
     if (previewCanvasWrap) {
-      previewCanvasWrap.style.background = primary;
+      setPreviewWrapBackground();
     }
 
     // Update URL hash from MAIN canvas only
@@ -861,6 +912,23 @@ document.addEventListener("DOMContentLoaded", () => {
   initPaneResizeControls({
     workspaceSplit: document.querySelector(".workspace-split") as HTMLElement,
     previewHandle: document.getElementById("previewResizeHandle")!,
+  });
+
+  // ── Map simulation ─────────────────────────────────────────────────────────
+  initMapSimulation({
+    button: mapSimBtn,
+    popover: mapPopover,
+    toggle: mapSimToggle,
+    list: mapList,
+    note: mapPopoverNote,
+    teamToggle: mapTeamToggle,
+    onChange: (sim) => {
+      simMapRef = sim.enabled && sim.meta
+        ? { image: sim.image, mask: sim.mask, width: sim.meta.width, height: sim.meta.height }
+        : null;
+      teamColorsRef = sim.teamColors ? TEAM_COLOR_HEXES : null;
+      renderPreviewOnly();
+    },
   });
 
   // ── Image import overlay ──────────────────────────────────────────────────
