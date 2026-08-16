@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { createClipboardManager } from "./app/clipboard.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
@@ -108,6 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewZoomInBtn = document.getElementById("previewZoomInBtn");
     const previewZoomOutBtn = document.getElementById("previewZoomOutBtn");
     const previewZoomValue = document.getElementById("previewZoomValue");
+    const copyPreviewImageBtn = document.getElementById("copyPreviewImageBtn");
     const copyColorsBtn = document.getElementById("copyColorsBtn");
     const favoriteColorsBtn = document.getElementById("favoriteColorsBtn");
     const favoritesContainer = document.getElementById("favoritesContainer");
@@ -310,6 +320,26 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     previewZoomInBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex + 1));
     previewZoomOutBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex - 1));
+    // ── Copy preview image ────────────────────────────────────────────────────
+    // Copies the preview canvas exactly as displayed to the clipboard as a PNG.
+    copyPreviewImageBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+        if (previewCanvas.width === 0 || previewCanvas.height === 0)
+            return;
+        try {
+            const blob = yield new Promise((resolve) => previewCanvas.toBlob(resolve, "image/png"));
+            if (!blob) {
+                showToast("Could not copy preview image.");
+                return;
+            }
+            yield navigator.clipboard.write([
+                new ClipboardItem({ "image/png": blob }),
+            ]);
+            showToast("Preview image copied to clipboard.");
+        }
+        catch (_a) {
+            showToast("Could not copy preview image.");
+        }
+    }));
     // ── Output update ─────────────────────────────────────────────────────────
     const clonePattern = (pattern) => pattern.map((row) => [...row]);
     // Re-renders the preview bitmap only — no history/URL side effects. Safe to

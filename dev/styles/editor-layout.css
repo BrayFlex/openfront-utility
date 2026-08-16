@@ -295,8 +295,8 @@
 
 .size-popover {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 8px;
+  left: 8px;
   background: color-mix(in srgb, var(--surface) 85%, transparent);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
@@ -729,9 +729,13 @@
   box-shadow: 0 12px 40px rgba(0,0,0,0.15);
 }
 
-/* When floating, hide the color preset list — only show primary/secondary + swap + copy */
-.preview-panel.floating .color-preset-details {
+/* When floating, hide color presets (keep favorites) — fixed height section */
+.preview-panel.floating .color-preset-details:not(#favoritesDetails) {
   display: none;
+}
+.preview-panel.floating .colors-section {
+  flex: none;
+  height: 256px;
 }
 
 .preview-header {
@@ -743,7 +747,10 @@
   background: var(--surface-muted);
 }
 .preview-header .panel-title {
-  margin-right: auto;
+  /* zoom controls follow the title on the left */
+}
+.preview-header .preview-map-btn {
+  margin-left: auto;
 }
 .preview-panel.floating .preview-header {
   cursor: move;
@@ -753,7 +760,7 @@
 .preview-zoom-controls {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 .preview-zoom-btn {
   background: none;
@@ -811,7 +818,7 @@
 }
 
 /* ── Map simulation button + popover ─────────────────────────────────────── */
-.preview-map-btn {
+.preview-map-btn, .preview-copy-btn {
   background: none;
   border: 1px solid var(--border);
   color: var(--text);
@@ -825,7 +832,7 @@
   align-items: center;
   justify-content: center;
 }
-.preview-map-btn:hover {
+.preview-map-btn:hover, .preview-copy-btn:hover {
   border-color: var(--accent);
 }
 .preview-map-btn.active {
@@ -833,10 +840,27 @@
   background: color-mix(in srgb, var(--accent) 18%, transparent);
 }
 
+/* Team-color gradient tint on the map button (matches the popover's wheel). */
+.preview-map-btn.team-colors {
+  position: relative;
+}
+.preview-map-btn.team-colors::after {
+  content: "";
+  position: absolute;
+  inset: 1px;
+  border-radius: 3px;
+  background: conic-gradient(
+    from 0deg,
+    #eb3333, #2962ff, #2bd4bd, #9234ea, #e7b008, #f97415, #41be52
+  );
+  mix-blend-mode: color;
+  pointer-events: none;
+}
+
 .map-popover {
   position: absolute;
-  top: 44px;
-  right: 12px;
+  top: 58px;
+  right: 8px;
   width: 256px;
   max-height: 70%;
   overflow-y: auto;
@@ -940,7 +964,7 @@
 }
 .map-option.selected {
   border-color: var(--accent);
-  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  background: var(--accent-light);
 }
 .map-option .map-option-name {
   flex: 1;
