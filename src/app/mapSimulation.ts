@@ -189,6 +189,7 @@ export async function initMapSimulation(options: MapSimulationOptions): Promise<
 
   const syncButton = () => {
     button.classList.toggle("active", state.enabled);
+    button.classList.toggle("team-colors", state.teamColors);
     button.setAttribute("aria-expanded", popover.hidden ? "false" : "true");
   };
 

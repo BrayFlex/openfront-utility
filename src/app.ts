@@ -124,6 +124,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewZoomInBtn = document.getElementById("previewZoomInBtn") as HTMLButtonElement;
   const previewZoomOutBtn = document.getElementById("previewZoomOutBtn") as HTMLButtonElement;
   const previewZoomValue = document.getElementById("previewZoomValue") as HTMLOutputElement;
+  const copyPreviewImageBtn = document.getElementById("copyPreviewImageBtn") as HTMLButtonElement;
   const copyColorsBtn = document.getElementById("copyColorsBtn") as HTMLButtonElement;
   const favoriteColorsBtn = document.getElementById("favoriteColorsBtn") as HTMLButtonElement;
   const favoritesContainer = document.getElementById("favoritesContainer") as HTMLDivElement;
@@ -365,6 +366,27 @@ document.addEventListener("DOMContentLoaded", () => {
   previewZoomOutBtn.addEventListener("click", () =>
     setPreviewZoom(previewZoomIndex - 1)
   );
+
+  // ── Copy preview image ────────────────────────────────────────────────────
+  // Copies the preview canvas exactly as displayed to the clipboard as a PNG.
+  copyPreviewImageBtn.addEventListener("click", async () => {
+    if (previewCanvas.width === 0 || previewCanvas.height === 0) return;
+    try {
+      const blob = await new Promise<Blob | null>((resolve) =>
+        previewCanvas.toBlob(resolve, "image/png")
+      );
+      if (!blob) {
+        showToast("Could not copy preview image.");
+        return;
+      }
+      await navigator.clipboard.write([
+        new ClipboardItem({ "image/png": blob }),
+      ]);
+      showToast("Preview image copied to clipboard.");
+    } catch {
+      showToast("Could not copy preview image.");
+    }
+  });
 
   // ── Output update ─────────────────────────────────────────────────────────
   const clonePattern = (pattern: number[][]) => pattern.map((row) => [...row]);

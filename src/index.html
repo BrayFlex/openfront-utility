@@ -326,12 +326,13 @@
             <button id="hidePreviewBtn"  class="preview-hide-btn"  title="Hide preview"  aria-label="Hide preview">⇥</button>
             <button id="floatingResizeBtn" class="preview-hide-btn" title="Resize preview" aria-label="Resize preview" hidden>⤡</button>
             <span class="panel-title">Preview</span>
-            <button id="mapSimBtn" class="preview-map-btn" title="Simulate map" aria-label="Simulate map" aria-haspopup="true" aria-expanded="false">🗺</button>
             <div class="preview-zoom-controls">
               <button id="previewZoomOutBtn" class="preview-zoom-btn" aria-label="Zoom out">−</button>
               <output id="previewZoomValue" class="preview-zoom-value">100%</output>
               <button id="previewZoomInBtn" class="preview-zoom-btn" aria-label="Zoom in">+</button>
             </div>
+            <button id="mapSimBtn" class="preview-map-btn" title="Game Simulations" aria-label="Game Simulations" aria-haspopup="true" aria-expanded="false">🗺</button>
+            <button id="copyPreviewImageBtn" class="preview-copy-btn" title="Copy pattern image" aria-label="Copy pattern image to clipboard">⎙</button>
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">❐</button>
             <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>❏</button>
           </div>
@@ -356,7 +357,7 @@
             </p>
             <div id="mapList" class="map-list" role="listbox" aria-label="Map selection"></div>
             <div class="map-popover-header">
-              <span class="map-popover-title">Show Team Colors</span>
+              <span class="map-popover-title">Simulate Teams</span>
               <label class="map-sim-toggle" title="In team games the primary color is replaced by the team color. Show each team color in the preview.">
                 <input type="checkbox" id="mapShowTeamColors" />
                 <span class="map-sim-switch"></span>

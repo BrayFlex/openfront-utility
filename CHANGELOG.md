@@ -3,11 +3,14 @@
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
 ## August 16, 2026 — Simulate In-Game Map & Team Colors
-Two big additions to the Preview panel:
+Three big additions to the Preview panel:
 
 - **Simulate Map (🗺 button)** — opens a popover where you can pick from **9 real in-game maps** (World, Alps, Two Lakes, Arctic, Mare Nostrum, Gulf of St. Lawrence, Australia, Baikal, and South America). Your pattern is layered over the map using the game's own terrain colours and territory-fill style, drawn **only on land**, and kept in sync with the pattern zoom — so it looks just like the in-game map view.
 - **Show Team Colors** — a toggle (now sitting below the map list with its own description) that shows what your pattern looks like in **team games**: the primary colour is swapped out for each team's colour in radial pie-style wedges radiating from the centre, so you can eyeball all 7 team colours at once.
 - Behind the scenes fix, the preview background turns to the map's dark colour while a map is shown, so your primary colour no longer bleeds through at the edges when you zoom out.
+- Added a **Copy image (⎙) button** to the right of it — one click copies the preview **exactly as you see it** (pattern, zoom, map simulation and all) to your clipboard as a PNG image.
+- The **🗺 button now glows with the 7 team colours** when *Simulate Teams* is switched on, so you can tell at a glance that team colours are active behind that popover menu button.
+- Small fixes to: UI spacing on popovers to create uniformity, size tick display, color display area in floating preview and font imports.
 
 ## August 15, 2026 — Crisper, Pixel-Perfect Preview
 The preview panel got a big clarity upgrade:
