@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import { createClipboardManager } from "./app/clipboard.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
@@ -8,6 +17,7 @@ import { createGridManager } from "./app/gridManager.js";
 import { setupHistoryShortcuts } from "./app/historyShortcuts.js";
 import { initImageImportOverlay } from "./app/imageImportOverlay.js";
 import { initInfoModal } from "./app/infoModal.js";
+import { initMapSimulation, TEAM_COLOR_HEXES } from "./app/mapSimulation.js";
 import { decodePatternBase64, generatePatternBase64, } from "./app/patternEncoding.js";
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
@@ -107,10 +117,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewZoomInBtn = document.getElementById("previewZoomInBtn");
     const previewZoomOutBtn = document.getElementById("previewZoomOutBtn");
     const previewZoomValue = document.getElementById("previewZoomValue");
+    const copyPreviewImageBtn = document.getElementById("copyPreviewImageBtn");
     const copyColorsBtn = document.getElementById("copyColorsBtn");
     const favoriteColorsBtn = document.getElementById("favoriteColorsBtn");
     const favoritesContainer = document.getElementById("favoritesContainer");
     const previewCanvasWrap = document.getElementById("previewCanvasWrap");
+    // Map simulation
+    const mapSimBtn = document.getElementById("mapSimBtn");
+    const mapPopover = document.getElementById("mapPopover");
+    const mapSimToggle = document.getElementById("mapSimToggle");
+    const mapList = document.getElementById("mapList");
+    const mapPopoverNote = document.getElementById("mapPopoverNote");
+    const mapTeamToggle = document.getElementById("mapShowTeamColors");
+    const mapTeamColorsWrap = document.getElementById("mapTeamColors");
+    const mapTeamColorsCanvas = document.getElementById("mapTeamColorsCanvas");
     // Submission
     const submitPatternBtn = document.getElementById("submitPatternBtn");
     // Workspace zoom
@@ -262,6 +282,16 @@ document.addEventListener("DOMContentLoaded", () => {
         return selected ? parseInt((_a = selected.dataset.scale) !== null && _a !== void 0 ? _a : "0") : 0;
     };
     // ── Preview renderer ──────────────────────────────────────────────────────
+    let simMapRef = null;
+    let teamColorsRef = null;
+    // Background shown behind the preview canvas. In simulate-map mode the
+    // panel is the map's impassable/background colour (#3c3c3c), not the
+    // pattern's primary colour, so zooming out never bleeds primary into view.
+    const setPreviewWrapBackground = () => {
+        if (!previewCanvasWrap)
+            return;
+        previewCanvasWrap.style.background = simMapRef ? "#3c3c3c" : previewPrimaryColor.value;
+    };
     const renderPreview = createPreviewRenderer({
         canvas: previewCanvas,
         context: previewCtx,
@@ -269,6 +299,8 @@ document.addEventListener("DOMContentLoaded", () => {
         secondaryColorInput: previewSecondaryColor,
         canvasWrap: previewCanvasWrap,
         getZoom: () => previewZoom,
+        getSimMap: () => simMapRef,
+        getTeamColors: () => teamColorsRef,
     });
     // ── Preview zoom ──────────────────────────────────────────────────────────
     // Zoom is the displayed CSS px per tile cell (× the encoded pattern scale).
@@ -288,6 +320,26 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     previewZoomInBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex + 1));
     previewZoomOutBtn.addEventListener("click", () => setPreviewZoom(previewZoomIndex - 1));
+    // ── Copy preview image ────────────────────────────────────────────────────
+    // Copies the preview canvas exactly as displayed to the clipboard as a PNG.
+    copyPreviewImageBtn.addEventListener("click", () => __awaiter(void 0, void 0, void 0, function* () {
+        if (previewCanvas.width === 0 || previewCanvas.height === 0)
+            return;
+        try {
+            const blob = yield new Promise((resolve) => previewCanvas.toBlob(resolve, "image/png"));
+            if (!blob) {
+                showToast("Could not copy preview image.");
+                return;
+            }
+            yield navigator.clipboard.write([
+                new ClipboardItem({ "image/png": blob }),
+            ]);
+            showToast("Preview image copied to clipboard.");
+        }
+        catch (_a) {
+            showToast("Could not copy preview image.");
+        }
+    }));
     // ── Output update ─────────────────────────────────────────────────────────
     const clonePattern = (pattern) => pattern.map((row) => [...row]);
     // Re-renders the preview bitmap only — no history/URL side effects. Safe to
@@ -309,7 +361,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
         if (previewCanvasWrap) {
-            previewCanvasWrap.style.background = previewPrimaryColor.value;
+            setPreviewWrapBackground();
         }
     };
     // Re-render whenever the preview panel is resized so the tile layout stays an
@@ -332,7 +384,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (isScrapActive) {
             renderPreview(pattern, true);
             if (previewCanvasWrap) {
-                previewCanvasWrap.style.background = primary;
+                setPreviewWrapBackground();
             }
             if (!isApplyingHistory)
                 scrapHistory.record(clonePattern(pattern));
@@ -350,7 +402,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const secondary = previewSecondaryColor.value;
         renderPreview(base64, false);
         if (previewCanvasWrap) {
-            previewCanvasWrap.style.background = primary;
+            setPreviewWrapBackground();
         }
         // Update URL hash from MAIN canvas only
         const params = new URLSearchParams({
@@ -775,6 +827,22 @@ document.addEventListener("DOMContentLoaded", () => {
     initPaneResizeControls({
         workspaceSplit: document.querySelector(".workspace-split"),
         previewHandle: document.getElementById("previewResizeHandle"),
+    });
+    // ── Map simulation ─────────────────────────────────────────────────────────
+    initMapSimulation({
+        button: mapSimBtn,
+        popover: mapPopover,
+        toggle: mapSimToggle,
+        list: mapList,
+        note: mapPopoverNote,
+        teamToggle: mapTeamToggle,
+        onChange: (sim) => {
+            simMapRef = sim.enabled && sim.meta
+                ? { image: sim.image, mask: sim.mask, width: sim.meta.width, height: sim.meta.height }
+                : null;
+            teamColorsRef = sim.teamColors ? TEAM_COLOR_HEXES : null;
+            renderPreviewOnly();
+        },
     });
     // ── Image import overlay ──────────────────────────────────────────────────
     initImageImportOverlay({

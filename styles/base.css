@@ -81,7 +81,7 @@ button.selected,
 .tool-btn.selected {
   background: var(--accent);
   border-color: var(--accent-dark);
-  color: #ffffff;
+  color: var(--text);
 }
 .btn-primary:hover,
 button.selected:hover,
@@ -145,7 +145,7 @@ textarea {
 /* ── Panel title ────────────────────────────────────────────────────────── */
 .panel-title {
   color: var(--muted);
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }

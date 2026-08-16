@@ -331,6 +331,8 @@
               <output id="previewZoomValue" class="preview-zoom-value">100%</output>
               <button id="previewZoomInBtn" class="preview-zoom-btn" aria-label="Zoom in">+</button>
             </div>
+            <button id="mapSimBtn" class="preview-map-btn" title="Game Simulations" aria-label="Game Simulations" aria-haspopup="true" aria-expanded="false">🗺</button>
+            <button id="copyPreviewImageBtn" class="preview-copy-btn" title="Copy pattern image" aria-label="Copy pattern image to clipboard">⎙</button>
             <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">❐</button>
             <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>❏</button>
           </div>
@@ -338,6 +340,35 @@
           <!-- Preview canvas -->
           <div class="preview-canvas-wrap" id="previewCanvasWrap">
             <canvas id="preview" aria-label="Pattern tiled preview"></canvas>
+          </div>
+
+          <!-- Map simulation popover -->
+          <div id="mapPopover" class="map-popover" hidden>
+            <div class="map-popover-header">
+              <span class="map-popover-title">Simulate Map</span>
+              <label class="map-sim-toggle" title="Layer the map behind the pattern preview">
+                <input type="checkbox" id="mapSimToggle" />
+                <span class="map-sim-switch"></span>
+              </label>
+            </div>
+            <p class="map-popover-hint">
+              Shows your pattern over the in-game map at the same scale and
+              colours used in-game.
+            </p>
+            <div id="mapList" class="map-list" role="listbox" aria-label="Map selection"></div>
+            <div class="map-popover-header">
+              <span class="map-popover-title">Simulate Teams</span>
+              <label class="map-sim-toggle" title="In team games the primary color is replaced by the team color. Show each team color in the preview.">
+                <input type="checkbox" id="mapShowTeamColors" />
+                <span class="map-sim-switch"></span>
+              </label>
+            </div>
+            <p class="map-popover-hint">
+              Shows an approximation of the most utilized 7 colors assigned in team modes.
+            </p>
+            <p class="map-popover-note" id="mapPopoverNote" hidden>
+              Map image not available. Run <code>npm run render:maps</code>.
+            </p>
           </div>
 
           <!-- Colors section -->
