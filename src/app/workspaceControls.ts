@@ -10,6 +10,8 @@ type WorkspaceControlsOptions = {
   zoomOutButton: HTMLButtonElement;
   resetButton: HTMLButtonElement;
   zoomValue: HTMLOutputElement;
+  /** Called after the active viewport's transform changes (zoom/pan/reset). */
+  onChange?: () => void;
 };
 
 const MIN_ZOOM = 0.25;
@@ -29,9 +31,8 @@ function isEditableTarget(target: EventTarget | null) {
 }
 
 export function initWorkspaceControls(options: WorkspaceControlsOptions) {
-  const { workspace, viewports, zoomInButton, zoomOutButton, resetButton, zoomValue } =
+  const { workspace, viewports, zoomInButton, zoomOutButton, resetButton, zoomValue, onChange } =
     options;
-
   const state = viewports.map((vp) => ({
     viewport: vp.element,
     isActive: vp.isActive,
@@ -61,6 +62,7 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
       s.viewport.style.transform = `translate(calc(-50% + ${s.panX}px), calc(-50% + ${s.panY}px)) scale(${s.zoom})`;
     }
     zoomValue.value = `${Math.round(getActive().zoom * 100)}%`;
+    onChange?.();
   };
 
   const setZoom = (nextZoom: number, anchor?: { clientX: number; clientY: number }) => {
@@ -73,14 +75,19 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
       const viewportHeight = active.viewport.offsetHeight;
       const anchorX = anchor.clientX - workspaceRect.left;
       const anchorY = anchor.clientY - workspaceRect.top;
+      // The viewport is scaled about its centre (transform-origin: center),
+      // so a local point maps to: centre + pan + zoom × (local − size/2).
+      // Keep the point under the cursor fixed across the zoom change.
       const localX =
-        (anchorX - workspaceRect.width / 2 + viewportWidth / 2 - active.panX) / active.zoom;
+        (anchorX - workspaceRect.width / 2 - active.panX + (active.zoom * viewportWidth) / 2) /
+        active.zoom;
       const localY =
-        (anchorY - workspaceRect.height / 2 + viewportHeight / 2 - active.panY) / active.zoom;
+        (anchorY - workspaceRect.height / 2 - active.panY + (active.zoom * viewportHeight) / 2) /
+        active.zoom;
       active.panX =
-        anchorX - workspaceRect.width / 2 + viewportWidth / 2 - localX * clampedZoom;
+        anchorX - workspaceRect.width / 2 + (clampedZoom * viewportWidth) / 2 - localX * clampedZoom;
       active.panY =
-        anchorY - workspaceRect.height / 2 + viewportHeight / 2 - localY * clampedZoom;
+        anchorY - workspaceRect.height / 2 + (clampedZoom * viewportHeight) / 2 - localY * clampedZoom;
     }
     active.zoom = clampedZoom;
     render();
