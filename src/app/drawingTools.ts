@@ -1,15 +1,30 @@
 import { getCircleCells } from "./circleGeometry.js";
+import type { ShapeRatio, ShapeType } from "./toolState.js";
 
 export type DrawingTools = {
   drawLine: (x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) => void;
   drawCircle: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
-  drawShape: (type: string, cx: number, cy: number, r: number, selection?: Set<string>) => void;
+  drawShape: (
+    type: ShapeType,
+    cx: number,
+    cy: number,
+    r: number,
+    ratio: ShapeRatio,
+    selection?: Set<string>
+  ) => void;
   floodFill: (sx: number, sy: number, selection?: Set<string>) => void;
   floodShade: (sx: number, sy: number, selection?: Set<string>) => void;
   shadeSelection: (selection: Set<string>) => void;
   invertSelection: (selection: Set<string>) => void;
   clearSelection: (selection: Set<string>) => void;
-  getShapeCells: (type: string, cx: number, cy: number, r: number, selection?: Set<string>) => {x: number, y: number}[];
+  getShapeCells: (
+    type: ShapeType,
+    cx: number,
+    cy: number,
+    r: number,
+    ratio: ShapeRatio,
+    selection?: Set<string>
+  ) => { x: number; y: number }[];
 };
 
 type DrawingOptions = {
@@ -64,16 +79,31 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     points.forEach((p) => setIfAllowed(p.x, p.y, true, selection));
   }
 
-  /** Shape tool: draws star or isometric cube */
-  function drawShape(type: string, cx: number, cy: number, r: number, selection?: Set<string>) {
+  /** Shape tool: draws a circle, isometric cube, star, or regular polygon */
+  function drawShape(
+    type: ShapeType,
+    cx: number,
+    cy: number,
+    r: number,
+    ratio: ShapeRatio,
+    selection?: Set<string>
+  ) {
     if (r <= 0) {
       // r=0: just place the center pixel
       setIfAllowed(cx, cy, true, selection);
       return;
     }
+
+    if (type === "circle") {
+      drawCircle(cx, cy, r, selection);
+      return;
+    }
+
     if (type === "cube") {
-      const h = r;
-      const w = Math.max(1, Math.round(r * 1.732)); // approx sqrt(3)
+      // Width/height are ratios of the size slider so the cube can be squashed
+      // or stretched directly from the Shape sub-bar.
+      const h = Math.max(1, Math.round(r * ratio.height));
+      const w = Math.max(1, Math.round(r * ratio.width));
       // Top face
       drawLine(cx, cy - h, cx + w, cy - Math.round(h/2), selection);
       drawLine(cx + w, cy - Math.round(h/2), cx, cy, selection);
@@ -88,20 +118,51 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
       drawLine(cx, cy, cx, cy + h, selection);
       return;
     }
-    
-    // Default: Star
+
+    if (type === "star") {
+      // Hollow star outline: alternating outer/inner points joined as one
+      // closed polygon, with no spokes to the center.
+      const outerRadius = r;
+      const innerRadius = Math.max(1, r * 0.382);
+      const pts: [number, number][] = [];
+      for (let i = 0; i < 10; i++) {
+        const radius = i % 2 === 0 ? outerRadius : innerRadius;
+        const angle = (Math.PI / 5) * i - Math.PI / 2;
+        pts.push([
+          Math.round(cx + radius * Math.cos(angle)),
+          Math.round(cy + radius * Math.sin(angle)),
+        ]);
+      }
+      for (let i = 0; i < pts.length; i++) {
+        const a = pts[i];
+        const b = pts[(i + 1) % pts.length];
+        drawLine(a[0], a[1], b[0], b[1], selection);
+      }
+      return;
+    }
+
+    // Regular polygons: triangle (3), diamond (4), hexagon (6).
+    const sides = type === "triangle" ? 3 : type === "diamond" ? 4 : 6;
     const pts: [number, number][] = [];
-    for (let i = 0; i < 5; i++) {
-      const angle = ((Math.PI * 2) / 5) * i - Math.PI / 2;
+    for (let i = 0; i < sides; i++) {
+      const angle = -Math.PI / 2 + (Math.PI * 2 * i) / sides;
       pts.push([Math.round(cx + r * Math.cos(angle)), Math.round(cy + r * Math.sin(angle))]);
     }
-    for (let i = 0; i < 5; i++) {
-      drawLine(cx, cy, pts[i][0], pts[i][1], selection);
-      drawLine(pts[i][0], pts[i][1], pts[(i + 2) % 5][0], pts[(i + 2) % 5][1], selection);
+    for (let i = 0; i < sides; i++) {
+      const a = pts[i];
+      const b = pts[(i + 1) % sides];
+      drawLine(a[0], a[1], b[0], b[1], selection);
     }
   }
 
-  function getShapeCells(type: string, cx: number, cy: number, r: number, selection?: Set<string>): {x: number, y: number}[] {
+  function getShapeCells(
+    type: ShapeType,
+    cx: number,
+    cy: number,
+    r: number,
+    ratio: ShapeRatio,
+    selection?: Set<string>
+  ): {x: number, y: number}[] {
     const width = getTileWidth();
     const height = getTileHeight();
     const pts: {x: number, y: number}[] = [];
@@ -111,7 +172,7 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
       if (x >= 0 && y >= 0 && x < width && y < height) pts.push({x, y});
     };
     try {
-      drawShape(type, cx, cy, r, selection);
+      drawShape(type, cx, cy, r, ratio, selection);
     } finally {
       currentSetCellActive = originalSet;
     }

@@ -2,6 +2,14 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## October 2nd, 2026 — Shape Tool Options Sub-bar
+- Selecting the **Shape** tool now opens a dedicated options strip on the left of the canvas controls bar instead of hiding choices inside the toolbar button.
+- Choose **Circle, Cube, Star, Triangle, Diamond, or Hexagon** from the Shape dropdown — the hover preview and drawing use the same shape state.
+- The Cube now exposes **W× / H× ratio inputs**, so its width and height scale from the Size slider independently.
+- Removed the separate **Circle** tool button since Circle is available from the Shape dropdown, and the **Shape toolbar icon now reflects the last shape selected**.
+- The Size slider now adapts to the chosen shape — **circles can be drawn up to 128 across**, while every other shape tops out at **64 across** (the slider value is the shape's overall width). Switching shapes clamps the current size into the new range, and large ranges thin out the tick labels so they stay readable.
+- The **Star** is now drawn as a hollow outline by default (no spokes through the middle).
+
 ## September 27th, 2026 — Seamless Tiling Around the Canvas
 - The workspace **outside the drawing canvas** now shows a faded repeat of your pattern, so you can see how it continues across tile edges while you draw.
 - The ghost keeps the canvas scheme — **black marks on a light backdrop** — in both light and dark mode. In dark mode the area outside the canvas lifts slightly so the black marks stay readable instead of inverting. It follows the pattern live and tracks canvas zoom/pan.

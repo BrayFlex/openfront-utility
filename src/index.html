@@ -53,15 +53,8 @@
               <span class="tool-icon">✎</span>
               <span class="tool-label">Pencil</span>
             </button>
-            <button id="tool-circle" class="tool-btn" data-tool="circle" title="Circle">
-              <span class="tool-icon">○</span>
-              <span class="tool-label">Circle</span>
-            </button>
             <button id="tool-shape" class="tool-btn" data-tool="shape" title="Shape">
-              <select id="shapeType" class="shape-select" onclick="event.stopPropagation()">
-                <option value="star" selected>Star</option>
-                <option value="cube">Cube</option>
-              </select>
+              <span class="tool-icon">◇</span>
               <span class="tool-label">Shape</span>
             </button>
             <button id="tool-line" class="tool-btn" data-tool="line" title="Line">
@@ -209,6 +202,9 @@
 
           <!-- Canvas controls bar -->
           <div class="canvas-controls-bar" id="canvasControlsBar">
+
+            <!-- Per-tool options (populated by toolOptions.ts) -->
+            <div id="toolOptions" class="tool-options" hidden></div>
 
             <div class="canvas-controls-divider"></div>
 
@@ -448,7 +444,7 @@
 
         <h3>What you can do here</h3>
         <ul style="padding-left: 20px; margin: 8px 0;">
-          <li>Draw with <strong>Pencil, Circle, Shape, Line, Fill and Shade</strong> tools, with a size slider that adapts to each tool.</li>
+          <li>Draw with <strong>Pencil, Shape (circle, cube, star and more), Line, Fill and Shade</strong> tools, with a size slider that adapts to each tool.</li>
           <li>Select part of your pattern to <strong>cut, copy, paste, shift, rotate or flip</strong> it.</li>
           <li>Use the <strong>Test Canvas</strong> as a scratchpad while you work on the main pattern.</li>
           <li>Preview your pattern against different scale sizes and colours before submitting.</li>
