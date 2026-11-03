@@ -13,7 +13,7 @@ import {
   flipSelectionH,
   flipSelectionV,
 } from "./patternTransforms.js";
-import type { ToolState } from "./toolState.js";
+import type { ShapeRatio, ShapeType, ToolState } from "./toolState.js";
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
@@ -229,10 +229,15 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     starPreviewCells = [];
   };
 
-  const previewShape = (type: string, center: GridPoint, radius: number) => {
+  const previewShape = (
+    type: ShapeType,
+    center: GridPoint,
+    radius: number,
+    ratio: ShapeRatio
+  ) => {
     clearStarPreview();
     if (!drawingTools) return;
-    const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, activeSelection.size > 0 ? activeSelection : undefined);
+    const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, ratio, activeSelection.size > 0 ? activeSelection : undefined);
     // Deduplicate and filter bounds
     const unique = new Set<string>();
     pts.forEach(p => {
@@ -794,7 +799,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             }
             onPatternChange();
           } else if (tool === "shape") {
-            drawingTools?.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), sel);
+            drawingTools?.drawShape(
+              toolState.getShapeType(),
+              cx,
+              cy,
+              toolState.getShapeRadius(),
+              toolState.getShapeRatio(),
+              sel
+            );
             clearStarPreview(); // using same dim overlay for shape if added later
             onPatternChange();
           } else if (tool === "circle") {
@@ -831,7 +843,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           }
 
           if (!isMouseDown && tool === "shape") {
-            previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius());
+            previewShape(
+              toolState.getShapeType(),
+              { x: cx, y: cy },
+              toolState.getShapeRadius(),
+              toolState.getShapeRatio()
+            );
             return;
           }
 
