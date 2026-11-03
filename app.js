@@ -24,6 +24,7 @@ import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
 import { createToolState } from "./app/toolState.js";
 import { createTileGhostRenderer } from "./app/tileGhostRenderer.js";
+import { setupToolOptions } from "./app/toolOptions.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
 import { initThemeToggle } from "./app/themeToggle.js";
@@ -200,11 +201,9 @@ document.addEventListener("DOMContentLoaded", () => {
             "Anything drawn here is temporary and won't be saved or affect the main canvas.", SCRAP_TOAST_DURATION);
     };
     const toolState = createToolState({ toolButtons, sizeSlider, sizeOutput, sizeGroup });
-    const shapeTypeSelect = document.getElementById("shapeType");
-    if (shapeTypeSelect) {
-        shapeTypeSelect.addEventListener("change", () => {
-            toolState.selectTool("shape");
-        });
+    const toolOptionsContainer = document.getElementById("toolOptions");
+    if (toolOptionsContainer) {
+        setupToolOptions({ container: toolOptionsContainer, toolState });
     }
     // ── Guide state ───────────────────────────────────────────────────────────
     let handleGuideChange = () => { };
