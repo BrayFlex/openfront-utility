@@ -121,11 +121,11 @@ export function createGridManager(options) {
         starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("star-hover"); });
         starPreviewCells = [];
     };
-    const previewShape = (type, center, radius) => {
+    const previewShape = (type, center, radius, ratio) => {
         clearStarPreview();
         if (!drawingTools)
             return;
-        const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, activeSelection.size > 0 ? activeSelection : undefined);
+        const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, ratio, activeSelection.size > 0 ? activeSelection : undefined);
         // Deduplicate and filter bounds
         const unique = new Set();
         pts.forEach(p => {
@@ -689,7 +689,7 @@ export function createGridManager(options) {
                         onPatternChange();
                     }
                     else if (tool === "shape") {
-                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), sel);
+                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), toolState.getShapeRatio(), sel);
                         clearStarPreview(); // using same dim overlay for shape if added later
                         onPatternChange();
                     }
@@ -724,7 +724,7 @@ export function createGridManager(options) {
                         return;
                     }
                     if (!isMouseDown && tool === "shape") {
-                        previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius());
+                        previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius(), toolState.getShapeRatio());
                         return;
                     }
                     if (tool === "line" && lineStart) {

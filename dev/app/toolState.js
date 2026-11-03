@@ -1,18 +1,33 @@
 import { create as createNoUiSlider, PipsMode } from "nouislider";
+export const SHAPE_TYPES = [
+    { type: "circle", label: "Circle", icon: "○" },
+    { type: "cube", label: "Cube", icon: "▣" },
+    { type: "star", label: "Star", icon: "★" },
+    { type: "triangle", label: "Triangle", icon: "△" },
+    { type: "diamond", label: "Diamond", icon: "◇" },
+    { type: "hexagon", label: "Hexagon", icon: "⬡" },
+];
+const DEFAULT_SHAPE_RATIO = { width: 1.73, height: 1 };
+const SHAPE_RATIO_MIN = 0.25;
+const SHAPE_RATIO_MAX = 4;
+const SHAPE_DEFAULT_SIZE = 10;
+const SHAPE_CIRCLE_MAX_SIZE = 128;
+const SHAPE_OTHER_MAX_SIZE = 64;
 const TOOL_SIZE_CONFIGS = {
     pencil: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
     circle: { min: 1, max: 30, step: 1, defaultValue: 7, label: "Size" },
-    shape: { min: 1, max: 30, step: 1, defaultValue: 5, label: "Size" },
 };
 export function createToolState(options) {
     const { toolButtons, sizeSlider, sizeOutput, sizeGroup } = options;
-    const shapeTypeSelect = document.getElementById("shapeType");
     let currentTool = "pencil";
     let previousTool = "pencil";
     let lastNonSelectTool = "pencil";
+    let shapeType = "star";
+    let shapeRatio = Object.assign({}, DEFAULT_SHAPE_RATIO);
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
+    const shapeListeners = new Set();
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
@@ -35,9 +50,52 @@ export function createToolState(options) {
         },
         tooltips: false,
     });
-    const updateSizeSlider = (tool) => {
+    // Helper to get slider value as number
+    const getSliderValue = () => {
+        const val = slider.get();
+        return Array.isArray(val) ? parseInt(val[0]) : parseInt(val);
+    };
+    /** Size config for a tool. Shape ranges depend on the selected shape. */
+    const getSizeConfig = (tool) => {
+        if (tool === "shape") {
+            return {
+                min: 1,
+                max: shapeType === "circle" ? SHAPE_CIRCLE_MAX_SIZE : SHAPE_OTHER_MAX_SIZE,
+                step: 1,
+                defaultValue: SHAPE_DEFAULT_SIZE,
+                label: "Size",
+            };
+        }
+        return TOOL_SIZE_CONFIGS[tool];
+    };
+    /**
+     * Show every value for small ranges, but only a readable subset for large
+     * ranges like the 128px circle, where one label per pixel would be unusable.
+     */
+    const buildPipValues = (config) => {
         var _a;
-        const config = TOOL_SIZE_CONFIGS[tool];
+        const values = [];
+        const span = config.max - config.min;
+        if (span <= 30) {
+            for (let v = config.min; v <= config.max; v += config.step)
+                values.push(v);
+            return values;
+        }
+        const targetCount = 20;
+        const rawStep = span / (targetCount - 1);
+        const niceSteps = [1, 2, 4, 5, 8, 10, 16, 20, 25, 32, 40, 50, 64];
+        const step = (_a = niceSteps.find((candidate) => candidate >= rawStep)) !== null && _a !== void 0 ? _a : Math.ceil(rawStep);
+        values.push(config.min);
+        for (let v = Math.ceil(config.min / step) * step; v < config.max; v += step) {
+            if (v > config.min)
+                values.push(v);
+        }
+        values.push(config.max);
+        return values;
+    };
+    const updateSizeSlider = (tool, preserveValue = false) => {
+        var _a;
+        const config = getSizeConfig(tool);
         if (!config) {
             if (sizeGroup)
                 sizeGroup.hidden = true;
@@ -45,11 +103,9 @@ export function createToolState(options) {
         }
         if (sizeGroup)
             sizeGroup.hidden = false;
-        // Generate pip values for all steps in the range
-        const pipValues = [];
-        for (let v = config.min; v <= config.max; v += config.step) {
-            pipValues.push(v);
-        }
+        // Capture before updateOptions, which may clamp the current value to the
+        // new range (e.g. switching from a 128px circle to a 64px shape).
+        const previousValue = getSliderValue();
         // Update noUiSlider range, step, and pips
         slider.updateOptions({
             range: {
@@ -59,7 +115,7 @@ export function createToolState(options) {
             step: config.step,
             pips: {
                 mode: PipsMode.Values,
-                values: pipValues,
+                values: buildPipValues(config),
                 density: 100,
                 format: {
                     to: (value) => String(value),
@@ -67,8 +123,13 @@ export function createToolState(options) {
                 },
             },
         }, false);
-        // Restore remembered size or use default
-        const value = (_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue;
+        // Restore the remembered size (or keep the current value) and clamp it to
+        // the tool's current range.
+        const requestedValue = preserveValue
+            ? previousValue
+            : ((_a = rememberedSizes[tool]) !== null && _a !== void 0 ? _a : config.defaultValue);
+        const value = Math.max(config.min, Math.min(config.max, requestedValue));
+        rememberedSizes[tool] = value;
         slider.set(value);
         if (sizeOutput) {
             sizeOutput.min = String(config.min);
@@ -78,9 +139,8 @@ export function createToolState(options) {
     };
     function selectTool(tool) {
         // Save current size before switching
-        if (TOOL_SIZE_CONFIGS[currentTool]) {
-            const currentValue = slider.get();
-            rememberedSizes[currentTool] = Array.isArray(currentValue) ? parseInt(currentValue[0]) : parseInt(currentValue);
+        if (getSizeConfig(currentTool)) {
+            rememberedSizes[currentTool] = getSliderValue();
         }
         previousTool = currentTool;
         currentTool = tool;
@@ -116,7 +176,7 @@ export function createToolState(options) {
             let val = parseInt(sizeOutput.value);
             if (isNaN(val))
                 val = 1;
-            const config = TOOL_SIZE_CONFIGS[currentTool];
+            const config = getSizeConfig(currentTool);
             if (config) {
                 val = Math.max(config.min, Math.min(config.max, val));
                 sizeOutput.value = String(val);
@@ -127,11 +187,6 @@ export function createToolState(options) {
     }
     // Initialize
     selectTool("pencil");
-    // Helper to get slider value as number
-    const getSliderValue = () => {
-        const val = slider.get();
-        return Array.isArray(val) ? parseInt(val[0]) : parseInt(val);
-    };
     return {
         getCurrentTool: () => currentTool,
         getPreviousTool: () => previousTool,
@@ -145,12 +200,44 @@ export function createToolState(options) {
         },
         getShapeRadius: () => {
             var _a;
+            const config = getSizeConfig("shape");
             const size = currentTool === "shape"
                 ? getSliderValue()
-                : ((_a = rememberedSizes["shape"]) !== null && _a !== void 0 ? _a : 5);
-            return size;
+                : ((_a = rememberedSizes["shape"]) !== null && _a !== void 0 ? _a : config.defaultValue);
+            const clamped = Math.max(config.min, Math.min(config.max, size));
+            // The Size slider is the shape's overall width/diameter, while the
+            // drawing code works from a radius, which must stay a whole number for
+            // the Bresenham circle.
+            return Math.max(1, Math.round(clamped / 2));
         },
-        getShapeType: () => shapeTypeSelect ? shapeTypeSelect.value : "star",
+        getShapeType: () => shapeType,
+        setShapeType: (type) => {
+            if (shapeType === type)
+                return;
+            shapeType = type;
+            // The circle can be drawn much larger than the other shapes, so the size
+            // range (and the current value, if it is now out of bounds) must follow
+            // the newly selected shape.
+            if (currentTool === "shape")
+                updateSizeSlider("shape", true);
+            shapeListeners.forEach((listener) => listener());
+        },
+        getShapeRatio: () => (Object.assign({}, shapeRatio)),
+        setShapeRatio: (next) => {
+            var _a, _b;
+            const clamp = (value, fallback) => {
+                if (!Number.isFinite(value))
+                    return fallback;
+                const clamped = Math.min(SHAPE_RATIO_MAX, Math.max(SHAPE_RATIO_MIN, value));
+                return Math.round(clamped * 100) / 100;
+            };
+            const width = clamp((_a = next.width) !== null && _a !== void 0 ? _a : shapeRatio.width, shapeRatio.width);
+            const height = clamp((_b = next.height) !== null && _b !== void 0 ? _b : shapeRatio.height, shapeRatio.height);
+            if (width === shapeRatio.width && height === shapeRatio.height)
+                return;
+            shapeRatio = { width, height };
+            shapeListeners.forEach((listener) => listener());
+        },
         getCircleRadius: () => {
             var _a;
             const size = currentTool === "circle"
@@ -161,6 +248,10 @@ export function createToolState(options) {
         subscribeToToolChanges: (listener) => {
             listeners.add(listener);
             return () => listeners.delete(listener);
+        },
+        subscribeToShapeChanges: (listener) => {
+            shapeListeners.add(listener);
+            return () => shapeListeners.delete(listener);
         },
         getCurrentSize: () => getSliderValue(),
     };
