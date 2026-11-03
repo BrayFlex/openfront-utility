@@ -23,6 +23,7 @@ import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
 import { createToolState } from "./app/toolState.js";
+import { createTileGhostRenderer } from "./app/tileGhostRenderer.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
 import { initThemeToggle } from "./app/themeToggle.js";
@@ -207,6 +208,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     // ── Guide state ───────────────────────────────────────────────────────────
     let handleGuideChange = () => { };
+    let refreshTileGhost = () => { };
     const guideState = setupGridGuides(document.getElementById("canvasControlsBar"), () => handleGuideChange());
     // ── MAIN grid manager ─────────────────────────────────────────────────────
     const mainGrid = createGridManager({
@@ -233,6 +235,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // and test canvases without resizing either one.
         mainGrid.refreshGuides();
         scrapGrid.refreshGuides();
+        // Ruler strips can change the frame's layout; re-align the ghost repeat.
+        refreshTileGhost();
     };
     // ── SCRAP grid manager ────────────────────────────────────────────────────
     // The test canvas is a fixed 128×128 scratch pad that ignores the shared
@@ -261,6 +265,28 @@ document.addEventListener("DOMContentLoaded", () => {
     scrapGrid.setDrawingTools(scrapDrawingTools);
     // Helper — active grid
     const activeGrid = () => (isScrapActive ? scrapGrid : mainGrid);
+    // ── Faded tiling around the canvas ────────────────────────────────────────
+    // Shows the next tile(s) over faintly on the workspace background so the
+    // pattern can be judged as a seamless repeat while drawing.
+    const canvasWorkspace = document.getElementById("canvasWorkspace");
+    const tileGhostCanvas = document.getElementById("tileGhost");
+    const tileGhost = createTileGhostRenderer({
+        canvas: tileGhostCanvas,
+        workspace: canvasWorkspace,
+        getGrid: () => ({
+            element: isScrapActive ? scrapGridDiv : gridDiv,
+            pattern: activeGrid().getCurrentPattern(),
+        }),
+    });
+    if (typeof ResizeObserver !== "undefined") {
+        new ResizeObserver(() => tileGhost.render()).observe(canvasWorkspace);
+    }
+    refreshTileGhost = () => tileGhost.render();
+    // Re-tint the ghost when the light/dark theme changes.
+    new MutationObserver(() => tileGhost.render()).observe(document.documentElement, {
+        attributes: true,
+        attributeFilter: ["data-theme"],
+    });
     // ── History managers ──────────────────────────────────────────────────────
     const mainHistory = createHistoryManager();
     // The test canvas can't be base64-encoded (128×128 exceeds the format's
@@ -388,6 +414,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!isApplyingHistory)
                 scrapHistory.record(clonePattern(pattern));
             updateHistoryButtons();
+            tileGhost.render();
             return;
         }
         const scale = scaleExponent();
@@ -412,6 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isApplyingHistory)
             mainHistory.record(base64);
         updateHistoryButtons();
+        tileGhost.render();
     };
     // ── Undo / Redo ───────────────────────────────────────────────────────────
     const applyMainHistoryState = (base64) => {
@@ -810,7 +838,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // ── Workspace (zoom/pan) controls ─────────────────────────────────────────
     // Each canvas keeps its own zoom/pan state and is controlled independently.
     workspaceRefresh = initWorkspaceControls({
-        workspace: document.getElementById("canvasWorkspace"),
+        workspace: canvasWorkspace,
         viewports: [
             { element: mainViewport, isActive: () => !isScrapActive },
             { element: scrapViewport, isActive: () => isScrapActive },
@@ -819,6 +847,7 @@ document.addEventListener("DOMContentLoaded", () => {
         zoomOutButton: zoomOutBtn,
         resetButton: resetViewBtn,
         zoomValue: zoomValueEl,
+        onChange: () => tileGhost.render(),
     }).refresh;
     // ── Info Modal ────────────────────────────────────────────────────────────
     initInfoModal();
