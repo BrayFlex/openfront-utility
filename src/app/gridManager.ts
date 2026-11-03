@@ -551,6 +551,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     const centerEnabled = guideState.isCenterEnabled();
     // Keep the ruler strips visible if either the ruler or the center ticks are shown
     frame.classList.toggle("ruler-off", !rulerEnabled && !centerEnabled);
+    // With center ticks only, the strips are a transparent overlay so they do
+    // not hide the workspace/ghost tiling around the canvas.
+    frame.classList.toggle("center-only", centerEnabled && !rulerEnabled);
 
     [topRuler, bottomRuler, leftRuler, rightRuler].forEach((r) => r.replaceChildren());
 

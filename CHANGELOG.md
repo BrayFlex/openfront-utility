@@ -2,6 +2,11 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## September 27th, 2026 — Seamless Tiling Around the Canvas
+- The workspace **outside the drawing canvas** now shows a faded repeat of your pattern, so you can see how it continues across tile edges while you draw.
+- The ghost keeps the canvas scheme — **black marks on a light backdrop** — in both light and dark mode. In dark mode the area outside the canvas lifts slightly so the black marks stay readable instead of inverting. It follows the pattern live and tracks canvas zoom/pan.
+- Fixed toggling the **Center** guide shifting the canvas (and knocking the ghost out of alignment), and the center-only ruler strips now stay transparent so they no longer cover the tiling around the canvas.
+
 ## August 16, 2026 — Update Links
 - The **Links** now reference the new artist dashboard and links related to the old system have been removed.
 

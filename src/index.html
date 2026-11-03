@@ -88,15 +88,15 @@
 
           <!-- Edit: Cut / Copy / Paste -->
           <div class="tool-strip-group">
-            <button id="cutBtn" class="tool-btn action-btn" title="Cut selection (Ctrl+X)">
+            <button id="cutBtn" class="tool-btn action-btn" title="Cut selection (⌘/Ctrl+X)">
               <span class="tool-icon">✂</span>
               <span class="tool-label">Cut</span>
             </button>
-            <button id="copyBtn" class="tool-btn action-btn" title="Copy selection (Ctrl+C)">
+            <button id="copyBtn" class="tool-btn action-btn" title="Copy selection (⌘/Ctrl+C)">
               <span class="tool-icon">⧉</span>
               <span class="tool-label">Copy</span>
             </button>
-            <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (Ctrl+V) — then click top-left position">
+            <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (⌘/Ctrl+V)">
               <span class="tool-icon">⎘</span>
               <span class="tool-label">Paste</span>
             </button>
@@ -278,7 +278,10 @@
 
           <!-- Grid workspaces -->
           <div id="canvasWorkspace" class="canvas-workspace">
-            
+
+            <!-- Faded repeat of the pattern around the drawable canvas -->
+            <canvas id="tileGhost" class="tile-ghost" aria-hidden="true"></canvas>
+
             <!-- Size Popover (Overlay) -->
             <div id="sizePopover" class="size-popover" hidden>
               <div class="size-popover-content">

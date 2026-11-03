@@ -537,12 +537,25 @@
 /* noUiSlider's own RTL-vertical origin transform drives the thumb sweep —
    do not override .noUi-vertical.noUi-rtl .noUi-origin here. */
 
+/* Faded tiled repeat of the pattern, shown around the drawable canvas. */
+.tile-ghost {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+}
+
 .grid-viewport {
   position: absolute;
   top: 50%;
   left: 50%;
-  transform-origin: 0 0;
+  /* Scale about the centre so adding/removing the ruler strips (which change
+     the frame's size) never shifts the drawable canvas. */
+  transform-origin: center center;
   will-change: transform;
+  z-index: 1;
 }
 
 /* Center guide cross — larger and theme-aware */
@@ -617,6 +630,13 @@
 .grid-frame.ruler-off {
   grid-template-columns: 0 auto 0;
   grid-template-rows: 0 auto 0;
+}
+
+/* Center guide only: the ruler strips exist just to host the center ticks, so
+   keep them transparent and borderless — the ghost tiling shows through. */
+.grid-frame.center-only .grid-ruler {
+  background: transparent;
+  border-color: transparent;
 }
 
 .grid-ruler {
