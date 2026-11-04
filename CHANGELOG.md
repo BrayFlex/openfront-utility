@@ -2,6 +2,14 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+
+## October 3rd, 2026 — One Fill Tool with 1-Bit Shading Styles
+- **Fill** and **Shade** are now a single **Fill** tool (keeping the ▦ shade icon), so there is one place to fill or shade an area.
+- The Fill options strip shows **clickable pixel swatches** instead of named buttons, ordered from darkest to lightest: solid ink, 75%, 50% and 25% dithers, plus **Erase** at the lightest end. Each swatch is a 48×48 preview drawn with chunky 4px pixels, so the pattern is easy to read at a glance.
+- Hovering with Fill shows a live preview: every cell the fill would touch gets a faint tint, and the cells the chosen style would actually ink get a stronger tint. The preview follows the pointer and respects any active selection.
+- Fills anchor the dither to the cell under the cursor, so patterns move with the pointer and line up predictably across a flood fill.
+- With a selection active, Fill now paints the chosen style across the **whole selection** (Erase clears it), with the dither still anchored to the clicked cell.
+
 ## October 2nd, 2026 — Shape Tool Options Sub-bar
 - Selecting the **Shape** tool now opens a dedicated options strip on the left of the canvas controls bar instead of hiding choices inside the toolbar button.
 - Choose **Circle, Cube, Star, Triangle, Diamond, or Hexagon** from the Shape dropdown — the hover preview and drawing use the same shape state.

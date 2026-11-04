@@ -1,6 +1,7 @@
 import { getCircleCells, type GridPoint } from "./circleGeometry.js";
 import type { ClipboardManager } from "./clipboard.js";
 import type { DrawingTools } from "./drawingTools.js";
+import { getFillStyle } from "./fillStyles.js";
 import type { GuideState } from "./gridGuides.js";
 import {
   invertPattern,
@@ -104,6 +105,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // Star preview (dim overlay)
   let starPreviewCells: GridPoint[] = [];
+
+  // Fill preview (which cells a fill would touch, and which it would ink)
+  let fillPreviewCells: { x: number; y: number; active: boolean }[] = [];
 
   // Line start
   let lineStart: GridPoint | null = null;
@@ -250,6 +254,31 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     starPreviewCells.forEach((p) =>
       cellMatrix[p.y]?.[p.x]?.classList.add("star-hover")
     );
+  };
+
+  // ── Fill preview ──────────────────────────────────────────────────────────
+  const clearFillPreview = () => {
+    fillPreviewCells.forEach((p) => {
+      cellMatrix[p.y]?.[p.x]?.classList.remove("fill-hover", "fill-hover-mark");
+    });
+    fillPreviewCells = [];
+  };
+
+  const previewFill = (pt: GridPoint) => {
+    clearFillPreview();
+    if (!drawingTools) return;
+    const targets = drawingTools.getFillTargets(
+      pt.x,
+      pt.y,
+      getFillStyle(toolState.getFillStyle()),
+      activeSelection.size > 0 ? activeSelection : undefined
+    );
+    fillPreviewCells = targets.filter((p) => isInBounds(p.x, p.y));
+    fillPreviewCells.forEach((p) => {
+      cellMatrix[p.y]?.[p.x]?.classList.add(
+        p.active ? "fill-hover-mark" : "fill-hover"
+      );
+    });
   };
 
   // ── Line preview ──────────────────────────────────────────────────────────
@@ -519,6 +548,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   gridDiv.addEventListener("mouseleave", () => {
     clearCirclePreview();
     clearStarPreview();
+    clearFillPreview();
     clearLinePreview();
     clearPastePreview();
   });
@@ -683,6 +713,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setLineStart(null);
     clearCirclePreview();
     clearStarPreview();
+    clearFillPreview();
     clearPastePreview();
     clearSelection();
     applyGridSizing();
@@ -785,18 +816,13 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             setLineStart(null);
             onPatternChange();
           } else if (tool === "fill") {
-            if (hasSelection()) {
-              drawingTools?.invertSelection(activeSelection);
-            } else {
-              drawingTools?.floodFill(cx, cy, sel);
-            }
-            onPatternChange();
-          } else if (tool === "shade") {
-            if (hasSelection()) {
-              drawingTools?.shadeSelection(activeSelection);
-            } else {
-              drawingTools?.floodShade(cx, cy, sel);
-            }
+            drawingTools?.fillWithStyle(
+              cx,
+              cy,
+              getFillStyle(toolState.getFillStyle()),
+              sel
+            );
+            clearFillPreview();
             onPatternChange();
           } else if (tool === "shape") {
             drawingTools?.drawShape(
@@ -834,6 +860,11 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             if (penToggleState === null) penToggleState = !isCellActive(cx, cy);
             applyPencilBrush(cx, cy, penToggleState);
             onPatternChange();
+            return;
+          }
+
+          if (!isMouseDown && tool === "fill") {
+            previewFill({ x: cx, y: cy });
             return;
           }
 
@@ -898,6 +929,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     if (tool !== "line") setLineStart(null);
     if (tool !== "circle") clearCirclePreview();
     if (tool !== "shape") clearStarPreview();
+    if (tool !== "fill") clearFillPreview();
     if (tool !== "paste") clearPastePreview();
     if (tool !== "selectArea") {
       selectAreaStart = null;
@@ -917,6 +949,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setLineStart(null);
     clearCirclePreview();
     clearStarPreview();
+    clearFillPreview();
     clearPastePreview();
     
     if (hasSelection() && drawingTools) {

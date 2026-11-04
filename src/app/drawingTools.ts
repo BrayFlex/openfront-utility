@@ -1,4 +1,5 @@
 import { getCircleCells } from "./circleGeometry.js";
+import type { FillStyle } from "./fillStyles.js";
 import type { ShapeRatio, ShapeType } from "./toolState.js";
 
 export type DrawingTools = {
@@ -12,9 +13,19 @@ export type DrawingTools = {
     ratio: ShapeRatio,
     selection?: Set<string>
   ) => void;
-  floodFill: (sx: number, sy: number, selection?: Set<string>) => void;
-  floodShade: (sx: number, sy: number, selection?: Set<string>) => void;
-  shadeSelection: (selection: Set<string>) => void;
+  fillWithStyle: (
+    sx: number,
+    sy: number,
+    style: FillStyle,
+    selection?: Set<string>
+  ) => void;
+  /** Cells a fill would touch, with the state it would leave them in. */
+  getFillTargets: (
+    sx: number,
+    sy: number,
+    style: FillStyle,
+    selection?: Set<string>
+  ) => { x: number; y: number; active: boolean }[];
   invertSelection: (selection: Set<string>) => void;
   clearSelection: (selection: Set<string>) => void;
   getShapeCells: (
@@ -199,32 +210,43 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     return toApply;
   }
 
-  /** Flood fill from (sx,sy) — respects selection constraint */
-  function floodFill(sx: number, sy: number, selection?: Set<string>) {
-    if (!isInSelection(sx, sy, selection)) return;
-    const target = isCellActive(sx, sy) ? 1 : 0;
-    const newValue = target ? 0 : 1;
-    const toApply = floodTraverse(sx, sy, selection);
-    toApply.forEach(([x, y]) => setCellActive(x, y, newValue === 1));
+  /**
+   * Resolve which cells a fill touches and what state it leaves them in. With
+   * a selection, only the selection is filled; otherwise the connected area of
+   * same-state cells around the seed is filled. The pattern is always anchored
+   * at the cell under the cursor so it moves with the pointer and lines up
+   * predictably with the preview.
+   */
+  function getFillTargets(
+    sx: number,
+    sy: number,
+    style: FillStyle,
+    selection?: Set<string>
+  ): { x: number; y: number; active: boolean }[] {
+    if (selection && selection.size > 0) {
+      const targets: { x: number; y: number; active: boolean }[] = [];
+      selection.forEach((cellKey) => {
+        const [x, y] = cellKey.split(",").map(Number);
+        targets.push({ x, y, active: style.isMarked(x - sx, y - sy) });
+      });
+      return targets;
+    }
+
+    return floodTraverse(sx, sy).map(([x, y]) => ({
+      x,
+      y,
+      active: style.isMarked(x - sx, y - sy),
+    }));
   }
 
-  /** Shade flood fill — fills connected same-state area with checkerboard */
-  function floodShade(sx: number, sy: number, selection?: Set<string>) {
-    if (!isInSelection(sx, sy, selection)) return;
-    const toApply = floodTraverse(sx, sy, selection);
-    const anchorParity = (sx + sy) % 2;
-    toApply.forEach(([x, y]) => {
-      // Checkerboard aligned with click anchor
-      setCellActive(x, y, (x + y) % 2 === anchorParity);
-    });
-  }
-
-  /** Fill an explicit selection set with checkerboard pattern */
-  function shadeSelection(selection: Set<string>) {
-    selection.forEach((key) => {
-      const [xs, ys] = key.split(",").map(Number);
-      // Without an anchor, just use even parity
-      setCellActive(xs, ys, (xs + ys) % 2 === 0);
+  function fillWithStyle(
+    sx: number,
+    sy: number,
+    style: FillStyle,
+    selection?: Set<string>
+  ) {
+    getFillTargets(sx, sy, style, selection).forEach(({ x, y, active }) => {
+      setCellActive(x, y, active);
     });
   }
 
@@ -248,9 +270,8 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     drawLine, 
     drawCircle, 
     drawShape, 
-    floodFill, 
-    floodShade, 
-    shadeSelection, 
+    fillWithStyle, 
+    getFillTargets,
     invertSelection, 
     clearSelection: clearSelectionPixels,
     getShapeCells

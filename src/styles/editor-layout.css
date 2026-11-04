@@ -50,22 +50,12 @@
   display: flex;
   align-items: center;
   gap: 8px;
+  /* Keep the tool options pinned to the left; the canvas controls stay right. */
+  margin-right: auto;
   /* Never shrink into the controls on the right; the bar scrolls if needed. */
   flex: 0 0 auto;
 }
 .tool-options[hidden] { display: none; }
-
-/* Divider between the tool options and the canvas controls. The auto margin
-   pushes the canvas controls to the right so the divider stays attached to
-   the tool options instead of drifting over to the controls. */
-.canvas-controls-bar > .tool-options + .canvas-controls-divider {
-  margin-right: auto;
-  height: 26px;
-  background: var(--border-strong);
-}
-.canvas-controls-bar > .tool-options[hidden] + .canvas-controls-divider {
-  display: none;
-}
 
 .tool-options-panel {
   display: flex;
@@ -139,6 +129,42 @@
 .tool-options-ratio-input:focus {
   outline: none;
   border-color: var(--accent);
+}
+
+/* Fill style swatches — 1-bit previews, darkest to lightest in the list. */
+.tool-options-swatch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: #ffffff;
+  cursor: pointer;
+}
+.tool-options-swatch:hover {
+  border-color: var(--border-strong);
+}
+.tool-options-swatch.selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+.tool-options-swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.tool-options-swatch-grid {
+  display: grid;
+  gap: 0;
+  border: 1px solid #c7d0d6;
+}
+
+.tool-options-swatch-cell {
+  background: transparent;
+}
+.tool-options-swatch-cell.is-marked {
+  background: #24313a;
 }
 
 .canvas-tabs {
