@@ -106,6 +106,68 @@ export function setupToolOptions({ container, toolState }) {
         swatchButtons.set(style.id, button);
     }
     container.appendChild(fillPanel);
+    // ── Pencil panel ─────────────────────────────────────────────────────────
+    const pencilPanel = document.createElement("div");
+    pencilPanel.className = "tool-options-panel";
+    pencilPanel.dataset.tool = "pencil";
+    const pencilLabel = document.createElement("span");
+    pencilLabel.className = "tool-options-label";
+    pencilLabel.textContent = "Tip";
+    const pencilTipGroup = document.createElement("div");
+    pencilTipGroup.className = "tool-options-toggle";
+    pencilTipGroup.setAttribute("role", "group");
+    pencilTipGroup.setAttribute("aria-label", "Pencil tip");
+    const pencilTipButtons = new Map();
+    const pencilTips = [
+        { tip: "sharp", label: "Sharp (square)", icon: "■" },
+        { tip: "soft", label: "Soft (circular)", icon: "●" },
+    ];
+    for (const entry of pencilTips) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tool-options-toggle-btn";
+        button.dataset.tip = entry.tip;
+        button.title = entry.label;
+        button.setAttribute("aria-label", entry.label);
+        button.setAttribute("aria-pressed", "false");
+        button.textContent = entry.icon;
+        button.addEventListener("click", () => toolState.setPencilTip(entry.tip));
+        pencilTipGroup.appendChild(button);
+        pencilTipButtons.set(entry.tip, button);
+    }
+    pencilPanel.append(pencilLabel, pencilTipGroup);
+    container.appendChild(pencilPanel);
+    // ── Line panel ───────────────────────────────────────────────────────────
+    const linePanel = document.createElement("div");
+    linePanel.className = "tool-options-panel";
+    linePanel.dataset.tool = "line";
+    const lineLabel = document.createElement("span");
+    lineLabel.className = "tool-options-label";
+    lineLabel.textContent = "Line";
+    const lineModeGroup = document.createElement("div");
+    lineModeGroup.className = "tool-options-toggle";
+    lineModeGroup.setAttribute("role", "group");
+    lineModeGroup.setAttribute("aria-label", "Line type");
+    const lineModeButtons = new Map();
+    const lineModes = [
+        { mode: "straight", label: "Straight line", icon: "╲" },
+        { mode: "curve", label: "Curved line", icon: "⌒" },
+    ];
+    for (const entry of lineModes) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tool-options-toggle-btn";
+        button.dataset.mode = entry.mode;
+        button.title = entry.label;
+        button.setAttribute("aria-label", entry.label);
+        button.setAttribute("aria-pressed", "false");
+        button.textContent = entry.icon;
+        button.addEventListener("click", () => toolState.setLineMode(entry.mode));
+        lineModeGroup.appendChild(button);
+        lineModeButtons.set(entry.mode, button);
+    }
+    linePanel.append(lineLabel, lineModeGroup);
+    container.appendChild(linePanel);
     // ── State sync ───────────────────────────────────────────────────────────
     const shapeToolButton = document.querySelector("#tool-shape");
     const shapeToolIcon = (_a = shapeToolButton === null || shapeToolButton === void 0 ? void 0 : shapeToolButton.querySelector(".tool-icon")) !== null && _a !== void 0 ? _a : null;
@@ -136,24 +198,52 @@ export function setupToolOptions({ container, toolState }) {
             button.setAttribute("aria-pressed", String(active));
         });
     };
+    const syncPencilTip = () => {
+        const current = toolState.getPencilTip();
+        pencilTipButtons.forEach((button, tip) => {
+            const active = tip === current;
+            button.classList.toggle("selected", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+    };
+    const syncLineMode = () => {
+        const current = toolState.getLineMode();
+        lineModeButtons.forEach((button, mode) => {
+            const active = mode === current;
+            button.classList.toggle("selected", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+    };
     const updateVisibility = (tool) => {
         const isShape = tool === "shape";
         const isFill = tool === "fill";
-        container.hidden = !isShape && !isFill;
+        const isPencil = tool === "pencil";
+        const isLine = tool === "line";
+        container.hidden = !isShape && !isFill && !isPencil && !isLine;
         shapePanel.hidden = !isShape;
         fillPanel.hidden = !isFill;
+        pencilPanel.hidden = !isPencil;
+        linePanel.hidden = !isLine;
         if (isShape) {
             syncType();
             syncRatioInputs();
         }
         if (isFill)
             syncFillStyle();
+        if (isPencil)
+            syncPencilTip();
+        if (isLine)
+            syncLineMode();
     };
     syncType();
     syncRatioInputs();
     syncFillStyle();
+    syncPencilTip();
+    syncLineMode();
     updateVisibility(toolState.getCurrentTool());
     toolState.subscribeToToolChanges(updateVisibility);
     toolState.subscribeToShapeChanges(syncType);
     toolState.subscribeToFillChanges(syncFillStyle);
+    toolState.subscribeToPencilChanges(syncPencilTip);
+    toolState.subscribeToLineChanges(syncLineMode);
 }
