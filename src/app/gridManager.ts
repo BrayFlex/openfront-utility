@@ -31,6 +31,8 @@ export type GridManager = {
   setDrawingTools: (tools: DrawingTools) => void;
   /** Returns the active selection (shared reference — read-only externally) */
   getActiveSelection: () => Set<string>;
+  /** Replace the active selection, dropping any cells outside the canvas. */
+  restoreSelection: (selection: Iterable<string>) => void;
   clearSelection: () => void;
   hasSelection: () => boolean;
   /** Invert all cells in selection (or full canvas if no selection) */
@@ -188,6 +190,18 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     renderSelection();
   };
 
+  const restoreSelection = (selection: Iterable<string>) => {
+    activeSelection = new Set<string>();
+    for (const cellKey of selection) {
+      const [x, y] = cellKey.split(",").map(Number);
+      if (isInBounds(x, y)) activeSelection.add(cellKey);
+    }
+    selectAreaStart = null;
+    selectAreaEnd = null;
+    selectAreaPreview.clear();
+    renderSelection();
+  };
+
   const hasSelection = () => activeSelection.size > 0;
 
   // ── Area preview for Select Area tool ─────────────────────────────────────
@@ -236,12 +250,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   const previewShape = (
     type: ShapeType,
     center: GridPoint,
-    radius: number,
+    size: number,
     ratio: ShapeRatio
   ) => {
     clearStarPreview();
     if (!drawingTools) return;
-    const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, ratio, activeSelection.size > 0 ? activeSelection : undefined);
+    const pts = drawingTools.getShapeCells(type, center.x, center.y, size, ratio, activeSelection.size > 0 ? activeSelection : undefined);
     // Deduplicate and filter bounds
     const unique = new Set<string>();
     pts.forEach(p => {
@@ -423,6 +437,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       originX: minX,
       originY: minY,
     });
+    // Copy is a completed selection action, so deselect automatically; this
+    // keeps a following paste unconstrained by the old selection.
     clearSelection();
   };
 
@@ -791,6 +807,15 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             renderSelection();
             return;
           }
+
+          if (tool === "pencil") {
+            // Start the stroke on the press so the very first pixel is drawn
+            // even when the pointer is dragged straight off this cell.
+            penToggleState = !isCellActive(cx, cy);
+            applyPencilBrush(cx, cy, penToggleState);
+            onPatternChange();
+            return;
+          }
         };
 
         cell.onmouseup = () => {
@@ -803,11 +828,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           const tool = toolState.getCurrentTool();
           const sel = activeSelection.size > 0 ? activeSelection : undefined;
 
-          if (tool === "pencil") {
-            const shouldActivate = !isCellActive(cx, cy);
-            applyPencilBrush(cx, cy, shouldActivate);
-            onPatternChange();
-          } else if (tool === "line") {
+          if (tool === "line") {
             if (!lineStart) {
               setLineStart({ x: cx, y: cy });
               return;
@@ -829,7 +850,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
               toolState.getShapeType(),
               cx,
               cy,
-              toolState.getShapeRadius(),
+              toolState.getShapeSize(),
               toolState.getShapeRatio(),
               sel
             );
@@ -877,7 +898,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             previewShape(
               toolState.getShapeType(),
               { x: cx, y: cy },
-              toolState.getShapeRadius(),
+              toolState.getShapeSize(),
               toolState.getShapeRatio()
             );
             return;
@@ -979,6 +1000,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     setCellActive,
     setDrawingTools,
     getActiveSelection: () => activeSelection,
+    restoreSelection,
     clearSelection,
     hasSelection,
     invertGrid,

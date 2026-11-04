@@ -766,7 +766,8 @@
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  background: var(--surface-muted);
+  /* Keep the strips transparent so the outside ghost tiling stays visible. */
+  background: transparent;
   color: var(--muted);
   font-family: "DM Mono", monospace;
 }

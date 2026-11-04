@@ -66,7 +66,8 @@ export type ToolState = {
   getCurrentTool: () => ToolKind;
   selectTool: (tool: ToolKind) => void;
   getPencilSize: () => number;
-  getShapeRadius: () => number;
+  /** Shape tool Size slider value: the shape's overall width in cells. */
+  getShapeSize: () => number;
   getShapeType: () => ShapeType;
   setShapeType: (type: ShapeType) => void;
   getShapeRatio: () => ShapeRatio;
@@ -277,16 +278,12 @@ export function createToolState(options: ToolStateOptions): ToolState {
       if (currentTool === "pencil") return getSliderValue();
       return rememberedSizes["pencil"] ?? 1;
     },
-    getShapeRadius: () => {
+    getShapeSize: () => {
       const config = getSizeConfig("shape")!;
       const size = currentTool === "shape"
         ? getSliderValue()
         : (rememberedSizes["shape"] ?? config.defaultValue);
-      const clamped = Math.max(config.min, Math.min(config.max, size));
-      // The Size slider is the shape's overall width/diameter, while the
-      // drawing code works from a radius, which must stay a whole number for
-      // the Bresenham circle.
-      return Math.max(1, Math.round(clamped / 2));
+      return Math.max(config.min, Math.min(config.max, size));
     },
     getShapeType: () => shapeType,
     setShapeType: (type) => {
