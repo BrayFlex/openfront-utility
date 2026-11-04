@@ -1,4 +1,5 @@
 import { create as createNoUiSlider, PipsMode } from "nouislider";
+import { DEFAULT_FILL_STYLE } from "./fillStyles.js";
 export const SHAPE_TYPES = [
     { type: "circle", label: "Circle", icon: "○" },
     { type: "cube", label: "Cube", icon: "▣" },
@@ -24,10 +25,12 @@ export function createToolState(options) {
     let lastNonSelectTool = "pencil";
     let shapeType = "star";
     let shapeRatio = Object.assign({}, DEFAULT_SHAPE_RATIO);
+    let fillStyle = DEFAULT_FILL_STYLE;
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
     const shapeListeners = new Set();
+    const fillListeners = new Set();
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
@@ -238,6 +241,13 @@ export function createToolState(options) {
             shapeRatio = { width, height };
             shapeListeners.forEach((listener) => listener());
         },
+        getFillStyle: () => fillStyle,
+        setFillStyle: (style) => {
+            if (fillStyle === style)
+                return;
+            fillStyle = style;
+            fillListeners.forEach((listener) => listener());
+        },
         getCircleRadius: () => {
             var _a;
             const size = currentTool === "circle"
@@ -252,6 +262,10 @@ export function createToolState(options) {
         subscribeToShapeChanges: (listener) => {
             shapeListeners.add(listener);
             return () => shapeListeners.delete(listener);
+        },
+        subscribeToFillChanges: (listener) => {
+            fillListeners.add(listener);
+            return () => fillListeners.delete(listener);
         },
         getCurrentSize: () => getSliderValue(),
     };

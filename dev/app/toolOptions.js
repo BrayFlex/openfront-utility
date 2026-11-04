@@ -1,3 +1,4 @@
+import { FILL_STYLES } from "./fillStyles.js";
 import { SHAPE_TYPES, } from "./toolState.js";
 const RATIO_MIN = 0.25;
 const RATIO_MAX = 4;
@@ -65,6 +66,46 @@ export function setupToolOptions({ container, toolState }) {
     const heightInput = createRatioInput("height", "H×");
     shapePanel.appendChild(ratioGroup);
     container.appendChild(shapePanel);
+    // ── Fill panel ───────────────────────────────────────────────────────────
+    // Swatches are pure pixel previews: the styles are easier to recognise than
+    // to name, so the list runs visually from darkest (solid) to lightest.
+    const fillPanel = document.createElement("div");
+    fillPanel.className = "tool-options-panel";
+    fillPanel.dataset.tool = "fill";
+    const swatchButtons = new Map();
+    for (const style of FILL_STYLES) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tool-options-swatch";
+        button.dataset.style = style.id;
+        button.title = style.label;
+        button.setAttribute("aria-label", style.label);
+        button.setAttribute("aria-pressed", "false");
+        const grid = document.createElement("span");
+        grid.className = "tool-options-swatch-grid";
+        grid.setAttribute("aria-hidden", "true");
+        // A fixed 48×48 field keeps every swatch the same size. 4px preview pixels
+        // make the dither easy to read while 12×12 cells still show several repeats
+        // of each 2-pixel tile.
+        const previewSize = 12;
+        const pixelSize = 4;
+        grid.style.gridTemplateColumns = `repeat(${previewSize}, ${pixelSize}px)`;
+        grid.style.gridTemplateRows = `repeat(${previewSize}, ${pixelSize}px)`;
+        for (let y = 0; y < previewSize; y++) {
+            for (let x = 0; x < previewSize; x++) {
+                const cell = document.createElement("span");
+                cell.className = "tool-options-swatch-cell";
+                if (style.isMarked(x, y))
+                    cell.classList.add("is-marked");
+                grid.appendChild(cell);
+            }
+        }
+        button.appendChild(grid);
+        button.addEventListener("click", () => toolState.setFillStyle(style.id));
+        fillPanel.appendChild(button);
+        swatchButtons.set(style.id, button);
+    }
+    container.appendChild(fillPanel);
     // ── State sync ───────────────────────────────────────────────────────────
     const shapeToolButton = document.querySelector("#tool-shape");
     const shapeToolIcon = (_a = shapeToolButton === null || shapeToolButton === void 0 ? void 0 : shapeToolButton.querySelector(".tool-icon")) !== null && _a !== void 0 ? _a : null;
@@ -87,18 +128,32 @@ export function setupToolOptions({ container, toolState }) {
         if (document.activeElement !== heightInput)
             heightInput.value = formatRatio(ratio.height);
     };
+    const syncFillStyle = () => {
+        const current = toolState.getFillStyle();
+        swatchButtons.forEach((button, id) => {
+            const active = id === current;
+            button.classList.toggle("selected", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+    };
     const updateVisibility = (tool) => {
         const isShape = tool === "shape";
-        container.hidden = !isShape;
+        const isFill = tool === "fill";
+        container.hidden = !isShape && !isFill;
         shapePanel.hidden = !isShape;
+        fillPanel.hidden = !isFill;
         if (isShape) {
             syncType();
             syncRatioInputs();
         }
+        if (isFill)
+            syncFillStyle();
     };
     syncType();
     syncRatioInputs();
+    syncFillStyle();
     updateVisibility(toolState.getCurrentTool());
     toolState.subscribeToToolChanges(updateVisibility);
     toolState.subscribeToShapeChanges(syncType);
+    toolState.subscribeToFillChanges(syncFillStyle);
 }

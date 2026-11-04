@@ -12,3 +12,21 @@
   background: rgba(12, 124, 201, 0.24); /* Blue accent with opacity */
   pointer-events: none;
 }
+
+/* Fill preview: a faint tint on every cell the fill would touch, and a
+   stronger tint on the cells the chosen style would actually ink. */
+.cell.fill-hover::after,
+.cell.fill-hover-mark::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cell.fill-hover::after {
+  background: rgba(12, 124, 201, 0.14);
+}
+
+.cell.fill-hover-mark::after {
+  background: rgba(12, 124, 201, 0.42);
+}
