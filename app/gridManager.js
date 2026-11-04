@@ -90,6 +90,18 @@ export function createGridManager(options) {
         selectAreaPreview.clear();
         renderSelection();
     };
+    const restoreSelection = (selection) => {
+        activeSelection = new Set();
+        for (const cellKey of selection) {
+            const [x, y] = cellKey.split(",").map(Number);
+            if (isInBounds(x, y))
+                activeSelection.add(cellKey);
+        }
+        selectAreaStart = null;
+        selectAreaEnd = null;
+        selectAreaPreview.clear();
+        renderSelection();
+    };
     const hasSelection = () => activeSelection.size > 0;
     // ── Area preview for Select Area tool ─────────────────────────────────────
     const buildRectSet = (start, end) => {
@@ -124,11 +136,11 @@ export function createGridManager(options) {
         starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("star-hover"); });
         starPreviewCells = [];
     };
-    const previewShape = (type, center, radius, ratio) => {
+    const previewShape = (type, center, size, ratio) => {
         clearStarPreview();
         if (!drawingTools)
             return;
-        const pts = drawingTools.getShapeCells(type, center.x, center.y, radius, ratio, activeSelection.size > 0 ? activeSelection : undefined);
+        const pts = drawingTools.getShapeCells(type, center.x, center.y, size, ratio, activeSelection.size > 0 ? activeSelection : undefined);
         // Deduplicate and filter bounds
         const unique = new Set();
         pts.forEach(p => {
@@ -315,6 +327,8 @@ export function createGridManager(options) {
             originX: minX,
             originY: minY,
         });
+        // Copy is a completed selection action, so deselect automatically; this
+        // keeps a following paste unconstrained by the old selection.
         clearSelection();
     };
     // ── Invert ────────────────────────────────────────────────────────────────
@@ -670,6 +684,14 @@ export function createGridManager(options) {
                         renderSelection();
                         return;
                     }
+                    if (tool === "pencil") {
+                        // Start the stroke on the press so the very first pixel is drawn
+                        // even when the pointer is dragged straight off this cell.
+                        penToggleState = !isCellActive(cx, cy);
+                        applyPencilBrush(cx, cy, penToggleState);
+                        onPatternChange();
+                        return;
+                    }
                 };
                 cell.onmouseup = () => {
                     // (commit handled on document body mouseup)
@@ -680,12 +702,7 @@ export function createGridManager(options) {
                         return;
                     const tool = toolState.getCurrentTool();
                     const sel = activeSelection.size > 0 ? activeSelection : undefined;
-                    if (tool === "pencil") {
-                        const shouldActivate = !isCellActive(cx, cy);
-                        applyPencilBrush(cx, cy, shouldActivate);
-                        onPatternChange();
-                    }
-                    else if (tool === "line") {
+                    if (tool === "line") {
                         if (!lineStart) {
                             setLineStart({ x: cx, y: cy });
                             return;
@@ -700,7 +717,7 @@ export function createGridManager(options) {
                         onPatternChange();
                     }
                     else if (tool === "shape") {
-                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeRadius(), toolState.getShapeRatio(), sel);
+                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.drawShape(toolState.getShapeType(), cx, cy, toolState.getShapeSize(), toolState.getShapeRatio(), sel);
                         clearStarPreview(); // using same dim overlay for shape if added later
                         onPatternChange();
                     }
@@ -739,7 +756,7 @@ export function createGridManager(options) {
                         return;
                     }
                     if (!isMouseDown && tool === "shape") {
-                        previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeRadius(), toolState.getShapeRatio());
+                        previewShape(toolState.getShapeType(), { x: cx, y: cy }, toolState.getShapeSize(), toolState.getShapeRatio());
                         return;
                     }
                     if (tool === "line" && lineStart) {
@@ -842,6 +859,7 @@ export function createGridManager(options) {
         setCellActive,
         setDrawingTools,
         getActiveSelection: () => activeSelection,
+        restoreSelection,
         clearSelection,
         hasSelection,
         invertGrid,

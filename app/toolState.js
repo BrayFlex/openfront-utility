@@ -201,17 +201,13 @@ export function createToolState(options) {
                 return getSliderValue();
             return (_a = rememberedSizes["pencil"]) !== null && _a !== void 0 ? _a : 1;
         },
-        getShapeRadius: () => {
+        getShapeSize: () => {
             var _a;
             const config = getSizeConfig("shape");
             const size = currentTool === "shape"
                 ? getSliderValue()
                 : ((_a = rememberedSizes["shape"]) !== null && _a !== void 0 ? _a : config.defaultValue);
-            const clamped = Math.max(config.min, Math.min(config.max, size));
-            // The Size slider is the shape's overall width/diameter, while the
-            // drawing code works from a radius, which must stay a whole number for
-            // the Bresenham circle.
-            return Math.max(1, Math.round(clamped / 2));
+            return Math.max(config.min, Math.min(config.max, size));
         },
         getShapeType: () => shapeType,
         setShapeType: (type) => {
