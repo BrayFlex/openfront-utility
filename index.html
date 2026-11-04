@@ -65,15 +65,11 @@
 
           <div class="tool-strip-separator"></div>
 
-          <!-- Fill / Shade -->
+          <!-- Fill -->
           <div class="tool-strip-group">
-            <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill area; with selection: inverts selection">
-              <span class="tool-icon">■</span>
-              <span class="tool-label">Fill</span>
-            </button>
-            <button id="tool-shade" class="tool-btn" data-tool="shade" title="Shade — checkerboard flood fill; with selection: shades entire selection">
+            <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill with the chosen style; with selection: fills the whole selection">
               <span class="tool-icon">▦</span>
-              <span class="tool-label">Shade</span>
+              <span class="tool-label">Fill</span>
             </button>
           </div>
 
@@ -205,8 +201,6 @@
 
             <!-- Per-tool options (populated by toolOptions.ts) -->
             <div id="toolOptions" class="tool-options" hidden></div>
-
-            <div class="canvas-controls-divider"></div>
 
             <!-- Width -->
             <div class="ctrl-col">
@@ -444,7 +438,7 @@
 
         <h3>What you can do here</h3>
         <ul style="padding-left: 20px; margin: 8px 0;">
-          <li>Draw with <strong>Pencil, Shape (circle, cube, star and more), Line, Fill and Shade</strong> tools, with a size slider that adapts to each tool.</li>
+          <li>Draw with <strong>Pencil, Shape (circle, cube, star and more), Line and Fill</strong> tools, with a size slider that adapts to each tool. The Fill tool can flood an area or a whole selection with <strong>solid ink or 1-bit shading</strong> from darkest to lightest.</li>
           <li>Select part of your pattern to <strong>cut, copy, paste, shift, rotate or flip</strong> it.</li>
           <li>Use the <strong>Test Canvas</strong> as a scratchpad while you work on the main pattern.</li>
           <li>Preview your pattern against different scale sizes and colours before submitting.</li>

@@ -1,4 +1,5 @@
 import { getCircleCells } from "./circleGeometry.js";
+import { getFillStyle } from "./fillStyles.js";
 import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, flipSelectionH, flipSelectionV, } from "./patternTransforms.js";
 // ─── Implementation ───────────────────────────────────────────────────────────
 export function createGridManager(options) {
@@ -17,6 +18,8 @@ export function createGridManager(options) {
     let circlePreviewCells = [];
     // Star preview (dim overlay)
     let starPreviewCells = [];
+    // Fill preview (which cells a fill would touch, and which it would ink)
+    let fillPreviewCells = [];
     // Line start
     let lineStart = null;
     let linePreviews = [];
@@ -137,6 +140,25 @@ export function createGridManager(options) {
             return { x, y };
         });
         starPreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.add("star-hover"); });
+    };
+    // ── Fill preview ──────────────────────────────────────────────────────────
+    const clearFillPreview = () => {
+        fillPreviewCells.forEach((p) => {
+            var _a, _b;
+            (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("fill-hover", "fill-hover-mark");
+        });
+        fillPreviewCells = [];
+    };
+    const previewFill = (pt) => {
+        clearFillPreview();
+        if (!drawingTools)
+            return;
+        const targets = drawingTools.getFillTargets(pt.x, pt.y, getFillStyle(toolState.getFillStyle()), activeSelection.size > 0 ? activeSelection : undefined);
+        fillPreviewCells = targets.filter((p) => isInBounds(p.x, p.y));
+        fillPreviewCells.forEach((p) => {
+            var _a, _b;
+            (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.add(p.active ? "fill-hover-mark" : "fill-hover");
+        });
     };
     // ── Line preview ──────────────────────────────────────────────────────────
     const clearLinePreview = () => {
@@ -418,6 +440,7 @@ export function createGridManager(options) {
     gridDiv.addEventListener("mouseleave", () => {
         clearCirclePreview();
         clearStarPreview();
+        clearFillPreview();
         clearLinePreview();
         clearPastePreview();
     });
@@ -583,6 +606,7 @@ export function createGridManager(options) {
         setLineStart(null);
         clearCirclePreview();
         clearStarPreview();
+        clearFillPreview();
         clearPastePreview();
         clearSelection();
         applyGridSizing();
@@ -671,21 +695,8 @@ export function createGridManager(options) {
                         onPatternChange();
                     }
                     else if (tool === "fill") {
-                        if (hasSelection()) {
-                            drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.invertSelection(activeSelection);
-                        }
-                        else {
-                            drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.floodFill(cx, cy, sel);
-                        }
-                        onPatternChange();
-                    }
-                    else if (tool === "shade") {
-                        if (hasSelection()) {
-                            drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.shadeSelection(activeSelection);
-                        }
-                        else {
-                            drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.floodShade(cx, cy, sel);
-                        }
+                        drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.fillWithStyle(cx, cy, getFillStyle(toolState.getFillStyle()), sel);
+                        clearFillPreview();
                         onPatternChange();
                     }
                     else if (tool === "shape") {
@@ -717,6 +728,10 @@ export function createGridManager(options) {
                             penToggleState = !isCellActive(cx, cy);
                         applyPencilBrush(cx, cy, penToggleState);
                         onPatternChange();
+                        return;
+                    }
+                    if (!isMouseDown && tool === "fill") {
+                        previewFill({ x: cx, y: cy });
                         return;
                     }
                     if (!isMouseDown && tool === "circle") {
@@ -777,6 +792,8 @@ export function createGridManager(options) {
             clearCirclePreview();
         if (tool !== "shape")
             clearStarPreview();
+        if (tool !== "fill")
+            clearFillPreview();
         if (tool !== "paste")
             clearPastePreview();
         if (tool !== "selectArea") {
@@ -797,6 +814,7 @@ export function createGridManager(options) {
         setLineStart(null);
         clearCirclePreview();
         clearStarPreview();
+        clearFillPreview();
         clearPastePreview();
         if (hasSelection() && drawingTools) {
             drawingTools.clearSelection(activeSelection);
