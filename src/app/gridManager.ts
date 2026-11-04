@@ -146,6 +146,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   const baseCellSize = 20;
 
+  // The workspace is pannable while Space / Ctrl / ⌘ is held. While one of
+  // those pan keys is down we suppress previews (and accidental drawing) so the
+  // canvas stays clean during a pan gesture.
+  const isPanKeyHeld = () =>
+    gridDiv.closest(".canvas-workspace")?.classList.contains("pan-key-held") ?? false;
+
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isInBounds = (x: number, y: number) =>
     x >= 0 && y >= 0 && x < tileWidth && y < tileHeight;
@@ -952,6 +958,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         const cx = x, cy = y;
 
         cell.onmousedown = () => {
+          if (isPanKeyHeld()) return;
           const actualTool = toolState.getCurrentTool();
           const tool = isShiftDown ? "selectArea" : actualTool;
 
@@ -987,6 +994,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         };
 
         cell.onclick = () => {
+          if (isPanKeyHeld()) return;
           // If shift is held, the mousedown already handled the selectArea logic — don't draw.
           if (isShiftDown) return;
           const tool = toolState.getCurrentTool();
@@ -1047,6 +1055,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         };
 
         cell.onmouseover = () => {
+          if (isPanKeyHeld()) return;
           const actualTool = toolState.getCurrentTool();
           const tool = isShiftDown ? "selectArea" : actualTool;
           const sel = activeSelection.size > 0 ? activeSelection : undefined;

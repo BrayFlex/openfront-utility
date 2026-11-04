@@ -52,7 +52,15 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
   let startPanY = 0;
   let isSpacePressed = false;
   let isCtrlPressed = false;
+  let isMetaPressed = false;
   let didKeyPan = false;
+
+  const syncPanKeyClass = () => {
+    workspace.classList.toggle(
+      "pan-key-held",
+      isSpacePressed || isCtrlPressed || isMetaPressed
+    );
+  };
 
   const clampZoom = (value: number) =>
     Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
@@ -104,6 +112,7 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
   const isPanGesture = (event: PointerEvent) =>
     isSpacePressed ||
     isCtrlPressed ||
+    isMetaPressed ||
     event.button === 1 ||
     event.altKey ||
     event.metaKey ||
@@ -158,6 +167,7 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
 
     if (event.code === "Space") {
       isSpacePressed = true;
+      syncPanKeyClass();
       workspace.classList.add("is-space-pan");
       event.preventDefault();
       return;
@@ -165,7 +175,14 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
 
     if (event.code === "ControlLeft" || event.code === "ControlRight") {
       isCtrlPressed = true;
+      syncPanKeyClass();
       workspace.classList.add("is-ctrl-pan");
+      return;
+    }
+
+    if (event.code === "MetaLeft" || event.code === "MetaRight") {
+      isMetaPressed = true;
+      syncPanKeyClass();
       return;
     }
 
@@ -180,17 +197,25 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
   document.addEventListener("keyup", (event) => {
     if (event.code === "Space") {
       isSpacePressed = false;
+      syncPanKeyClass();
       workspace.classList.remove("is-space-pan");
     }
     if (event.code === "ControlLeft" || event.code === "ControlRight") {
       isCtrlPressed = false;
+      syncPanKeyClass();
       workspace.classList.remove("is-ctrl-pan");
+    }
+    if (event.code === "MetaLeft" || event.code === "MetaRight") {
+      isMetaPressed = false;
+      syncPanKeyClass();
     }
   });
 
   window.addEventListener("blur", () => {
     isSpacePressed = false;
     isCtrlPressed = false;
+    isMetaPressed = false;
+    syncPanKeyClass();
     workspace.classList.remove("is-space-pan");
     workspace.classList.remove("is-ctrl-pan");
   });

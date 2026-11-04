@@ -8,6 +8,7 @@
 - Fixed **square brushes being one cell too large at even sizes** — a size 4 brush is now exactly 4×4 instead of 5×5.
 - Fixed **fast pencil drags skipping pixels** — strokes are now filled in between cell updates, so quick lines stay continuous.
 - **Dragging the colour picker is much smoother**: colour changes are coalesced to roughly 30fps, the pattern is no longer re-encoded on every input event, and the URL rewrite waits until you pause.
+- Holding **Space, Ctrl or ⌘** to pan now hides every tool preview, so the canvas stays clean during a pan gesture.
 
 ## October 10th, 2026 — Line Controls, Curved Lines & Pencil Preview
 - **Line thickness** now has a Size slider just like Pencil, and the live line preview reflects the chosen thickness.
