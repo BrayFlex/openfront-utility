@@ -16,6 +16,7 @@ const SHAPE_CIRCLE_MAX_SIZE = 128;
 const SHAPE_OTHER_MAX_SIZE = 64;
 const TOOL_SIZE_CONFIGS = {
     pencil: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
+    line: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
     circle: { min: 1, max: 30, step: 1, defaultValue: 7, label: "Size" },
 };
 export function createToolState(options) {
@@ -23,14 +24,18 @@ export function createToolState(options) {
     let currentTool = "pencil";
     let previousTool = "pencil";
     let lastNonSelectTool = "pencil";
-    let shapeType = "star";
+    let shapeType = "circle";
     let shapeRatio = Object.assign({}, DEFAULT_SHAPE_RATIO);
     let fillStyle = DEFAULT_FILL_STYLE;
+    let pencilTip = "sharp";
+    let lineMode = "straight";
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
     const shapeListeners = new Set();
     const fillListeners = new Set();
+    const pencilListeners = new Set();
+    const lineListeners = new Set();
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
@@ -201,6 +206,28 @@ export function createToolState(options) {
                 return getSliderValue();
             return (_a = rememberedSizes["pencil"]) !== null && _a !== void 0 ? _a : 1;
         },
+        getPencilTip: () => pencilTip,
+        setPencilTip: (tip) => {
+            if (pencilTip === tip)
+                return;
+            pencilTip = tip;
+            pencilListeners.forEach((listener) => listener());
+        },
+        getLineSize: () => {
+            var _a;
+            const config = getSizeConfig("line");
+            const size = currentTool === "line"
+                ? getSliderValue()
+                : ((_a = rememberedSizes["line"]) !== null && _a !== void 0 ? _a : config.defaultValue);
+            return Math.max(config.min, Math.min(config.max, size));
+        },
+        getLineMode: () => lineMode,
+        setLineMode: (mode) => {
+            if (lineMode === mode)
+                return;
+            lineMode = mode;
+            lineListeners.forEach((listener) => listener());
+        },
         getShapeSize: () => {
             var _a;
             const config = getSizeConfig("shape");
@@ -262,6 +289,14 @@ export function createToolState(options) {
         subscribeToFillChanges: (listener) => {
             fillListeners.add(listener);
             return () => fillListeners.delete(listener);
+        },
+        subscribeToPencilChanges: (listener) => {
+            pencilListeners.add(listener);
+            return () => pencilListeners.delete(listener);
+        },
+        subscribeToLineChanges: (listener) => {
+            lineListeners.add(listener);
+            return () => lineListeners.delete(listener);
         },
         getCurrentSize: () => getSliderValue(),
     };

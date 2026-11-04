@@ -366,6 +366,11 @@ document.addEventListener("DOMContentLoaded", () => {
     }));
     // ── Output update ─────────────────────────────────────────────────────────
     const clonePattern = (pattern) => pattern.map((row) => [...row]);
+    // Last encoded main-canvas pattern. Colour-only changes (dragging the colour
+    // picker) can reuse this instead of re-encoding the whole pattern on every
+    // input event. Every pattern change goes through updateOutput(), which
+    // refreshes this cache.
+    let lastMainBase64 = null;
     // Re-renders the preview bitmap only — no history/URL side effects. Safe to
     // call on panel resizes and zoom changes without polluting undo history.
     const renderPreviewOnly = () => {
@@ -377,7 +382,7 @@ document.addEventListener("DOMContentLoaded", () => {
         else {
             const scale = scaleExponent();
             try {
-                const base64 = generatePatternBase64(pattern, grid.getTileWidth(), grid.getTileHeight(), scale);
+                const base64 = lastMainBase64 !== null && lastMainBase64 !== void 0 ? lastMainBase64 : generatePatternBase64(pattern, grid.getTileWidth(), grid.getTileHeight(), scale);
                 renderPreview(base64, false);
             }
             catch (_a) {
@@ -424,6 +429,7 @@ document.addEventListener("DOMContentLoaded", () => {
         catch (_a) {
             return;
         }
+        lastMainBase64 = base64;
         const secondary = previewSecondaryColor.value;
         renderPreview(base64, false);
         if (previewCanvasWrap) {
@@ -439,6 +445,46 @@ document.addEventListener("DOMContentLoaded", () => {
             mainHistory.record(base64);
         updateHistoryButtons();
         tileGhost.render();
+    };
+    // ── Colour-only updates ───────────────────────────────────────────────────
+    // Dragging a native colour picker fires `input` many times per second. Coalesce
+    // those events into at most one preview redraw every ~32ms, and delay the URL
+    // rewrite until the user pauses. The pattern itself has not changed, so there
+    // is no history entry to record.
+    const COLOR_REDRAW_INTERVAL = 32;
+    let colorUpdateTimer = null;
+    let colorHashTimer = null;
+    let lastColorRedraw = 0;
+    const scheduleColorHashUpdate = () => {
+        if (isScrapActive)
+            return;
+        if (colorHashTimer !== null)
+            window.clearTimeout(colorHashTimer);
+        colorHashTimer = window.setTimeout(() => {
+            colorHashTimer = null;
+            if (!lastMainBase64)
+                return;
+            const params = new URLSearchParams({
+                primary: previewPrimaryColor.value.replace("#", ""),
+                secondary: previewSecondaryColor.value.replace("#", ""),
+            });
+            window.history.replaceState(null, "", `#${lastMainBase64}?${params}`);
+        }, 150);
+    };
+    const scheduleColorUpdate = () => {
+        if (colorUpdateTimer !== null)
+            return;
+        // Map simulation recolours every land pixel, so give it a little more
+        // headroom than the plain tiled preview.
+        const interval = simMapRef ? 50 : COLOR_REDRAW_INTERVAL;
+        const elapsed = performance.now() - lastColorRedraw;
+        const wait = Math.max(0, interval - elapsed);
+        colorUpdateTimer = window.setTimeout(() => {
+            colorUpdateTimer = null;
+            lastColorRedraw = performance.now();
+            renderPreviewOnly();
+            scheduleColorHashUpdate();
+        }, wait);
     };
     // ── Undo / Redo ───────────────────────────────────────────────────────────
     const applyMainHistoryState = (base64) => {
@@ -959,14 +1005,14 @@ document.addEventListener("DOMContentLoaded", () => {
         favoriteButton: favoriteColorsBtn,
         favoritesContainer,
         initialColors,
-        onChange: () => updateOutput(),
+        onChange: scheduleColorUpdate,
     });
     swapColorsBtn.addEventListener("click", () => {
         const p = previewPrimaryColor.value;
         previewPrimaryColor.value = previewSecondaryColor.value;
         previewSecondaryColor.value = p;
         colorPresetControls.setCustomSelection();
-        updateOutput();
+        scheduleColorUpdate();
     });
     copyColorsBtn.addEventListener("click", () => {
         const primary = previewPrimaryColor.value.replace("#", "");
@@ -978,14 +1024,8 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         copyText(text);
     });
-    previewPrimaryColor.addEventListener("input", () => {
-        colorPresetControls.setCustomSelection();
-        updateOutput();
-    });
-    previewSecondaryColor.addEventListener("input", () => {
-        colorPresetControls.setCustomSelection();
-        updateOutput();
-    });
+    // Colour inputs are already wired inside colorPresets.ts (setCustomSelection
+    // + onChange), so no duplicate listeners are needed here.
     // ── Initial grid + scrap grid ─────────────────────────────────────────────
     mainGrid.generateGrid();
     scrapGrid.generateGrid();
