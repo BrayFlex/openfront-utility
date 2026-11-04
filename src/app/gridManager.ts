@@ -1,6 +1,6 @@
 import { getCircleCells, type GridPoint } from "./circleGeometry.js";
 import type { ClipboardManager } from "./clipboard.js";
-import type { DrawingTools } from "./drawingTools.js";
+import type { BrushTip, DrawingTools } from "./drawingTools.js";
 import { getFillStyle } from "./fillStyles.js";
 import type { GuideState } from "./gridGuides.js";
 import {
@@ -111,9 +111,27 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   // Fill preview (which cells a fill would touch, and which it would ink)
   let fillPreviewCells: { x: number; y: number; active: boolean }[] = [];
 
+  // Pencil preview (brush footprint under the cursor)
+  let pencilPreviewCells: GridPoint[] = [];
+  // Last cell touched by the current pencil stroke, used to fill in gaps when
+  // the pointer moves quickly between cells.
+  let lastPencilCell: GridPoint | null = null;
+
   // Line start
   let lineStart: GridPoint | null = null;
+  let lineStartMarker: GridPoint | null = null;
   let linePreviews: GridPoint[] = [];
+
+  // Editable curved line: the straight line stays a preview while the pointer
+  // moves to bend it, then the next click solidifies it onto the canvas.
+  type CurveDraft = {
+    start: GridPoint;
+    end: GridPoint;
+    control: GridPoint;
+  };
+  let curveDraft: CurveDraft | null = null;
+
+  const LINE_BRUSH_TIP: BrushTip = "soft";
 
   // ── UNIFIED SELECTION ─────────────────────────────────────────────────────
   let activeSelection = new Set<string>();
@@ -295,45 +313,149 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     });
   };
 
+  // ── Pencil preview ────────────────────────────────────────────────────────
+  const getPencilCells = (cx: number, cy: number) =>
+    drawingTools?.getBrushCells(
+      cx,
+      cy,
+      toolState.getPencilSize(),
+      toolState.getPencilTip()
+    ) ?? [];
+
+  const clearPencilPreview = () => {
+    pencilPreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.remove("pencil-hover")
+    );
+    pencilPreviewCells = [];
+  };
+
+  const previewPencil = (pt: GridPoint) => {
+    clearPencilPreview();
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    pencilPreviewCells = getPencilCells(pt.x, pt.y).filter(
+      (p) => isInBounds(p.x, p.y) && (!sel || sel.has(key(p.x, p.y)))
+    );
+    pencilPreviewCells.forEach((p) =>
+      cellMatrix[p.y]?.[p.x]?.classList.add("pencil-hover")
+    );
+  };
+
   // ── Line preview ──────────────────────────────────────────────────────────
+  const markLineStart = (pt: GridPoint) => {
+    lineStartMarker = pt;
+    cellMatrix[pt.y]?.[pt.x]?.classList.add("line-start");
+  };
+
   const clearLinePreview = () => {
     linePreviews.forEach((p) =>
       cellMatrix[p.y]?.[p.x]?.classList.remove("line-hover")
     );
     linePreviews = [];
-    if (lineStart) {
-      cellMatrix[lineStart.y]?.[lineStart.x]?.classList.remove("line-start");
+    if (lineStartMarker) {
+      cellMatrix[lineStartMarker.y]?.[lineStartMarker.x]?.classList.remove("line-start");
     }
+    lineStartMarker = null;
   };
 
   const setLineStart = (pt: GridPoint | null) => {
     clearLinePreview();
     lineStart = pt;
-    if (pt) cellMatrix[pt.y]?.[pt.x]?.classList.add("line-start");
+    if (pt) markLineStart(pt);
+  };
+
+  const renderLineCells = (cells: GridPoint[], start: GridPoint) => {
+    linePreviews = cells.filter((p) => isInBounds(p.x, p.y));
+    markLineStart(start);
+    linePreviews.forEach((p) => {
+      if (p.x === start.x && p.y === start.y) return;
+      cellMatrix[p.y]?.[p.x]?.classList.add("line-hover");
+    });
   };
 
   const previewLine = (x1: number, y1: number) => {
     clearLinePreview();
     if (!lineStart) return;
-    if (lineStart) cellMatrix[lineStart.y]?.[lineStart.x]?.classList.add("line-start");
-    // Bresenham
-    let x0 = lineStart.x, y0 = lineStart.y;
-    let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
-    let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
-    let err = dx + dy, e2;
-    const pts: GridPoint[] = [];
-    while (true) {
-      if (isInBounds(x0, y0)) pts.push({ x: x0, y: y0 });
-      if (x0 === x1 && y0 === y1) break;
-      e2 = 2 * err;
-      if (e2 >= dy) { err += dy; x0 += sx; }
-      if (e2 <= dx) { err += dx; y0 += sy; }
-    }
-    linePreviews = pts;
-    linePreviews.forEach((p) => {
-      if (p.x === lineStart!.x && p.y === lineStart!.y) return;
-      cellMatrix[p.y]?.[p.x]?.classList.add("line-hover");
-    });
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    const cells = drawingTools?.getLineCells(
+      lineStart.x,
+      lineStart.y,
+      x1,
+      y1,
+      toolState.getLineSize(),
+      LINE_BRUSH_TIP,
+      sel
+    ) ?? [{ x: lineStart.x, y: lineStart.y }, { x: x1, y: y1 }];
+    renderLineCells(cells, lineStart);
+  };
+
+  // ── Curved line draft ─────────────────────────────────────────────────────
+  const previewCurve = () => {
+    clearLinePreview();
+    if (!curveDraft) return;
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    const cells = drawingTools?.getCurveCells(
+      curveDraft.start.x,
+      curveDraft.start.y,
+      curveDraft.control.x,
+      curveDraft.control.y,
+      curveDraft.end.x,
+      curveDraft.end.y,
+      toolState.getLineSize(),
+      LINE_BRUSH_TIP,
+      sel
+    ) ?? [];
+    renderLineCells(cells, curveDraft.start);
+  };
+
+  const beginCurveDraft = (start: GridPoint, end: GridPoint) => {
+    clearLinePreview();
+    lineStart = null;
+    curveDraft = {
+      start: { ...start },
+      end: { ...end },
+      control: {
+        x: Math.round((start.x + end.x) / 2),
+        y: Math.round((start.y + end.y) / 2),
+      },
+    };
+    previewCurve();
+  };
+
+  const updateCurveControl = (pt: GridPoint) => {
+    if (!curveDraft) return;
+    // A quadratic Bézier passes through its control path midpoint at t=0.5.
+    // Solve for the control point so the curve passes through the pixel the
+    // user is dragging: C = 2M - (P0 + P2) / 2.
+    curveDraft.control = {
+      x: Math.round(2 * pt.x - (curveDraft.start.x + curveDraft.end.x) / 2),
+      y: Math.round(2 * pt.y - (curveDraft.start.y + curveDraft.end.y) / 2),
+    };
+    previewCurve();
+  };
+
+  const clearCurveDraft = () => {
+    const hadDraft = curveDraft !== null;
+    curveDraft = null;
+    if (hadDraft) clearLinePreview();
+  };
+
+  const commitCurveDraft = () => {
+    if (!curveDraft || !drawingTools) return;
+    const draft = curveDraft;
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    drawingTools.drawCurve(
+      draft.start.x,
+      draft.start.y,
+      draft.control.x,
+      draft.control.y,
+      draft.end.x,
+      draft.end.y,
+      sel,
+      toolState.getLineSize(),
+      LINE_BRUSH_TIP
+    );
+    clearCurveDraft();
+    onPatternChange();
   };
 
   // ── Paste preview ─────────────────────────────────────────────────────────
@@ -370,16 +492,43 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Pencil brush ──────────────────────────────────────────────────────────
   const applyPencilBrush = (cx: number, cy: number, activate: boolean) => {
-    const size = toolState.getPencilSize();
-    const radius = Math.floor(size / 2);
     const sel = activeSelection.size > 0 ? activeSelection : undefined;
-    for (let by = cy - radius; by <= cy + radius; by++) {
-      for (let bx = cx - radius; bx <= cx + radius; bx++) {
-        if (!isInBounds(bx, by)) continue;
-        if (sel && !sel.has(key(bx, by))) continue;
-        setCellActive(bx, by, activate);
-      }
+    for (const p of getPencilCells(cx, cy)) {
+      if (!isInBounds(p.x, p.y)) continue;
+      if (sel && !sel.has(key(p.x, p.y))) continue;
+      setCellActive(p.x, p.y, activate);
     }
+    lastPencilCell = { x: cx, y: cy };
+  };
+
+  /**
+   * Continue a pencil stroke from the last touched cell to the new one. Using
+   * the drawing tool's line helper stamps the brush along every skipped cell,
+   * so fast drags stay continuous instead of leaving dotted gaps.
+   */
+  const continuePencilStroke = (
+    cx: number,
+    cy: number,
+    activate: boolean
+  ) => {
+    const sel = activeSelection.size > 0 ? activeSelection : undefined;
+    const size = toolState.getPencilSize();
+    const tip = toolState.getPencilTip();
+    if (lastPencilCell && (lastPencilCell.x !== cx || lastPencilCell.y !== cy)) {
+      drawingTools?.drawLine(
+        lastPencilCell.x,
+        lastPencilCell.y,
+        cx,
+        cy,
+        sel,
+        size,
+        tip,
+        activate
+      );
+      lastPencilCell = { x: cx, y: cy };
+      return;
+    }
+    applyPencilBrush(cx, cy, activate);
   };
 
   // ── Paste commit ──────────────────────────────────────────────────────────
@@ -546,6 +695,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   document.body.addEventListener("mouseup", () => {
     isMouseDown = false;
     penToggleState = null;
+    lastPencilCell = null;
     // Commit Select Area drag regardless of current tool if we started one
     if (selectAreaStart && selectAreaEnd) {
       const rect = buildRectSet(selectAreaStart, selectAreaEnd);
@@ -565,7 +715,11 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     clearCirclePreview();
     clearStarPreview();
     clearFillPreview();
-    clearLinePreview();
+    clearPencilPreview();
+    lastPencilCell = null;
+    // Keep a curved-line draft visible if the pointer briefly leaves the grid
+    // (for example while moving toward the Draw button).
+    if (!curveDraft) clearLinePreview();
     clearPastePreview();
   });
 
@@ -727,6 +881,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     tileWidth = fixedWidth ?? parseInt(tileWidthInput.value);
     tileHeight = fixedHeight ?? parseInt(tileHeightInput.value);
     setLineStart(null);
+    clearCurveDraft();
+    clearPencilPreview();
+    lastPencilCell = null;
     clearCirclePreview();
     clearStarPreview();
     clearFillPreview();
@@ -798,6 +955,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           const actualTool = toolState.getCurrentTool();
           const tool = isShiftDown ? "selectArea" : actualTool;
 
+          // While a curved line is being edited, moving the pointer bends the
+          // curve. The click that follows solidifies it.
+          if (tool === "line" && curveDraft) {
+            return;
+          }
+
           if (tool === "selectArea") {
             selectAreaStart = { x: cx, y: cy };
             selectAreaEnd = { x: cx, y: cy };
@@ -811,6 +974,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           if (tool === "pencil") {
             // Start the stroke on the press so the very first pixel is drawn
             // even when the pointer is dragged straight off this cell.
+            clearPencilPreview();
             penToggleState = !isCellActive(cx, cy);
             applyPencilBrush(cx, cy, penToggleState);
             onPatternChange();
@@ -829,11 +993,28 @@ export function createGridManager(options: GridManagerOptions): GridManager {
           const sel = activeSelection.size > 0 ? activeSelection : undefined;
 
           if (tool === "line") {
+            // A click while editing a curve solidifies it immediately.
+            if (curveDraft) {
+              commitCurveDraft();
+              return;
+            }
             if (!lineStart) {
               setLineStart({ x: cx, y: cy });
               return;
             }
-            drawingTools?.drawLine(lineStart.x, lineStart.y, cx, cy, sel);
+            if (toolState.getLineMode() === "curve") {
+              beginCurveDraft(lineStart, { x: cx, y: cy });
+              return;
+            }
+            drawingTools?.drawLine(
+              lineStart.x,
+              lineStart.y,
+              cx,
+              cy,
+              sel,
+              toolState.getLineSize(),
+              LINE_BRUSH_TIP
+            );
             setLineStart(null);
             onPatternChange();
           } else if (tool === "fill") {
@@ -877,10 +1058,20 @@ export function createGridManager(options: GridManagerOptions): GridManager {
             return;
           }
 
+          if (tool === "line" && curveDraft) {
+            updateCurveControl({ x: cx, y: cy });
+            return;
+          }
+
           if (isMouseDown && tool === "pencil") {
             if (penToggleState === null) penToggleState = !isCellActive(cx, cy);
-            applyPencilBrush(cx, cy, penToggleState);
+            continuePencilStroke(cx, cy, penToggleState);
             onPatternChange();
+            return;
+          }
+
+          if (!isMouseDown && tool === "pencil") {
+            previewPencil({ x: cx, y: cy });
             return;
           }
 
@@ -947,10 +1138,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Tool change listener ──────────────────────────────────────────────────
   toolState.subscribeToToolChanges((tool) => {
-    if (tool !== "line") setLineStart(null);
+    if (tool !== "line") {
+      setLineStart(null);
+      clearCurveDraft();
+    }
     if (tool !== "circle") clearCirclePreview();
     if (tool !== "shape") clearStarPreview();
     if (tool !== "fill") clearFillPreview();
+    if (tool !== "pencil") clearPencilPreview();
     if (tool !== "paste") clearPastePreview();
     if (tool !== "selectArea") {
       selectAreaStart = null;
@@ -965,9 +1160,20 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     }
   });
 
+  toolState.subscribeToLineChanges(() => {
+    if (toolState.getLineMode() !== "curve") clearCurveDraft();
+  });
+
+  toolState.subscribeToPencilChanges(() => {
+    clearPencilPreview();
+  });
+
   // ── Clear grid ────────────────────────────────────────────────────────────
   function clearGrid() {
     setLineStart(null);
+    clearCurveDraft();
+    clearPencilPreview();
+    lastPencilCell = null;
     clearCirclePreview();
     clearStarPreview();
     clearFillPreview();

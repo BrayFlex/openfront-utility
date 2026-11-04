@@ -167,6 +167,42 @@
   background: #24313a;
 }
 
+/* Compact two-state toggle (e.g. pencil tip) */
+.tool-options-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 2px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-muted);
+}
+
+.tool-options-toggle-btn {
+  border: 1px solid transparent;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1;
+  padding: 4px 7px;
+  cursor: pointer;
+  transition: border-color 0.12s, background 0.12s, color 0.12s;
+}
+.tool-options-toggle-btn:hover {
+  color: var(--text);
+}
+.tool-options-toggle-btn.selected {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--text);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.tool-options-toggle-btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .canvas-tabs {
   display: flex;
   align-items: center;
@@ -263,10 +299,15 @@
   padding: 4px 6px;
   text-align: center;
   font-variant-numeric: tabular-nums;
-  /* -moz-appearance: textfield; */
+  /* Hide the browser-native number spinners; the custom stepper remains. */
+  -moz-appearance: textfield;
+  appearance: textfield;
 }
 .ctrl-number::-webkit-inner-spin-button,
 .ctrl-number::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
   display: none;
 }
 .stepper-btns {

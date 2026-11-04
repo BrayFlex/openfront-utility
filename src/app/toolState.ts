@@ -25,6 +25,13 @@ export type ShapeRatio = {
   height: number;
 };
 
+/** Straight lines are committed on the second click; curved lines stay
+ *  editable until the user presses Draw. */
+export type LineMode = "straight" | "curve";
+
+/** Pencil footprint: a square block or a circular dot. */
+export type PencilTip = "sharp" | "soft";
+
 export const SHAPE_TYPES: { type: ShapeType; label: string; icon: string }[] = [
   { type: "circle", label: "Circle", icon: "○" },
   { type: "cube", label: "Cube", icon: "▣" },
@@ -52,6 +59,7 @@ export type ToolSizeConfig = {
 
 const TOOL_SIZE_CONFIGS: Partial<Record<ToolKind, ToolSizeConfig>> = {
   pencil: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
+  line: { min: 1, max: 9, step: 1, defaultValue: 1, label: "Size" },
   circle: { min: 1, max: 30, step: 1, defaultValue: 7, label: "Size" },
 };
 
@@ -66,6 +74,12 @@ export type ToolState = {
   getCurrentTool: () => ToolKind;
   selectTool: (tool: ToolKind) => void;
   getPencilSize: () => number;
+  getPencilTip: () => PencilTip;
+  setPencilTip: (tip: PencilTip) => void;
+  /** Line tool Size slider value (stroke thickness in cells). */
+  getLineSize: () => number;
+  getLineMode: () => LineMode;
+  setLineMode: (mode: LineMode) => void;
   /** Shape tool Size slider value: the shape's overall width in cells. */
   getShapeSize: () => number;
   getShapeType: () => ShapeType;
@@ -79,6 +93,8 @@ export type ToolState = {
   subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
   subscribeToShapeChanges: (listener: () => void) => () => void;
   subscribeToFillChanges: (listener: () => void) => () => void;
+  subscribeToPencilChanges: (listener: () => void) => () => void;
+  subscribeToLineChanges: (listener: () => void) => () => void;
   /** Returns the current slider value for any sized tool */
   getCurrentSize: () => number;
   getPreviousTool: () => ToolKind;
@@ -91,14 +107,18 @@ export function createToolState(options: ToolStateOptions): ToolState {
   let currentTool: ToolKind = "pencil";
   let previousTool: ToolKind = "pencil";
   let lastNonSelectTool: ToolKind = "pencil";
-  let shapeType: ShapeType = "star";
+  let shapeType: ShapeType = "circle";
   let shapeRatio: ShapeRatio = { ...DEFAULT_SHAPE_RATIO };
   let fillStyle: FillStyleId = DEFAULT_FILL_STYLE;
+  let pencilTip: PencilTip = "sharp";
+  let lineMode: LineMode = "straight";
   // Per-tool remembered sizes
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
   const shapeListeners = new Set<() => void>();
   const fillListeners = new Set<() => void>();
+  const pencilListeners = new Set<() => void>();
+  const lineListeners = new Set<() => void>();
 
   // Initialize noUiSlider
   const slider = createNoUiSlider(sizeSlider, {
@@ -278,6 +298,25 @@ export function createToolState(options: ToolStateOptions): ToolState {
       if (currentTool === "pencil") return getSliderValue();
       return rememberedSizes["pencil"] ?? 1;
     },
+    getPencilTip: () => pencilTip,
+    setPencilTip: (tip) => {
+      if (pencilTip === tip) return;
+      pencilTip = tip;
+      pencilListeners.forEach((listener) => listener());
+    },
+    getLineSize: () => {
+      const config = getSizeConfig("line")!;
+      const size = currentTool === "line"
+        ? getSliderValue()
+        : (rememberedSizes["line"] ?? config.defaultValue);
+      return Math.max(config.min, Math.min(config.max, size));
+    },
+    getLineMode: () => lineMode,
+    setLineMode: (mode) => {
+      if (lineMode === mode) return;
+      lineMode = mode;
+      lineListeners.forEach((listener) => listener());
+    },
     getShapeSize: () => {
       const config = getSizeConfig("shape")!;
       const size = currentTool === "shape"
@@ -331,6 +370,14 @@ export function createToolState(options: ToolStateOptions): ToolState {
     subscribeToFillChanges: (listener) => {
       fillListeners.add(listener);
       return () => fillListeners.delete(listener);
+    },
+    subscribeToPencilChanges: (listener) => {
+      pencilListeners.add(listener);
+      return () => pencilListeners.delete(listener);
+    },
+    subscribeToLineChanges: (listener) => {
+      lineListeners.add(listener);
+      return () => lineListeners.delete(listener);
     },
     getCurrentSize: () => getSliderValue(),
   };
