@@ -3,6 +3,13 @@
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
 
+## October 4th, 2026 — Selection, Sizing & Pencil Fixes
+- **Undo/redo now preserves your selection** instead of clearing it. Copy, cut and the explicit **Deselect** action still clear it automatically, and the Deselect button highlights while a selection is active.
+- Shortcut hints now use the **⌘ symbol** for Mac alongside Ctrl, including the Deselect tooltip and the keyboard shortcuts panel.
+- **Shape sizes now match the Size slider exactly**: circles are drawn at their stated width (e.g. 64 is 64 cells, not 65), and cubes use the rounded Size × ratio for their width and height (e.g. 16 with a 1× height ratio is 16 cells tall).
+- The **outside ruler strips are transparent**, so the faded canvas tiling remains visible around the grid.
+- **Pencil strokes now start on mouse-down**, so the first pixel draws or erases correctly when you begin dragging.
+
 ## October 3rd, 2026 — One Fill Tool with 1-Bit Shading Styles
 - **Fill** and **Shade** are now a single **Fill** tool (keeping the ▦ shade icon), so there is one place to fill or shade an area.
 - The Fill options strip shows **clickable pixel swatches** instead of named buttons, ordered from darkest to lightest: solid ink, 75%, 50% and 25% dithers, plus **Erase** at the lightest end. Each swatch is a 48×48 preview drawn with chunky 4px pixels, so the pattern is easy to read at a glance.

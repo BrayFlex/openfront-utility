@@ -515,17 +515,21 @@ document.addEventListener("DOMContentLoaded", () => {
     tileHeightValue.value = tileHeightInput.value;
     // Update scale tabs
     setScale(scale);
-    // Clear any active selection so it doesn't mask the restored pattern
-    mainGrid.clearSelection();
+    // Keep the current selection across undo/redo. Copy, cut and the explicit
+    // Deselect action still clear it; cells that no longer fit the restored
+    // canvas are dropped.
+    const selection = new Set(mainGrid.getActiveSelection());
     isApplyingHistory = true;
     mainGrid.generateGrid(pattern);
+    mainGrid.restoreSelection(selection);
     isApplyingHistory = false;
   };
 
   const applyScrapHistoryState = (pattern: number[][]) => {
-    scrapGrid.clearSelection();
+    const selection = new Set(scrapGrid.getActiveSelection());
     isApplyingHistory = true;
     scrapGrid.generateGrid(pattern);
+    scrapGrid.restoreSelection(selection);
     isApplyingHistory = false;
   };
 
@@ -607,8 +611,11 @@ document.addEventListener("DOMContentLoaded", () => {
   // Enable/disable transform buttons based on selection
   const updateTransformButtons = () => {
     const hasSel = activeGrid().hasSelection();
-    [shiftUpBtn, shiftDownBtn, shiftLeftBtn, shiftRightBtn, rotateLeftBtn, rotateRightBtn, flipHBtn, flipVBtn, deselectBtn]
+    [shiftUpBtn, shiftDownBtn, shiftLeftBtn, shiftRightBtn, rotateLeftBtn, rotateRightBtn, flipHBtn, flipVBtn]
       .forEach((btn) => (btn.disabled = !hasSel));
+    deselectBtn.disabled = !hasSel;
+    deselectBtn.classList.toggle("selected", hasSel);
+    deselectBtn.setAttribute("aria-pressed", String(hasSel));
   };
   // Poll selection state (simple approach — could be event-driven)
   setInterval(updateTransformButtons, 200);
