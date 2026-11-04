@@ -42,6 +42,10 @@ export function createGridManager(options) {
     let pastePreviewCells = [];
     let pastePreviewOrigin = null;
     const baseCellSize = 20;
+    // The workspace is pannable while Space / Ctrl / ⌘ is held. While one of
+    // those pan keys is down we suppress previews (and accidental drawing) so the
+    // canvas stays clean during a pan gesture.
+    const isPanKeyHeld = () => { var _a, _b; return (_b = (_a = gridDiv.closest(".canvas-workspace")) === null || _a === void 0 ? void 0 : _a.classList.contains("pan-key-held")) !== null && _b !== void 0 ? _b : false; };
     // ── Helpers ───────────────────────────────────────────────────────────────
     const isInBounds = (x, y) => x >= 0 && y >= 0 && x < tileWidth && y < tileHeight;
     const key = (x, y) => `${x},${y}`;
@@ -756,6 +760,8 @@ export function createGridManager(options) {
                 // Capture x/y in closure (re-assign to avoid stale capture issue)
                 const cx = x, cy = y;
                 cell.onmousedown = () => {
+                    if (isPanKeyHeld())
+                        return;
                     const actualTool = toolState.getCurrentTool();
                     const tool = isShiftDown ? "selectArea" : actualTool;
                     // While a curved line is being edited, moving the pointer bends the
@@ -786,6 +792,8 @@ export function createGridManager(options) {
                     // (commit handled on document body mouseup)
                 };
                 cell.onclick = () => {
+                    if (isPanKeyHeld())
+                        return;
                     // If shift is held, the mousedown already handled the selectArea logic — don't draw.
                     if (isShiftDown)
                         return;
@@ -829,6 +837,8 @@ export function createGridManager(options) {
                     }
                 };
                 cell.onmouseover = () => {
+                    if (isPanKeyHeld())
+                        return;
                     const actualTool = toolState.getCurrentTool();
                     const tool = isShiftDown ? "selectArea" : actualTool;
                     const sel = activeSelection.size > 0 ? activeSelection : undefined;

@@ -862,6 +862,24 @@
 .canvas-workspace.is-ctrl-pan { cursor: grab; }
 .canvas-workspace.is-ctrl-pan .cell { cursor: grab; }
 
+/* While a pan key (Space / Ctrl / ⌘) is held, hide every hover or draft
+   preview so the canvas stays clean during a pan gesture. */
+.canvas-workspace.pan-key-held .cell.circle-hover::after,
+.canvas-workspace.pan-key-held .cell.star-hover::after,
+.canvas-workspace.pan-key-held .cell.line-hover::after,
+.canvas-workspace.pan-key-held .cell.pencil-hover::after,
+.canvas-workspace.pan-key-held .cell.paste-hover::after,
+.canvas-workspace.pan-key-held .cell.fill-hover::after,
+.canvas-workspace.pan-key-held .cell.fill-hover-mark::after {
+  display: none;
+}
+.canvas-workspace.pan-key-held .cell.paste-hover {
+  background: transparent;
+}
+.canvas-workspace.pan-key-held .cell.line-start {
+  box-shadow: none;
+}
+
 /* Selection — theme-aware, visible over black pixels */
 .selection-cell {
   box-shadow: inset 0 0 0 2px var(--accent);
