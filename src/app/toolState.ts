@@ -1,4 +1,5 @@
 import { create as createNoUiSlider, PipsMode } from "nouislider";
+import { DEFAULT_FILL_STYLE, type FillStyleId } from "./fillStyles.js";
 
 export type ToolKind =
   | "pencil"
@@ -6,7 +7,6 @@ export type ToolKind =
   | "shape"
   | "line"
   | "fill"
-  | "shade"
   | "selectArea"
   | "paste";
 
@@ -71,9 +71,13 @@ export type ToolState = {
   setShapeType: (type: ShapeType) => void;
   getShapeRatio: () => ShapeRatio;
   setShapeRatio: (ratio: Partial<ShapeRatio>) => void;
+  /** Pattern used by the Fill tool. */
+  getFillStyle: () => FillStyleId;
+  setFillStyle: (style: FillStyleId) => void;
   getCircleRadius: () => number;
   subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
   subscribeToShapeChanges: (listener: () => void) => () => void;
+  subscribeToFillChanges: (listener: () => void) => () => void;
   /** Returns the current slider value for any sized tool */
   getCurrentSize: () => number;
   getPreviousTool: () => ToolKind;
@@ -88,10 +92,12 @@ export function createToolState(options: ToolStateOptions): ToolState {
   let lastNonSelectTool: ToolKind = "pencil";
   let shapeType: ShapeType = "star";
   let shapeRatio: ShapeRatio = { ...DEFAULT_SHAPE_RATIO };
+  let fillStyle: FillStyleId = DEFAULT_FILL_STYLE;
   // Per-tool remembered sizes
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
   const shapeListeners = new Set<() => void>();
+  const fillListeners = new Set<() => void>();
 
   // Initialize noUiSlider
   const slider = createNoUiSlider(sizeSlider, {
@@ -305,6 +311,12 @@ export function createToolState(options: ToolStateOptions): ToolState {
       shapeRatio = { width, height };
       shapeListeners.forEach((listener) => listener());
     },
+    getFillStyle: () => fillStyle,
+    setFillStyle: (style) => {
+      if (fillStyle === style) return;
+      fillStyle = style;
+      fillListeners.forEach((listener) => listener());
+    },
     getCircleRadius: () => {
       const size = currentTool === "circle"
         ? getSliderValue()
@@ -318,6 +330,10 @@ export function createToolState(options: ToolStateOptions): ToolState {
     subscribeToShapeChanges: (listener) => {
       shapeListeners.add(listener);
       return () => shapeListeners.delete(listener);
+    },
+    subscribeToFillChanges: (listener) => {
+      fillListeners.add(listener);
+      return () => fillListeners.delete(listener);
     },
     getCurrentSize: () => getSliderValue(),
   };
