@@ -1,4 +1,4 @@
-import { getCircleCells } from "./circleGeometry.js";
+import { getCircleCells, getCircleCellsBySize } from "./circleGeometry.js";
 function isInSelection(x, y, selection) {
     if (!selection || selection.size === 0)
         return true;
@@ -47,53 +47,86 @@ export function createDrawingTools(options) {
         }
         points.forEach((p) => setIfAllowed(p.x, p.y, true, selection));
     }
+    /**
+     * Fit a unit-space polygon into an exact `width`-cell horizontal span while
+     * preserving its aspect ratio. Both the leftmost and rightmost vertices land
+     * on the bounding-box edges, so the drawn shape is exactly as wide as the
+     * Size slider says.
+     */
+    function fitPolygonToWidth(points, cx, cy, width) {
+        const targetWidth = Math.max(1, Math.round(width));
+        const span = targetWidth - 1;
+        const xs = points.map(([x]) => x);
+        const ys = points.map(([, y]) => y);
+        const minX = Math.min(...xs);
+        const maxX = Math.max(...xs);
+        const minY = Math.min(...ys);
+        const maxY = Math.max(...ys);
+        const unitWidth = maxX - minX;
+        const centerY = (minY + maxY) / 2;
+        if (unitWidth === 0) {
+            return points.map(([, y]) => [cx, Math.round(cy + (y - centerY))]);
+        }
+        const scale = span / unitWidth;
+        const left = cx - Math.floor(span / 2);
+        return points.map(([x, y]) => [
+            Math.round(left + ((x - minX) / unitWidth) * span),
+            Math.round(cy + (y - centerY) * scale),
+        ]);
+    }
     /** Shape tool: draws a circle, isometric cube, star, or regular polygon */
-    function drawShape(type, cx, cy, r, ratio, selection) {
-        if (r <= 0) {
-            // r=0: just place the center pixel
+    function drawShape(type, cx, cy, size, ratio, selection) {
+        if (size <= 0) {
+            // size=0: just place the center pixel
             setIfAllowed(cx, cy, true, selection);
             return;
         }
         if (type === "circle") {
-            drawCircle(cx, cy, r, selection);
+            getCircleCellsBySize({ x: cx, y: cy }, size, getTileWidth(), getTileHeight())
+                .forEach((p) => setIfAllowed(p.x, p.y, true, selection));
             return;
         }
         if (type === "cube") {
             // Width/height are ratios of the size slider so the cube can be squashed
-            // or stretched directly from the Shape sub-bar.
-            const h = Math.max(1, Math.round(r * ratio.height));
-            const w = Math.max(1, Math.round(r * ratio.width));
+            // or stretched directly from the Shape sub-bar. The bounding box is
+            // exactly the rounded target size (no extra off-by-one cell).
+            const w = Math.max(1, Math.round(size * ratio.width));
+            const h = Math.max(1, Math.round(size * ratio.height));
+            const left = cx - Math.floor((w - 1) / 2);
+            const right = left + w - 1;
+            const top = cy - Math.floor((h - 1) / 2);
+            const bottom = top + h - 1;
+            const midY = Math.round((top + bottom) / 2);
+            const topMidY = Math.round((top + midY) / 2);
+            const bottomMidY = Math.round((midY + bottom) / 2);
             // Top face
-            drawLine(cx, cy - h, cx + w, cy - Math.round(h / 2), selection);
-            drawLine(cx + w, cy - Math.round(h / 2), cx, cy, selection);
-            drawLine(cx, cy, cx - w, cy - Math.round(h / 2), selection);
-            drawLine(cx - w, cy - Math.round(h / 2), cx, cy - h, selection);
+            drawLine(cx, top, right, topMidY, selection);
+            drawLine(right, topMidY, cx, midY, selection);
+            drawLine(cx, midY, left, topMidY, selection);
+            drawLine(left, topMidY, cx, top, selection);
             // Bottom edges
-            drawLine(cx - w, cy - Math.round(h / 2), cx - w, cy + Math.round(h / 2), selection);
-            drawLine(cx + w, cy - Math.round(h / 2), cx + w, cy + Math.round(h / 2), selection);
-            drawLine(cx - w, cy + Math.round(h / 2), cx, cy + h, selection);
-            drawLine(cx + w, cy + Math.round(h / 2), cx, cy + h, selection);
+            drawLine(left, topMidY, left, bottomMidY, selection);
+            drawLine(right, topMidY, right, bottomMidY, selection);
+            drawLine(left, bottomMidY, cx, bottom, selection);
+            drawLine(right, bottomMidY, cx, bottom, selection);
             // Center vertical
-            drawLine(cx, cy, cx, cy + h, selection);
+            drawLine(cx, midY, cx, bottom, selection);
             return;
         }
         if (type === "star") {
             // Hollow star outline: alternating outer/inner points joined as one
             // closed polygon, with no spokes to the center.
-            const outerRadius = r;
-            const innerRadius = Math.max(1, r * 0.382);
+            const innerRadius = 0.382;
             const pts = [];
             for (let i = 0; i < 10; i++) {
-                const radius = i % 2 === 0 ? outerRadius : innerRadius;
+                const radius = i % 2 === 0 ? 1 : innerRadius;
                 const angle = (Math.PI / 5) * i - Math.PI / 2;
-                pts.push([
-                    Math.round(cx + radius * Math.cos(angle)),
-                    Math.round(cy + radius * Math.sin(angle)),
-                ]);
+                pts.push([radius * Math.cos(angle), radius * Math.sin(angle)]);
             }
-            for (let i = 0; i < pts.length; i++) {
-                const a = pts[i];
-                const b = pts[(i + 1) % pts.length];
+            const fitted = fitPolygonToWidth(pts, cx, cy, size);
+            for (let i = 0; i < fitted.length; i++) {
+                const a = fitted[i];
+                const b = fitted[(i + 1) % fitted.length];
                 drawLine(a[0], a[1], b[0], b[1], selection);
             }
             return;
@@ -103,15 +136,16 @@ export function createDrawingTools(options) {
         const pts = [];
         for (let i = 0; i < sides; i++) {
             const angle = -Math.PI / 2 + (Math.PI * 2 * i) / sides;
-            pts.push([Math.round(cx + r * Math.cos(angle)), Math.round(cy + r * Math.sin(angle))]);
+            pts.push([Math.cos(angle), Math.sin(angle)]);
         }
+        const fitted = fitPolygonToWidth(pts, cx, cy, size);
         for (let i = 0; i < sides; i++) {
-            const a = pts[i];
-            const b = pts[(i + 1) % sides];
+            const a = fitted[i];
+            const b = fitted[(i + 1) % sides];
             drawLine(a[0], a[1], b[0], b[1], selection);
         }
     }
-    function getShapeCells(type, cx, cy, r, ratio, selection) {
+    function getShapeCells(type, cx, cy, size, ratio, selection) {
         const width = getTileWidth();
         const height = getTileHeight();
         const pts = [];
@@ -122,7 +156,7 @@ export function createDrawingTools(options) {
                 pts.push({ x, y });
         };
         try {
-            drawShape(type, cx, cy, r, ratio, selection);
+            drawShape(type, cx, cy, size, ratio, selection);
         }
         finally {
             currentSetCellActive = originalSet;
