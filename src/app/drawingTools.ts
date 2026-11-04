@@ -1,9 +1,55 @@
 import { getCircleCells, getCircleCellsBySize } from "./circleGeometry.js";
 import type { FillStyle } from "./fillStyles.js";
-import type { ShapeRatio, ShapeType } from "./toolState.js";
+import type { PencilTip, ShapeRatio, ShapeType } from "./toolState.js";
+
+export type BrushTip = PencilTip;
 
 export type DrawingTools = {
-  drawLine: (x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) => void;
+  drawLine: (
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    selection?: Set<string>,
+    size?: number,
+    tip?: BrushTip,
+    active?: boolean
+  ) => void;
+  drawCurve: (
+    x0: number,
+    y0: number,
+    cx: number,
+    cy: number,
+    x1: number,
+    y1: number,
+    selection?: Set<string>,
+    size?: number,
+    tip?: BrushTip
+  ) => void;
+  /** Cells covered by a brush stamp at (cx, cy). */
+  getBrushCells: (cx: number, cy: number, size: number, tip: BrushTip) => { x: number; y: number }[];
+  /** Cells a line would draw (including thickness), without committing. */
+  getLineCells: (
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    size: number,
+    tip: BrushTip,
+    selection?: Set<string>
+  ) => { x: number; y: number }[];
+  /** Cells a quadratic curve would draw, without committing. */
+  getCurveCells: (
+    x0: number,
+    y0: number,
+    cx: number,
+    cy: number,
+    x1: number,
+    y1: number,
+    size: number,
+    tip: BrushTip,
+    selection?: Set<string>
+  ) => { x: number; y: number }[];
   drawCircle: (cx: number, cy: number, r: number, selection?: Set<string>) => void;
   drawShape: (
     type: ShapeType,
@@ -61,18 +107,173 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     currentSetCellActive(x, y, active);
   }
 
-  /** Bresenham line, respects selection constraint */
-  function drawLine(x0: number, y0: number, x1: number, y1: number, selection?: Set<string>) {
+  /**
+   * Footprint of one brush stamp. Size 1 is always a single pixel. Sharp tips
+   * are square (matching the long-standing pencil behaviour), soft tips are a
+   * filled circle.
+   */
+  function getBrushCells(cx: number, cy: number, size: number, tip: BrushTip) {
+    const cells: { x: number; y: number }[] = [];
+    if (size <= 1) {
+      cells.push({ x: cx, y: cy });
+      return cells;
+    }
+
+    // Keep the footprint exactly `size` cells wide/tall. Using a radius alone
+    // made even sizes one cell larger than requested (4 -> 5x5).
+    const start = -Math.floor(size / 2);
+    const end = start + size - 1;
+    if (tip === "soft") {
+      // Circle inscribed in the size x size box. For even sizes the box has no
+      // single centre cell, so measure from its true centre.
+      const centre = start + (size - 1) / 2;
+      const limit = (size / 2) * (size / 2);
+      for (let dy = start; dy <= end; dy++) {
+        for (let dx = start; dx <= end; dx++) {
+          const ox = dx - centre;
+          const oy = dy - centre;
+          if (ox * ox + oy * oy <= limit) cells.push({ x: cx + dx, y: cy + dy });
+        }
+      }
+      return cells;
+    }
+
+    for (let dy = start; dy <= end; dy++) {
+      for (let dx = start; dx <= end; dx++) {
+        cells.push({ x: cx + dx, y: cy + dy });
+      }
+    }
+    return cells;
+  }
+
+  /** Stamp the brush at every step along a Bresenham line. */
+  function stampLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    selection: Set<string> | undefined,
+    size: number,
+    tip: BrushTip,
+    active = true
+  ) {
     let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = dx + dy, e2;
     while (true) {
-      setIfAllowed(x0, y0, true, selection);
+      for (const cell of getBrushCells(x0, y0, size, tip)) {
+        setIfAllowed(cell.x, cell.y, active, selection);
+      }
       if (x0 === x1 && y0 === y1) break;
       e2 = 2 * err;
       if (e2 >= dy) { err += dy; x0 += sx; }
       if (e2 <= dx) { err += dx; y0 += sy; }
     }
+  }
+
+  /** Bresenham line with an optional thickness (thickness 1 = old behaviour). */
+  function drawLine(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    selection?: Set<string>,
+    size = 1,
+    tip: BrushTip = "sharp",
+    active = true
+  ) {
+    stampLine(x0, y0, x1, y1, selection, size, tip, active);
+  }
+
+  /** Rounded sample points along a quadratic Bézier curve. */
+  function sampleQuadratic(
+    x0: number,
+    y0: number,
+    cx: number,
+    cy: number,
+    x1: number,
+    y1: number
+  ): { x: number; y: number }[] {
+    const polygonLength =
+      Math.hypot(cx - x0, cy - y0) + Math.hypot(x1 - cx, y1 - cy);
+    const steps = Math.max(2, Math.ceil(polygonLength * 1.5));
+    const points: { x: number; y: number }[] = [];
+    for (let i = 0; i <= steps; i++) {
+      const t = i / steps;
+      const mt = 1 - t;
+      points.push({
+        x: Math.round(mt * mt * x0 + 2 * mt * t * cx + t * t * x1),
+        y: Math.round(mt * mt * y0 + 2 * mt * t * cy + t * t * y1),
+      });
+    }
+    return points;
+  }
+
+  /** Quadratic curve drawn as short, brush-stamped line segments. */
+  function drawCurve(
+    x0: number,
+    y0: number,
+    cx: number,
+    cy: number,
+    x1: number,
+    y1: number,
+    selection?: Set<string>,
+    size = 1,
+    tip: BrushTip = "sharp"
+  ) {
+    const points = sampleQuadratic(x0, y0, cx, cy, x1, y1);
+    for (let i = 0; i < points.length; i++) {
+      const a = points[i];
+      const b = points[i + 1] ?? a;
+      stampLine(a.x, a.y, b.x, b.y, selection, size, tip);
+    }
+  }
+
+  /** Collect the cells a drawing function would touch, without committing. */
+  function collectCells(draw: () => void): { x: number; y: number }[] {
+    const originalSet = currentSetCellActive;
+    const cells: { x: number; y: number }[] = [];
+    const seen = new Set<string>();
+    currentSetCellActive = (x, y) => {
+      const k = `${x},${y}`;
+      if (seen.has(k)) return;
+      seen.add(k);
+      cells.push({ x, y });
+    };
+    try {
+      draw();
+    } finally {
+      currentSetCellActive = originalSet;
+    }
+    return cells;
+  }
+
+  function getLineCells(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    size: number,
+    tip: BrushTip,
+    selection?: Set<string>
+  ) {
+    return collectCells(() => drawLine(x0, y0, x1, y1, selection, size, tip));
+  }
+
+  function getCurveCells(
+    x0: number,
+    y0: number,
+    cx: number,
+    cy: number,
+    x1: number,
+    y1: number,
+    size: number,
+    tip: BrushTip,
+    selection?: Set<string>
+  ) {
+    return collectCells(() =>
+      drawCurve(x0, y0, cx, cy, x1, y1, selection, size, tip)
+    );
   }
 
   /** Circle outline only (Bresenham midpoint), respects selection constraint.
@@ -310,6 +511,10 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
 
   return { 
     drawLine, 
+    drawCurve,
+    getBrushCells,
+    getLineCells,
+    getCurveCells,
     drawCircle, 
     drawShape, 
     fillWithStyle, 

@@ -2,6 +2,19 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## October 10th, 2026 — Improved Compatibility, Pencil Size/Drag Fixes, Performance Improvements
+- **The Shape tool now starts on Circle** instead of Star.
+- Removed the **browser-native number spinners** from the canvas Width/Height inputs on Firefox, leaving only the custom steppers.
+- Fixed **square brushes being one cell too large at even sizes** — a size 4 brush is now exactly 4×4 instead of 5×5.
+- Fixed **fast pencil drags skipping pixels** — strokes are now filled in between cell updates, so quick lines stay continuous.
+- **Dragging the colour picker is much smoother**: colour changes are coalesced to roughly 30fps, the pattern is no longer re-encoded on every input event, and the URL rewrite waits until you pause.
+
+## October 10th, 2026 — Line Controls, Curved Lines & Pencil Preview
+- **Line thickness** now has a Size slider just like Pencil, and the live line preview reflects the chosen thickness.
+- Added a **Straight / Curved** option to the Line tool, shown as a compact **╲ / ⌒** icon tabber. In Curved mode, place your two endpoints, then **move the pointer to bend the line** — the pixel under the cursor becomes part of the curve.
+- A curved line stays editable while you move the pointer, and the **next click solidifies it** onto the canvas. The floating Draw / × buttons and the first-time toast are gone.
+- **Pencil now shows a live preview** of its brush footprint, matching the Shape tool's hover preview.
+- Added a **Sharp (■) / Soft (●)** pencil tip toggle, switching between a square block and a circular brush.
 
 ## October 4th, 2026 — Selection, Sizing & Pencil Fixes
 - **Undo/redo now preserves your selection** instead of clearing it. Copy, cut and the explicit **Deselect** action still clear it automatically, and the Deselect button highlights while a selection is active.
