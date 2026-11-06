@@ -2,18 +2,18 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
-## November 6th, 2026 — Offline Support & Installable App
+## November 5th, 2026 — Offline Support (credit oncenot)
 - The utility now **works with no internet**: a service worker saves the app on the first visit (about 0.7 MB up front, map backgrounds finish in the background).
 - **Fonts are bundled** with the app, so text looks the same offline and the page no longer requests Google Fonts.
 - The app is now **installable** as a standalone app from the browser (manifest and icons).
 - Returning visitors see a **"new version is ready"** message after a deploy instead of a surprise reload, and `npm run dev` is unaffected (network-first on localhost).
 
-## November 6th, 2026 — Centered Guide Grid & Info Glow
+## November 5th, 2026 — Centered Guide Grid & Info Glow
 - With both **Grid** and **Center** turned on, the 5-cell guide grid is now **anchored to the centre of the canvas** instead of the top-left corner, so the guide lines stay symmetric. Odd canvas sizes keep a whole cell in the middle.
 - The **info button glows** when there are changes to read, and first-time visitors see it too. Opening the information panel clears the glow; it comes back with each new changelog entry.
 
 ## November 4th, 2026 — Selection Preview Contrast
-- The drag **selection preview** is now easy to see over filled/black pixels: a small centered dot with a light halo plus a light-and-accent outline. The marker is drawn on top of the cell, so you can still tell filled and empty pixels apart while selecting.
+- The drag **selection preview** is now easy to see over filled/black pixels: a small centered dot. The marker is drawn on top of the cell, so you can still tell filled and empty pixels apart while selecting.
 - Selected cells and the **paste preview** now carry a light inner edge so their outlines stand out against dark pixels too.
 - While an existing selection dims the canvas, **pending preview cells stay at full strength** instead of being dimmed along with everything else.
 - **Removing from a selection** now previews in the danger red instead of blue, so subtracting is visually distinct from adding.

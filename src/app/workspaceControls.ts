@@ -1,3 +1,5 @@
+import { isShortcutBlocked } from "./shortcutGuard.js";
+
 type ViewportConfig = {
   element: HTMLElement;
   isActive: () => boolean;
@@ -167,6 +169,7 @@ export function initWorkspaceControls(options: WorkspaceControlsOptions) {
 
   document.addEventListener("keydown", (event) => {
     if (isEditableTarget(event.target)) return;
+    if (isShortcutBlocked()) return;
 
     if (event.code === "Space") {
       isSpacePressed = true;
