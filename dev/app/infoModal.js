@@ -74,21 +74,102 @@ export function renderMarkdown(md) {
     return blocks.join("\n");
 }
 let changelogLoaded = false;
-let changelogLoading = null;
+let changelogText = null;
+let changelogRequest = null;
+function fetchChangelog() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (changelogText !== null)
+            return changelogText;
+        if (!changelogRequest) {
+            changelogRequest = (() => __awaiter(this, void 0, void 0, function* () {
+                try {
+                    const res = yield fetch(CHANGELOG_URL, { cache: "no-cache" });
+                    if (!res.ok)
+                        throw new Error(`HTTP ${res.status}`);
+                    changelogText = yield res.text();
+                    return changelogText;
+                }
+                catch (_a) {
+                    return null;
+                }
+                finally {
+                    changelogRequest = null;
+                }
+            }))();
+        }
+        return changelogRequest;
+    });
+}
+const getChangelogVersion = (md) => {
+    const match = md.match(/^##\s+(.+)$/m);
+    return match ? match[1].trim() : null;
+};
+const INFO_SEEN_KEY = "pu-info-seen-version";
+/**
+ * Glow the info button until the current changelog entry has been viewed. New
+ * visitors get the glow immediately; returning visitors get it again as soon
+ * as a new patch appears at the top of the changelog.
+ */
+function setupInfoGlow(openBtn) {
+    const baseTitle = openBtn.title;
+    let latestVersion = null;
+    let opened = false;
+    const readSeen = () => {
+        try {
+            return localStorage.getItem(INFO_SEEN_KEY);
+        }
+        catch (_a) {
+            return null;
+        }
+    };
+    const writeSeen = (version) => {
+        try {
+            localStorage.setItem(INFO_SEEN_KEY, version);
+        }
+        catch (_a) {
+            // Storage can be unavailable (private mode / blocked); the glow simply
+            // falls back to the first-visit behaviour.
+        }
+    };
+    const setGlow = (on) => {
+        openBtn.classList.toggle("info-btn-glow", on);
+        openBtn.title = on ? "Tool Information — new changes" : baseTitle;
+    };
+    // A first-time visitor should see the invitation right away, before the
+    // changelog request resolves.
+    if (!readSeen())
+        setGlow(true);
+    fetchChangelog().then((text) => {
+        if (text === null)
+            return;
+        latestVersion = getChangelogVersion(text);
+        if (!latestVersion)
+            return;
+        if (opened) {
+            // They already opened the panel while the version was loading.
+            writeSeen(latestVersion);
+            return;
+        }
+        setGlow(readSeen() !== latestVersion);
+    });
+    return () => {
+        opened = true;
+        setGlow(false);
+        if (latestVersion)
+            writeSeen(latestVersion);
+    };
+}
 function loadChangelog(contentEl) {
     return __awaiter(this, void 0, void 0, function* () {
         if (changelogLoaded)
             return;
         contentEl.innerHTML = `<p class="changelog-pending">Loading changelog…</p>`;
-        try {
-            const res = yield fetch(CHANGELOG_URL, { cache: "no-cache" });
-            if (!res.ok)
-                throw new Error(`HTTP ${res.status}`);
-            const text = yield res.text();
+        const text = yield fetchChangelog();
+        if (text !== null) {
             contentEl.innerHTML = renderMarkdown(text);
             changelogLoaded = true;
         }
-        catch (err) {
+        else {
             contentEl.innerHTML = `<p class="changelog-pending">Couldn't load the changelog from GitHub.` +
                 ` See it directly: <a href="${CHANGELOG_LINK}" target="_blank" rel="noopener">CHANGELOG.md</a></p>`;
         }
@@ -103,7 +184,11 @@ export function initInfoModal() {
     const tabs = Array.from(modal.querySelectorAll(".info-tab"));
     const panels = Array.from(modal.querySelectorAll(".info-panel"));
     const changelogEl = modal.querySelector("#changelogContent");
-    openBtn.addEventListener("click", () => (modal.hidden = false));
+    const markInfoSeen = setupInfoGlow(openBtn);
+    openBtn.addEventListener("click", () => {
+        markInfoSeen();
+        modal.hidden = false;
+    });
     closeBtn.addEventListener("click", () => (modal.hidden = true));
     modal.addEventListener("click", (e) => {
         if (e.target === modal)
@@ -120,13 +205,8 @@ export function initInfoModal() {
             panels.forEach((panel) => {
                 panel.hidden = panel.dataset.panel !== name;
             });
-            if (name === "changelog" && changelogEl && !changelogLoading) {
-                changelogLoading = loadChangelog(changelogEl);
-                changelogLoading.then(() => {
-                    changelogLoading = null;
-                }).catch(() => {
-                    changelogLoading = null;
-                });
+            if (name === "changelog" && changelogEl) {
+                void loadChangelog(changelogEl);
             }
         });
     });
