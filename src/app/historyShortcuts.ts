@@ -1,3 +1,5 @@
+import { isShortcutBlocked } from "./shortcutGuard.js";
+
 type KeyboardShortcutOptions = {
   onUndo: () => void;
   onRedo: () => void;
@@ -23,6 +25,7 @@ export function setupHistoryShortcuts(options: KeyboardShortcutOptions) {
 
   document.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || isEditableTarget(event.target)) return;
+    if (isShortcutBlocked()) return;
 
     const key = event.key.toLowerCase();
     const mod = event.metaKey || event.ctrlKey;
