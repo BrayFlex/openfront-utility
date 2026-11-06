@@ -2,6 +2,7 @@ type KeyboardShortcutOptions = {
   onUndo: () => void;
   onRedo: () => void;
   onDeselect: () => void;
+  onSelectAll: () => void;
   onCopy: () => void;
   onCut: () => void;
   onPaste: () => void;
@@ -18,7 +19,7 @@ const isEditableTarget = (target: EventTarget | null) => {
 };
 
 export function setupHistoryShortcuts(options: KeyboardShortcutOptions) {
-  const { onUndo, onRedo, onDeselect, onCopy, onCut, onPaste, onClearSelection, onInvert, onInvertSelection } = options;
+  const { onUndo, onRedo, onDeselect, onSelectAll, onCopy, onCut, onPaste, onClearSelection, onInvert, onInvertSelection } = options;
 
   document.addEventListener("keydown", (event) => {
     if (event.defaultPrevented || isEditableTarget(event.target)) return;
@@ -28,6 +29,7 @@ export function setupHistoryShortcuts(options: KeyboardShortcutOptions) {
 
     if (mod && !event.shiftKey && key === "z") { event.preventDefault(); onUndo(); return; }
     if (mod && event.shiftKey && key === "z") { event.preventDefault(); onRedo(); return; }
+    if (mod && !event.shiftKey && key === "a") { event.preventDefault(); onSelectAll(); return; }
     if (mod && !event.shiftKey && key === "d") { event.preventDefault(); onDeselect(); return; }
     if (mod && !event.shiftKey && key === "c") { event.preventDefault(); onCopy(); return; }
     if (mod && !event.shiftKey && key === "x") { event.preventDefault(); onCut(); return; }
