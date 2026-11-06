@@ -96,6 +96,30 @@
   color: var(--text);
 }
 
+/* Soft pulsing halo inviting people to open the info panel after a new patch. */
+.info-btn.info-btn-glow {
+  animation: info-btn-glow 2.4s ease-in-out infinite;
+}
+@keyframes info-btn-glow {
+  0%, 100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--accent) 0%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--accent) 22%, transparent),
+      0 0 14px 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .info-btn.info-btn-glow {
+    animation: none;
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--accent) 22%, transparent),
+      0 0 12px 2px color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+
 .theme-toggle input:checked + .theme-toggle-slider:before {
   transform: translateX(24px);
 }

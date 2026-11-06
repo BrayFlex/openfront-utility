@@ -10,6 +10,9 @@
     "render:maps": "node scripts/render-maps.mjs"
   },
   "devDependencies": {
+    "@fontsource/dm-mono": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
+    "@fontsource/space-grotesk": "^5.3.0",
     "typescript": "^5.0.0"
   },
   "dependencies": {
