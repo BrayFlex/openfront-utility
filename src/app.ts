@@ -25,11 +25,14 @@ import { setupToolOptions } from "./app/toolOptions.js";
 import { createHistoryManager } from "./app/undoRedo.js";
 import { initWorkspaceControls } from "./app/workspaceControls.js";
 import { initThemeToggle } from "./app/themeToggle.js";
+import { setupOfflineSupport } from "./app/offlineSupport.js";
 import { showToast } from "./app/toast.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const themeToggleEl = document.getElementById("themeToggle") as HTMLInputElement;
   if (themeToggleEl) initThemeToggle(themeToggleEl);
+
+  setupOfflineSupport();
 
   // ── Element references ───────────────────────────────────────────────────
   const gridDiv = document.getElementById("grid")!;

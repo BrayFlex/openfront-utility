@@ -972,6 +972,19 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     }
   };
 
+  /**
+   * Where the 5-cell guide lines fall. With the Center guide on, the grid is
+   * anchored on the canvas centre so the lines stay symmetric instead of
+   * starting from the top-left corner. Odd sizes keep a whole cell in the
+   * middle by shifting half a grid step, so the centre never cuts a cell.
+   */
+  const isGuideBoundary = (index: number, length: number) => {
+    if (!guideState.isCenterEnabled()) return index % 5 === 0;
+    const center = length / 2;
+    const phase = length % 2 === 0 ? 0 : 2.5;
+    return (index - center - phase) % 5 === 0;
+  };
+
   // Ruler ticks + labels on the outside of the drawable grid. Top/left rulers
   // mark every grid line (numbered every 5). Center ticks render on all four
   // sides when the center guide is enabled — and show even without the ruler.
@@ -1009,7 +1022,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       for (const ruler of [topRuler, bottomRuler]) {
         for (let i = 0; i <= tileWidth; i++) {
           const x = i * cellSize;
-          const major = i % 5 === 0;
+          const major = isGuideBoundary(i, tileWidth);
           const tick = document.createElement("div");
           tick.className =
             "grid-ruler-tick grid-ruler-tick-v" + (major ? " grid-ruler-tick-major" : "");
@@ -1038,7 +1051,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       for (const ruler of [leftRuler, rightRuler]) {
         for (let i = 0; i <= tileHeight; i++) {
           const y = i * cellSize;
-          const major = i % 5 === 0;
+          const major = isGuideBoundary(i, tileHeight);
           const tick = document.createElement("div");
           tick.className =
             "grid-ruler-tick grid-ruler-tick-h" + (major ? " grid-ruler-tick-major" : "");
@@ -1099,8 +1112,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         if (!cell) continue;
         cell.classList.remove("guide-v", "guide-h");
         if (guideState.isBlackEnabled()) {
-          if (x !== 0 && x % 5 === 0) cell.classList.add("guide-v");
-          if (y !== 0 && y % 5 === 0) cell.classList.add("guide-h");
+          if (x !== 0 && isGuideBoundary(x, tileWidth)) cell.classList.add("guide-v");
+          if (y !== 0 && isGuideBoundary(y, tileHeight)) cell.classList.add("guide-h");
         }
       }
     }
@@ -1175,8 +1188,8 @@ export function createGridManager(options: GridManagerOptions): GridManager {
         cell.classList.toggle("active", patternState[y][x] === 1);
 
         if (guideState.isBlackEnabled()) {
-          if (x !== 0 && x % 5 === 0) cell.classList.add("guide-v");
-          if (y !== 0 && y % 5 === 0) cell.classList.add("guide-h");
+          if (x !== 0 && isGuideBoundary(x, tileWidth)) cell.classList.add("guide-v");
+          if (y !== 0 && isGuideBoundary(y, tileHeight)) cell.classList.add("guide-h");
         }
 
         // ── Event handlers ─────────────────────────────────────────────
