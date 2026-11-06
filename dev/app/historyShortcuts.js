@@ -1,3 +1,4 @@
+import { isShortcutBlocked } from "./shortcutGuard.js";
 const isEditableTarget = (target) => {
     if (!(target instanceof HTMLElement))
         return false;
@@ -10,6 +11,8 @@ export function setupHistoryShortcuts(options) {
     const { onUndo, onRedo, onDeselect, onSelectAll, onCopy, onCut, onPaste, onClearSelection, onInvert, onInvertSelection } = options;
     document.addEventListener("keydown", (event) => {
         if (event.defaultPrevented || isEditableTarget(event.target))
+            return;
+        if (isShortcutBlocked())
             return;
         const key = event.key.toLowerCase();
         const mod = event.metaKey || event.ctrlKey;

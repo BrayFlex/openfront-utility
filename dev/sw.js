@@ -3,7 +3,7 @@
  * This is a TEMPLATE: scripts/copy-static.js fills in the file list and a
  * content hash and writes the result to docs/sw.js on every build.
  */
-const VERSION = "9f751a8648";
+const VERSION = "2c57c682ec";
 
 // Include the scope (e.g. "/" or "/openfront-utility/dev/") in the cache name so
 // the production site and the dev preview never delete each other's caches.
@@ -41,6 +41,7 @@ const CORE = [
   "app/patternLoader.js",
   "app/patternTransforms.js",
   "app/previewRenderer.js",
+  "app/shortcutGuard.js",
   "app/themeToggle.js",
   "app/tileGhostRenderer.js",
   "app/toast.js",

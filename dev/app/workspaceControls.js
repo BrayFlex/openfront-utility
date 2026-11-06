@@ -1,3 +1,4 @@
+import { isShortcutBlocked } from "./shortcutGuard.js";
 const MIN_ZOOM = 0.25;
 const MAX_ZOOM = 4;
 const ZOOM_STEP = 0.10;
@@ -125,6 +126,8 @@ export function initWorkspaceControls(options) {
     document.addEventListener("keydown", (event) => {
         var _a;
         if (isEditableTarget(event.target))
+            return;
+        if (isShortcutBlocked())
             return;
         if (event.code === "Space") {
             isSpacePressed = true;
