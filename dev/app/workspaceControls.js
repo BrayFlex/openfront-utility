@@ -80,7 +80,6 @@ export function initWorkspaceControls(options) {
         isCtrlPressed ||
         isMetaPressed ||
         event.button === 1 ||
-        event.altKey ||
         event.metaKey ||
         event.target === workspace ||
         viewports.some((v) => event.target === v.element);
@@ -124,6 +123,7 @@ export function initWorkspaceControls(options) {
         didKeyPan = false;
     }, { capture: true });
     document.addEventListener("keydown", (event) => {
+        var _a;
         if (isEditableTarget(event.target))
             return;
         if (event.code === "Space") {
@@ -144,31 +144,57 @@ export function initWorkspaceControls(options) {
             syncPanKeyClass();
             return;
         }
-        // Arrow key panning — 5 cells (100px at base scale)
+        // Shift + "+" / "-" adjusts the current tool size.
+        if (event.shiftKey &&
+            (event.code === "Equal" ||
+                event.code === "NumpadAdd" ||
+                event.code === "Minus" ||
+                event.code === "NumpadSubtract")) {
+            if (options.onAdjustSize) {
+                event.preventDefault();
+                const increase = event.code === "Equal" || event.code === "NumpadAdd";
+                options.onAdjustSize(increase ? 1 : -1);
+                return;
+            }
+        }
+        // Arrow keys: Shift moves the selection, otherwise the canvas pans by
+        // 5 cells (100px at base scale).
         const active = getActive();
-        if (event.code === "ArrowUp") {
+        const arrow = event.code === "ArrowUp"
+            ? { dx: 0, dy: -1 }
+            : event.code === "ArrowDown"
+                ? { dx: 0, dy: 1 }
+                : event.code === "ArrowLeft"
+                    ? { dx: -1, dy: 0 }
+                    : event.code === "ArrowRight"
+                        ? { dx: 1, dy: 0 }
+                        : null;
+        if (arrow) {
+            if (event.shiftKey && ((_a = options.onShiftArrow) === null || _a === void 0 ? void 0 : _a.call(options, arrow.dx, arrow.dy))) {
+                event.preventDefault();
+                return;
+            }
             event.preventDefault();
-            active.panY += ARROW_PAN_STEP;
-            render();
-            return;
-        }
-        if (event.code === "ArrowDown") {
-            event.preventDefault();
-            active.panY -= ARROW_PAN_STEP;
-            render();
-            return;
-        }
-        if (event.code === "ArrowLeft") {
-            event.preventDefault();
-            active.panX += ARROW_PAN_STEP;
-            render();
-            return;
-        }
-        if (event.code === "ArrowRight") {
-            event.preventDefault();
-            active.panX -= ARROW_PAN_STEP;
-            render();
-            return;
+            if (event.code === "ArrowUp") {
+                active.panY += ARROW_PAN_STEP;
+                render();
+                return;
+            }
+            if (event.code === "ArrowDown") {
+                active.panY -= ARROW_PAN_STEP;
+                render();
+                return;
+            }
+            if (event.code === "ArrowLeft") {
+                active.panX += ARROW_PAN_STEP;
+                render();
+                return;
+            }
+            if (event.code === "ArrowRight") {
+                active.panX -= ARROW_PAN_STEP;
+                render();
+                return;
+            }
         }
     });
     document.addEventListener("keyup", (event) => {

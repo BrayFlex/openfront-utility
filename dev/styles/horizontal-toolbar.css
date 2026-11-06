@@ -162,6 +162,30 @@
   opacity: 0.3;
   cursor: not-allowed;
 }
+
+/* Deselect is an action button: when a selection exists only its icon turns
+   blue. Keep the button surface neutral so it still reads as a normal action. */
+#deselectBtn.selected {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: var(--muted);
+}
+#deselectBtn.selected .tool-icon {
+  color: var(--accent);
+}
+/* Hover feedback must outrank the selected-state override above, otherwise
+   Deselect feels dead while a selection exists. */
+#deselectBtn:hover:not(:disabled),
+#deselectBtn.selected:hover:not(:disabled) {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--border);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+  color: var(--text);
+}
+#deselectBtn.selected:hover:not(:disabled) .tool-icon {
+  color: var(--accent);
+}
 .tool-icon {
   font-size: 16px;
   line-height: 1;
@@ -215,6 +239,27 @@
   font-size: 9px;
   color: var(--muted);
   line-height: 1;
+}
+
+/* ── Pattern Scale tabs (in the top toolbar) ─────────────────────────────
+   Compact variant of the .ctrl-tabs control so it fits inside the ~44px
+   tool-button row without stretching the toolbar. */
+.toolbar-scale-col {
+  gap: 3px;
+}
+.toolbar-scale-label {
+  font-size: 12px;
+  line-height: 1;
+  letter-spacing: 0.03em;
+}
+.toolbar-scale-tabs {
+  gap: 1px;
+  padding: 2px;
+}
+.toolbar-scale-tabs .ctrl-tab {
+  padding: 3px 6px;
+  font-size: 11px;
+  line-height: 1.2;
 }
 
 /* ── Guide buttons (appended by gridGuides.ts) ──────────────────────────── */

@@ -1,6 +1,6 @@
 import { getCircleCells } from "./circleGeometry.js";
 import { getFillStyle } from "./fillStyles.js";
-import { invertPattern, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, flipSelectionH, flipSelectionV, } from "./patternTransforms.js";
+import { invertPattern, matchesSelectionColor, rotateSelection, shiftPatternDown, shiftPatternLeft, shiftPatternRight, shiftPatternUp, shiftSelection, flipSelectionH, flipSelectionV, } from "./patternTransforms.js";
 // ─── Implementation ───────────────────────────────────────────────────────────
 export function createGridManager(options) {
     const { gridDiv, tileWidthInput, tileHeightInput, tileWidthValue, tileHeightValue, gridScaleInput, guideState, toolState, clipboard, drawingTools: initialDrawingTools, fixedWidth, fixedHeight, onPatternChange, } = options;
@@ -33,11 +33,15 @@ export function createGridManager(options) {
     const LINE_BRUSH_TIP = "soft";
     // ── UNIFIED SELECTION ─────────────────────────────────────────────────────
     let activeSelection = new Set();
-    // For Select Area tool: track drag rect
+    // For Select Area tool: track a rectangle or freehand drag
     let selectAreaStart = null;
     let selectAreaEnd = null;
     let selectAreaAdding = true; // true = add to sel, false = remove
-    let selectAreaPreview = new Set(); // visual rect preview
+    let selectAreaPreview = new Set(); // visual selection preview
+    let selectDragMode = null;
+    // Ordered polygon vertices for a freehand lasso. The closing edge back to the
+    // first point is implicit, so an unfinished loop still selects a closed area.
+    let selectLassoPoints = [];
     // Paste preview
     let pastePreviewCells = [];
     let pastePreviewOrigin = null;
@@ -93,6 +97,7 @@ export function createGridManager(options) {
             const [x, y] = k.split(",").map(Number);
             (_b = (_a = cellMatrix[y]) === null || _a === void 0 ? void 0 : _a[x]) === null || _b === void 0 ? void 0 : _b.classList.add("select-area-preview");
         });
+        gridDiv.classList.toggle("selection-remove", selectAreaPreview.size > 0 && !selectAreaAdding);
         gridDiv.classList.toggle("selection-active", activeSelection.size > 0);
     };
     const clearSelection = () => {
@@ -100,21 +105,46 @@ export function createGridManager(options) {
         selectAreaStart = null;
         selectAreaEnd = null;
         selectAreaPreview.clear();
+        selectDragMode = null;
+        selectLassoPoints = [];
         renderSelection();
     };
     const restoreSelection = (selection) => {
         activeSelection = new Set();
         for (const cellKey of selection) {
             const [x, y] = cellKey.split(",").map(Number);
-            if (isInBounds(x, y))
-                activeSelection.add(cellKey);
+            if (!isInBounds(x, y))
+                continue;
+            // A restored cell may have changed colour through undo/redo; keep the
+            // selection consistent with the current Select filter.
+            if (!matchesSelectionColor(isCellActive(x, y), toolState.getSelectColor()))
+                continue;
+            activeSelection.add(cellKey);
         }
         selectAreaStart = null;
         selectAreaEnd = null;
         selectAreaPreview.clear();
+        selectDragMode = null;
+        selectLassoPoints = [];
         renderSelection();
     };
     const hasSelection = () => activeSelection.size > 0;
+    const getSelectColor = () => toolState.getSelectColor();
+    const getOverwriteColor = () => toolState.getOverwriteColor();
+    const passesSelectFilter = (active) => matchesSelectionColor(active, getSelectColor());
+    const passesOverwriteFilter = (active) => matchesSelectionColor(active, getOverwriteColor());
+    const selectAll = () => {
+        activeSelection = new Set();
+        for (let y = 0; y < tileHeight; y++) {
+            for (let x = 0; x < tileWidth; x++) {
+                // The Select filter decides which pixels may enter a selection.
+                if (!passesSelectFilter(isCellActive(x, y)))
+                    continue;
+                activeSelection.add(key(x, y));
+            }
+        }
+        renderSelection();
+    };
     // ── Area preview for Select Area tool ─────────────────────────────────────
     const buildRectSet = (start, end) => {
         const s = new Set();
@@ -124,10 +154,102 @@ export function createGridManager(options) {
         const y2 = Math.min(tileHeight - 1, Math.max(start.y, end.y));
         for (let y = y1; y <= y2; y++) {
             for (let x = x1; x <= x2; x++) {
+                // The Select filter decides which pixels may enter a selection.
+                if (!passesSelectFilter(isCellActive(x, y)))
+                    continue;
                 s.add(key(x, y));
             }
         }
         return s;
+    };
+    /**
+     * Turn a freehand lasso outline into a filled selection. The path points are
+     * treated as an implicitly closed polygon: every traced cell is included, and
+     * a ray-cast fill adds the cells inside it. This means an unfinished loop
+     * still selects the area it encloses.
+     */
+    const buildLassoSet = (points) => {
+        const s = new Set();
+        if (points.length === 0)
+            return s;
+        let minX = Infinity;
+        let minY = Infinity;
+        let maxX = -Infinity;
+        let maxY = -Infinity;
+        for (const point of points) {
+            if (isInBounds(point.x, point.y) &&
+                passesSelectFilter(isCellActive(point.x, point.y))) {
+                s.add(key(point.x, point.y));
+            }
+            if (point.x < minX)
+                minX = point.x;
+            if (point.y < minY)
+                minY = point.y;
+            if (point.x > maxX)
+                maxX = point.x;
+            if (point.y > maxY)
+                maxY = point.y;
+        }
+        // A single point or a line has no interior; the traced cells are enough.
+        if (points.length < 3)
+            return s;
+        minX = Math.max(0, minX);
+        minY = Math.max(0, minY);
+        maxX = Math.min(tileWidth - 1, maxX);
+        maxY = Math.min(tileHeight - 1, maxY);
+        const isInside = (x, y) => {
+            let inside = false;
+            for (let i = 0, j = points.length - 1; i < points.length; j = i++) {
+                const xi = points[i].x;
+                const yi = points[i].y;
+                const xj = points[j].x;
+                const yj = points[j].y;
+                if (yi > y !== yj > y) {
+                    const intersectionX = ((xj - xi) * (y - yi)) / (yj - yi) + xi;
+                    if (x < intersectionX)
+                        inside = !inside;
+                }
+            }
+            return inside;
+        };
+        for (let y = minY; y <= maxY; y++) {
+            for (let x = minX; x <= maxX; x++) {
+                if (isInside(x, y) &&
+                    passesSelectFilter(isCellActive(x, y))) {
+                    s.add(key(x, y));
+                }
+            }
+        }
+        return s;
+    };
+    /** Object selection: every connected pixel of the same colour as the click. */
+    const getConnectedRegion = (start) => {
+        const targetActive = isCellActive(start.x, start.y);
+        if (!matchesSelectionColor(targetActive, getSelectColor()))
+            return [];
+        const visited = new Set();
+        const region = [];
+        const stack = [Object.assign({}, start)];
+        while (stack.length) {
+            const point = stack.pop();
+            if (!isInBounds(point.x, point.y))
+                continue;
+            const cellKey = key(point.x, point.y);
+            if (visited.has(cellKey))
+                continue;
+            if (isCellActive(point.x, point.y) !== targetActive)
+                continue;
+            visited.add(cellKey);
+            region.push(cellKey);
+            stack.push({ x: point.x + 1, y: point.y }, { x: point.x - 1, y: point.y }, { x: point.x, y: point.y + 1 }, { x: point.x, y: point.y - 1 });
+        }
+        return region;
+    };
+    /** Cells along a freehand lasso segment, including gaps on fast drags. */
+    const getLassoPath = (from, to) => {
+        var _a;
+        const cells = (_a = drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.getLineCells(from.x, from.y, to.x, to.y, 1, "sharp")) !== null && _a !== void 0 ? _a : [];
+        return cells.length > 0 ? cells : [to];
     };
     // ── Circle preview ────────────────────────────────────────────────────────
     const clearCirclePreview = () => {
@@ -304,14 +426,16 @@ export function createGridManager(options) {
         const halfH = Math.floor(entry.height / 2);
         const pts = [];
         for (const c of entry.cells) {
-            if (!c.active)
-                continue;
             const tx = anchorX + (c.x - entry.originX) - halfW;
             const ty = anchorY + (c.y - entry.originY) - halfH;
-            if (isInBounds(tx, ty)) {
-                pts.push({ x: tx, y: ty });
-                (_b = (_a = cellMatrix[ty]) === null || _a === void 0 ? void 0 : _a[tx]) === null || _b === void 0 ? void 0 : _b.classList.add("paste-hover");
-            }
+            if (!isInBounds(tx, ty))
+                continue;
+            if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty)))
+                continue;
+            if (!passesOverwriteFilter(isCellActive(tx, ty)))
+                continue;
+            pts.push({ x: tx, y: ty });
+            (_b = (_a = cellMatrix[ty]) === null || _a === void 0 ? void 0 : _a[tx]) === null || _b === void 0 ? void 0 : _b.classList.add("paste-hover");
         }
         pastePreviewCells = pts;
     };
@@ -353,12 +477,13 @@ export function createGridManager(options) {
         const halfW = Math.floor(entry.width / 2);
         const halfH = Math.floor(entry.height / 2);
         for (const c of entry.cells) {
-            if (!c.active)
-                continue;
             const tx = anchorX + (c.x - entry.originX) - halfW;
             const ty = anchorY + (c.y - entry.originY) - halfH;
             // Respect active selection boundary if one exists
             if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty)))
+                continue;
+            // The Overwrite filter decides which destination pixels can be replaced.
+            if (!passesOverwriteFilter(isCellActive(tx, ty)))
                 continue;
             setCellActive(tx, ty, c.active);
         }
@@ -368,8 +493,16 @@ export function createGridManager(options) {
     const cutSelection = (clipboard) => {
         if (!hasSelection())
             return;
-        // Snapshot selection keys before copySelection clears them
-        const toErase = new Set(activeSelection);
+        // Snapshot the cells that should be erased before copySelection clears the
+        // selection. The Select and Overwrite filters both apply to clearing.
+        const toErase = [];
+        activeSelection.forEach((k) => {
+            const [x, y] = k.split(",").map(Number);
+            const active = isCellActive(x, y);
+            if (passesSelectFilter(active) && passesOverwriteFilter(active)) {
+                toErase.push(k);
+            }
+        });
         copySelection(clipboard); // internally calls clearSelection()
         toErase.forEach((k) => {
             const [x, y] = k.split(",").map(Number);
@@ -381,23 +514,26 @@ export function createGridManager(options) {
     const copySelection = (clipboard) => {
         if (!hasSelection())
             return;
-        // Compute bounding box
-        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-        activeSelection.forEach((k) => {
-            const [x, y] = k.split(",").map(Number);
-            if (x < minX)
-                minX = x;
-            if (y < minY)
-                minY = y;
-            if (x > maxX)
-                maxX = x;
-            if (y > maxY)
-                maxY = y;
-        });
-        const cells = Array.from(activeSelection).map((k) => {
+        // Only pixels passing the Select filter are copied.
+        const cells = Array.from(activeSelection)
+            .map((k) => {
             const [x, y] = k.split(",").map(Number);
             return { x, y, active: isCellActive(x, y) };
-        });
+        })
+            .filter((cell) => passesSelectFilter(cell.active));
+        if (cells.length === 0)
+            return;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+        for (const cell of cells) {
+            if (cell.x < minX)
+                minX = cell.x;
+            if (cell.y < minY)
+                minY = cell.y;
+            if (cell.x > maxX)
+                maxX = cell.x;
+            if (cell.y > maxY)
+                maxY = cell.y;
+        }
         clipboard.copy({
             cells,
             width: maxX - minX + 1,
@@ -412,7 +548,15 @@ export function createGridManager(options) {
     // ── Invert ────────────────────────────────────────────────────────────────
     const invertGrid = () => {
         if (hasSelection()) {
-            drawingTools === null || drawingTools === void 0 ? void 0 : drawingTools.invertSelection(activeSelection);
+            // Select filters which pixels are read; Overwrite filters which of those
+            // pixels may be changed.
+            activeSelection.forEach((k) => {
+                const [x, y] = k.split(",").map(Number);
+                const active = isCellActive(x, y);
+                if (!passesSelectFilter(active) || !passesOverwriteFilter(active))
+                    return;
+                setCellActive(x, y, !active);
+            });
         }
         else {
             applyPattern(invertPattern(patternState));
@@ -421,13 +565,17 @@ export function createGridManager(options) {
     };
     // ── Invert Selection ─────────────────────────────────────────────────────
     // Toggles which cells are selected: everything not selected becomes selected.
+    // Cells that fail the Select filter can never enter the selection, so they
+    // are skipped when building the inverted set.
     const invertSelection = () => {
         const newSel = new Set();
         for (let y = 0; y < tileHeight; y++) {
             for (let x = 0; x < tileWidth; x++) {
-                if (!activeSelection.has(key(x, y))) {
-                    newSel.add(key(x, y));
-                }
+                if (activeSelection.has(key(x, y)))
+                    continue;
+                if (!passesSelectFilter(isCellActive(x, y)))
+                    continue;
+                newSel.add(key(x, y));
             }
         }
         activeSelection = newSel;
@@ -436,7 +584,7 @@ export function createGridManager(options) {
     // ── Shift ─────────────────────────────────────────────────────────────────
     const shiftDir = (dx, dy) => {
         if (hasSelection()) {
-            const { pattern: next, movedSelection } = shiftSelection(patternState, activeSelection, dx, dy);
+            const { pattern: next, movedSelection } = shiftSelection(patternState, activeSelection, dx, dy, getSelectColor(), getOverwriteColor());
             patternState = next;
             activeSelection = movedSelection;
             applyPattern(patternState);
@@ -458,7 +606,7 @@ export function createGridManager(options) {
     const rotateDir = (direction) => {
         if (!hasSelection())
             return;
-        const { pattern: next, rotatedSelection } = rotateSelection(patternState, activeSelection, direction);
+        const { pattern: next, rotatedSelection } = rotateSelection(patternState, activeSelection, direction, getSelectColor(), getOverwriteColor());
         patternState = next;
         activeSelection = rotatedSelection;
         applyPattern(patternState);
@@ -470,8 +618,8 @@ export function createGridManager(options) {
         if (!hasSelection())
             return;
         const { pattern: next, flippedSelection } = direction === "h"
-            ? flipSelectionH(patternState, activeSelection)
-            : flipSelectionV(patternState, activeSelection);
+            ? flipSelectionH(patternState, activeSelection, getSelectColor(), getOverwriteColor())
+            : flipSelectionV(patternState, activeSelection, getSelectColor(), getOverwriteColor());
         patternState = next;
         activeSelection = flippedSelection;
         applyPattern(patternState);
@@ -489,43 +637,87 @@ export function createGridManager(options) {
     };
     // ── Mouse & Key state ─────────────────────────────────────────────────────
     let isShiftDown = false;
+    let isAltDown = false;
     // Button element for the selectArea tool — used for unified shift highlight
     const selectAreaBtn = document.getElementById("tool-selectArea");
+    /**
+     * Shift+Alt always means freehand lasso. With the Select tool active the
+     * options-strip mode is used; otherwise holding Shift falls back to the
+     * regular rectangular marquee.
+     */
+    const resolveSelectMode = () => {
+        if (isShiftDown && isAltDown)
+            return "lasso";
+        // Holding Shift temporarily overrides Object mode with a regular marquee,
+        // so quick Shift / Shift+Alt selections still work while Object is active.
+        if (isShiftDown && toolState.getSelectMode() === "object")
+            return "regular";
+        if (toolState.getCurrentTool() === "selectArea")
+            return toolState.getSelectMode();
+        return "regular";
+    };
+    const isSelectionGesture = () => isShiftDown || toolState.getCurrentTool() === "selectArea";
+    const updateSelectCursor = () => {
+        const showSelectCursor = isSelectionGesture();
+        gridDiv.classList.toggle("select-mode", showSelectCursor);
+        if (showSelectCursor) {
+            // Selection gestures take over the pointer, so drop any drawing preview
+            // that was left over from the previous tool or Shift state.
+            clearCirclePreview();
+            clearStarPreview();
+            clearFillPreview();
+            clearPencilPreview();
+            clearPastePreview();
+            clearLinePreview();
+            selectAreaBtn === null || selectAreaBtn === void 0 ? void 0 : selectAreaBtn.classList.add("selected");
+        }
+        else {
+            selectAreaBtn === null || selectAreaBtn === void 0 ? void 0 : selectAreaBtn.classList.remove("selected");
+        }
+    };
     document.addEventListener("keydown", (e) => {
         if (e.key === "Shift") {
             isShiftDown = true;
-            // Highlight the select tool button while shift is held
-            selectAreaBtn === null || selectAreaBtn === void 0 ? void 0 : selectAreaBtn.classList.add("selected");
-            // Show select-mode cursor on the grid
-            gridDiv.classList.add("select-mode");
+            updateSelectCursor();
+        }
+        else if (e.key === "Alt") {
+            isAltDown = true;
         }
     });
     document.addEventListener("keyup", (e) => {
         if (e.key === "Shift") {
             isShiftDown = false;
-            // Only remove highlight if select tool isn't permanently active
-            if (toolState.getCurrentTool() !== "selectArea") {
-                selectAreaBtn === null || selectAreaBtn === void 0 ? void 0 : selectAreaBtn.classList.remove("selected");
-            }
-            gridDiv.classList.remove("select-mode");
+            updateSelectCursor();
+        }
+        else if (e.key === "Alt") {
+            isAltDown = false;
         }
     });
+    window.addEventListener("blur", () => {
+        isShiftDown = false;
+        isAltDown = false;
+        updateSelectCursor();
+    });
+    if (!isSelectionGesture())
+        selectAreaBtn === null || selectAreaBtn === void 0 ? void 0 : selectAreaBtn.classList.remove("selected");
     document.body.addEventListener("mousedown", () => (isMouseDown = true));
     document.body.addEventListener("mouseup", () => {
         isMouseDown = false;
         penToggleState = null;
         lastPencilCell = null;
-        // Commit Select Area drag regardless of current tool if we started one
-        if (selectAreaStart && selectAreaEnd) {
-            const rect = buildRectSet(selectAreaStart, selectAreaEnd);
+        // Commit a rectangle or lasso drag regardless of the current tool, since
+        // Shift / Shift+Alt can start one from any tool.
+        if (selectDragMode) {
             if (selectAreaAdding) {
-                rect.forEach((k) => activeSelection.add(k));
+                selectAreaPreview.forEach((k) => activeSelection.add(k));
             }
             else {
-                rect.forEach((k) => activeSelection.delete(k));
+                selectAreaPreview.forEach((k) => activeSelection.delete(k));
             }
             selectAreaStart = null;
             selectAreaEnd = null;
+            selectDragMode = null;
+            selectLassoPoints = [];
             selectAreaPreview.clear();
             renderSelection();
         }
@@ -762,20 +954,35 @@ export function createGridManager(options) {
                 cell.onmousedown = () => {
                     if (isPanKeyHeld())
                         return;
-                    const actualTool = toolState.getCurrentTool();
-                    const tool = isShiftDown ? "selectArea" : actualTool;
+                    const tool = toolState.getCurrentTool();
+                    if (isSelectionGesture()) {
+                        const mode = resolveSelectMode();
+                        // If starting on a selected cell, the gesture removes instead of adds.
+                        selectAreaAdding = !activeSelection.has(key(cx, cy));
+                        if (mode === "object") {
+                            const region = getConnectedRegion({ x: cx, y: cy });
+                            region.forEach((k) => selectAreaAdding ? activeSelection.add(k) : activeSelection.delete(k));
+                            if (region.length > 0)
+                                renderSelection();
+                            return;
+                        }
+                        selectAreaStart = { x: cx, y: cy };
+                        selectAreaEnd = { x: cx, y: cy };
+                        selectDragMode = mode === "lasso" ? "lasso" : "rect";
+                        if (selectDragMode === "lasso") {
+                            selectLassoPoints = [{ x: cx, y: cy }];
+                            selectAreaPreview = buildLassoSet(selectLassoPoints);
+                        }
+                        else {
+                            selectLassoPoints = [];
+                            selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
+                        }
+                        renderSelection();
+                        return;
+                    }
                     // While a curved line is being edited, moving the pointer bends the
                     // curve. The click that follows solidifies it.
                     if (tool === "line" && curveDraft) {
-                        return;
-                    }
-                    if (tool === "selectArea") {
-                        selectAreaStart = { x: cx, y: cy };
-                        selectAreaEnd = { x: cx, y: cy };
-                        // If starting on a selected cell, we're removing
-                        selectAreaAdding = !activeSelection.has(key(cx, cy));
-                        selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
-                        renderSelection();
                         return;
                     }
                     if (tool === "pencil") {
@@ -794,8 +1001,8 @@ export function createGridManager(options) {
                 cell.onclick = () => {
                     if (isPanKeyHeld())
                         return;
-                    // If shift is held, the mousedown already handled the selectArea logic — don't draw.
-                    if (isShiftDown)
+                    // Selection gestures are handled on mouse-down, so never draw here.
+                    if (isSelectionGesture())
                         return;
                     const tool = toolState.getCurrentTool();
                     const sel = activeSelection.size > 0 ? activeSelection : undefined;
@@ -839,15 +1046,38 @@ export function createGridManager(options) {
                 cell.onmouseover = () => {
                     if (isPanKeyHeld())
                         return;
-                    const actualTool = toolState.getCurrentTool();
-                    const tool = isShiftDown ? "selectArea" : actualTool;
+                    const tool = toolState.getCurrentTool();
                     const sel = activeSelection.size > 0 ? activeSelection : undefined;
-                    if (tool === "selectArea" && isMouseDown && selectAreaStart) {
+                    if (isMouseDown && selectDragMode && selectAreaStart) {
                         selectAreaEnd = { x: cx, y: cy };
-                        selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
+                        if (selectDragMode === "lasso") {
+                            // Add every cell along the drag path (so fast strokes stay
+                            // continuous), then re-fill the implicitly closed polygon.
+                            const last = selectLassoPoints[selectLassoPoints.length - 1];
+                            if (last) {
+                                getLassoPath(last, { x: cx, y: cy }).forEach((point, index) => {
+                                    if (index === 0 && point.x === last.x && point.y === last.y)
+                                        return;
+                                    const previous = selectLassoPoints[selectLassoPoints.length - 1];
+                                    if (previous && previous.x === point.x && previous.y === point.y)
+                                        return;
+                                    selectLassoPoints.push({ x: point.x, y: point.y });
+                                });
+                            }
+                            else {
+                                selectLassoPoints.push({ x: cx, y: cy });
+                            }
+                            selectAreaPreview = buildLassoSet(selectLassoPoints);
+                        }
+                        else {
+                            selectAreaPreview = buildRectSet(selectAreaStart, selectAreaEnd);
+                        }
                         renderSelection();
                         return;
                     }
+                    // While a selection gesture is active, never show drawing previews.
+                    if (isSelectionGesture())
+                        return;
                     if (tool === "line" && curveDraft) {
                         updateCurveControl({ x: cx, y: cy });
                         return;
@@ -937,14 +1167,11 @@ export function createGridManager(options) {
             selectAreaStart = null;
             selectAreaEnd = null;
             selectAreaPreview.clear();
+            selectDragMode = null;
+            selectLassoPoints = [];
         }
-        // Sync select-mode cursor class with tool state
-        if (tool === "selectArea") {
-            gridDiv.classList.add("select-mode");
-        }
-        else if (!isShiftDown) {
-            gridDiv.classList.remove("select-mode");
-        }
+        // Sync select-mode cursor class and toolbar highlight with tool state
+        updateSelectCursor();
     });
     toolState.subscribeToLineChanges(() => {
         if (toolState.getLineMode() !== "curve")
@@ -952,6 +1179,23 @@ export function createGridManager(options) {
     });
     toolState.subscribeToPencilChanges(() => {
         clearPencilPreview();
+    });
+    toolState.subscribeToSelectChanges(() => {
+        // Keep the selection consistent with the Select filter: switching to Black
+        // or White must not leave opposite-coloured cells selected.
+        const filtered = new Set();
+        activeSelection.forEach((k) => {
+            const [x, y] = k.split(",").map(Number);
+            if (passesSelectFilter(isCellActive(x, y)))
+                filtered.add(k);
+        });
+        activeSelection = filtered;
+        // Mid-drag mode switches should not leave stale lasso state behind.
+        selectDragMode = null;
+        selectLassoPoints = [];
+        selectAreaPreview.clear();
+        renderSelection();
+        updateSelectCursor();
     });
     // ── Clear grid ────────────────────────────────────────────────────────────
     function clearGrid() {
@@ -963,8 +1207,16 @@ export function createGridManager(options) {
         clearStarPreview();
         clearFillPreview();
         clearPastePreview();
-        if (hasSelection() && drawingTools) {
-            drawingTools.clearSelection(activeSelection);
+        if (hasSelection()) {
+            // Clear obeys both filters: a cell is only erased when its current
+            // colour passes Select and may be replaced under Overwrite.
+            activeSelection.forEach((k) => {
+                const [x, y] = k.split(",").map(Number);
+                const active = isCellActive(x, y);
+                if (!passesSelectFilter(active) || !passesOverwriteFilter(active))
+                    return;
+                setCellActive(x, y, false);
+            });
         }
         else {
             for (let y = 0; y < tileHeight; y++) {
@@ -991,6 +1243,7 @@ export function createGridManager(options) {
         getActiveSelection: () => activeSelection,
         restoreSelection,
         clearSelection,
+        selectAll,
         hasSelection,
         invertGrid,
         invertSelection,

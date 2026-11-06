@@ -7,7 +7,7 @@ const isEditableTarget = (target) => {
     return t === "input" || t === "textarea" || t === "select";
 };
 export function setupHistoryShortcuts(options) {
-    const { onUndo, onRedo, onDeselect, onCopy, onCut, onPaste, onClearSelection, onInvert, onInvertSelection } = options;
+    const { onUndo, onRedo, onDeselect, onSelectAll, onCopy, onCut, onPaste, onClearSelection, onInvert, onInvertSelection } = options;
     document.addEventListener("keydown", (event) => {
         if (event.defaultPrevented || isEditableTarget(event.target))
             return;
@@ -21,6 +21,11 @@ export function setupHistoryShortcuts(options) {
         if (mod && event.shiftKey && key === "z") {
             event.preventDefault();
             onRedo();
+            return;
+        }
+        if (mod && !event.shiftKey && key === "a") {
+            event.preventDefault();
+            onSelectAll();
             return;
         }
         if (mod && !event.shiftKey && key === "d") {

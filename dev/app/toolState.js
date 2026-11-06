@@ -29,6 +29,9 @@ export function createToolState(options) {
     let fillStyle = DEFAULT_FILL_STYLE;
     let pencilTip = "sharp";
     let lineMode = "straight";
+    let selectMode = "regular";
+    let selectColor = "both";
+    let overwriteColor = "both";
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
@@ -36,6 +39,7 @@ export function createToolState(options) {
     const fillListeners = new Set();
     const pencilListeners = new Set();
     const lineListeners = new Set();
+    const selectListeners = new Set();
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
@@ -161,6 +165,24 @@ export function createToolState(options) {
         updateSizeSlider(tool);
         listeners.forEach((l) => l(tool));
     }
+    /**
+     * Step the current tool's size. Used by Ctrl/⌘ + arrow keys so the slider can
+     * be adjusted without opening the size popover.
+     */
+    const adjustCurrentSize = (delta) => {
+        const config = getSizeConfig(currentTool);
+        if (!config)
+            return false;
+        const current = getSliderValue();
+        const next = Math.max(config.min, Math.min(config.max, current + delta * config.step));
+        if (next !== current) {
+            slider.set(next);
+            rememberedSizes[currentTool] = next;
+            if (sizeOutput)
+                sizeOutput.value = String(next);
+        }
+        return true;
+    };
     // Wire up tool buttons
     toolButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -278,6 +300,27 @@ export function createToolState(options) {
                 : ((_a = rememberedSizes["circle"]) !== null && _a !== void 0 ? _a : 7);
             return Math.max(0, Math.floor(size / 2));
         },
+        getSelectMode: () => selectMode,
+        setSelectMode: (mode) => {
+            if (selectMode === mode)
+                return;
+            selectMode = mode;
+            selectListeners.forEach((listener) => listener());
+        },
+        getSelectColor: () => selectColor,
+        setSelectColor: (color) => {
+            if (selectColor === color)
+                return;
+            selectColor = color;
+            selectListeners.forEach((listener) => listener());
+        },
+        getOverwriteColor: () => overwriteColor,
+        setOverwriteColor: (color) => {
+            if (overwriteColor === color)
+                return;
+            overwriteColor = color;
+            selectListeners.forEach((listener) => listener());
+        },
         subscribeToToolChanges: (listener) => {
             listeners.add(listener);
             return () => listeners.delete(listener);
@@ -298,6 +341,11 @@ export function createToolState(options) {
             lineListeners.add(listener);
             return () => lineListeners.delete(listener);
         },
+        subscribeToSelectChanges: (listener) => {
+            selectListeners.add(listener);
+            return () => selectListeners.delete(listener);
+        },
         getCurrentSize: () => getSliderValue(),
+        adjustCurrentSize,
     };
 }
