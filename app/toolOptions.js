@@ -8,7 +8,7 @@ const formatRatio = (value) => String(Math.round(value * 100) / 100);
  * controls bar. Add another panel here when a tool needs its own controls.
  */
 export function setupToolOptions({ container, toolState }) {
-    var _a;
+    var _a, _b;
     // ── Shape panel ──────────────────────────────────────────────────────────
     const shapePanel = document.createElement("div");
     shapePanel.className = "tool-options-panel";
@@ -151,7 +151,7 @@ export function setupToolOptions({ container, toolState }) {
     const lineModeButtons = new Map();
     const lineModes = [
         { mode: "straight", label: "Straight line", icon: "╲" },
-        { mode: "curve", label: "Curved line", icon: "⌒" },
+        { mode: "curve", label: "Curved line", icon: "⟅" },
     ];
     for (const entry of lineModes) {
         const button = document.createElement("button");
@@ -168,6 +168,77 @@ export function setupToolOptions({ container, toolState }) {
     }
     linePanel.append(lineLabel, lineModeGroup);
     container.appendChild(linePanel);
+    // ── Select panel ─────────────────────────────────────────────────────────
+    const selectPanel = document.createElement("div");
+    selectPanel.className = "tool-options-panel";
+    selectPanel.dataset.tool = "selectArea";
+    const selectModeLabel = document.createElement("span");
+    selectModeLabel.className = "tool-options-label";
+    selectModeLabel.textContent = "Mode";
+    const selectModeGroup = document.createElement("div");
+    selectModeGroup.className = "tool-options-toggle";
+    selectModeGroup.setAttribute("role", "group");
+    selectModeGroup.setAttribute("aria-label", "Selection mode");
+    const selectModeButtons = new Map();
+    const selectModes = [
+        { mode: "regular", label: "Regular selection - (hold) Shift", icon: "⬚" },
+        { mode: "lasso", label: "Freehand selection - (hold) Shift + Alt/⌥", icon: "◌" },
+        { mode: "object", label: "Object selection - connected pixels", icon: "⁜" },
+    ];
+    for (const entry of selectModes) {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tool-options-toggle-btn";
+        button.dataset.mode = entry.mode;
+        button.title = entry.label;
+        button.setAttribute("aria-label", entry.label);
+        button.setAttribute("aria-pressed", "false");
+        button.textContent = entry.icon;
+        button.addEventListener("click", () => toolState.setSelectMode(entry.mode));
+        selectModeGroup.appendChild(button);
+        selectModeButtons.set(entry.mode, button);
+    }
+    const selectColorButtons = new Map();
+    const overwriteColorButtons = new Map();
+    const selectionColors = ["black", "both", "white"];
+    const createColorTabs = (labelText, ariaLabel, onPick) => {
+        const wrapper = document.createElement("div");
+        wrapper.className = "tool-options-field";
+        const text = document.createElement("span");
+        text.className = "tool-options-label";
+        text.textContent = labelText;
+        const group = document.createElement("div");
+        group.className = "tool-options-toggle";
+        group.setAttribute("role", "group");
+        group.setAttribute("aria-label", ariaLabel);
+        const buttons = new Map();
+        for (const color of selectionColors) {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "tool-options-toggle-btn tool-options-color-btn";
+            button.dataset.color = color;
+            button.title = `${labelText} ${color} pixels`;
+            button.setAttribute("aria-label", `${ariaLabel}: ${color}`);
+            button.setAttribute("aria-pressed", "false");
+            button.textContent = color[0].toUpperCase() + color.slice(1);
+            button.addEventListener("click", () => onPick(color));
+            group.appendChild(button);
+            buttons.set(color, button);
+        }
+        wrapper.append(text, group);
+        return { wrapper, buttons };
+    };
+    const selectColorTabs = createColorTabs("Select", "Select pixels", (color) => toolState.setSelectColor(color));
+    selectColorTabs.buttons.forEach((button, color) => selectColorButtons.set(color, button));
+    const overwriteColorTabs = createColorTabs("Overwrite", "Overwrite pixels", (color) => toolState.setOverwriteColor(color));
+    overwriteColorTabs.buttons.forEach((button, color) => overwriteColorButtons.set(color, button));
+    // Mode, Select and Overwrite are three horizontal tabbers with their titles
+    // above, matching the Pattern Scale control.
+    const selectModeField = document.createElement("div");
+    selectModeField.className = "tool-options-field";
+    selectModeField.append(selectModeLabel, selectModeGroup);
+    selectPanel.append(selectModeField, selectColorTabs.wrapper, overwriteColorTabs.wrapper);
+    container.appendChild(selectPanel);
     // ── State sync ───────────────────────────────────────────────────────────
     const shapeToolButton = document.querySelector("#tool-shape");
     const shapeToolIcon = (_a = shapeToolButton === null || shapeToolButton === void 0 ? void 0 : shapeToolButton.querySelector(".tool-icon")) !== null && _a !== void 0 ? _a : null;
@@ -214,16 +285,44 @@ export function setupToolOptions({ container, toolState }) {
             button.setAttribute("aria-pressed", String(active));
         });
     };
+    const selectToolButton = document.querySelector("#tool-selectArea");
+    const selectToolIcon = (_b = selectToolButton === null || selectToolButton === void 0 ? void 0 : selectToolButton.querySelector(".tool-icon")) !== null && _b !== void 0 ? _b : null;
+    const syncColorButtons = (buttons, current) => {
+        buttons.forEach((button, color) => {
+            const active = color === current;
+            button.classList.toggle("selected", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+    };
+    const syncSelect = () => {
+        const mode = toolState.getSelectMode();
+        selectModeButtons.forEach((button, entryMode) => {
+            const active = entryMode === mode;
+            button.classList.toggle("selected", active);
+            button.setAttribute("aria-pressed", String(active));
+        });
+        syncColorButtons(selectColorButtons, toolState.getSelectColor());
+        syncColorButtons(overwriteColorButtons, toolState.getOverwriteColor());
+        const entry = selectModes.find((candidate) => candidate.mode === mode);
+        if (entry) {
+            if (selectToolIcon)
+                selectToolIcon.textContent = entry.icon;
+            if (selectToolButton)
+                selectToolButton.title = `Select — ${entry.label} (Shift)`;
+        }
+    };
     const updateVisibility = (tool) => {
         const isShape = tool === "shape";
         const isFill = tool === "fill";
         const isPencil = tool === "pencil";
         const isLine = tool === "line";
-        container.hidden = !isShape && !isFill && !isPencil && !isLine;
+        const isSelect = tool === "selectArea";
+        container.hidden = !isShape && !isFill && !isPencil && !isLine && !isSelect;
         shapePanel.hidden = !isShape;
         fillPanel.hidden = !isFill;
         pencilPanel.hidden = !isPencil;
         linePanel.hidden = !isLine;
+        selectPanel.hidden = !isSelect;
         if (isShape) {
             syncType();
             syncRatioInputs();
@@ -234,16 +333,20 @@ export function setupToolOptions({ container, toolState }) {
             syncPencilTip();
         if (isLine)
             syncLineMode();
+        if (isSelect)
+            syncSelect();
     };
     syncType();
     syncRatioInputs();
     syncFillStyle();
     syncPencilTip();
     syncLineMode();
+    syncSelect();
     updateVisibility(toolState.getCurrentTool());
     toolState.subscribeToToolChanges(updateVisibility);
     toolState.subscribeToShapeChanges(syncType);
     toolState.subscribeToFillChanges(syncFillStyle);
     toolState.subscribeToPencilChanges(syncPencilTip);
     toolState.subscribeToLineChanges(syncLineMode);
+    toolState.subscribeToSelectChanges(syncSelect);
 }

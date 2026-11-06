@@ -36,12 +36,18 @@
 .canvas-controls-bar {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  /* Start at the left so an over-wide tool options strip stays reachable via
+     the horizontal scrollbar; the divider after it claims the free space and
+     keeps the right-hand controls aligned to the right when they fit. */
+  justify-content: flex-start;
   gap: 8px;
   padding: 8px 12px;
   border-bottom: 1px solid var(--border);
   background: var(--surface-muted);
   overflow-x: auto;
+}
+#toolOptions + .canvas-controls-divider {
+  margin-left: auto;
 }
 .canvas-controls-bar::-webkit-scrollbar { display: none; }
 
@@ -51,7 +57,6 @@
   align-items: center;
   gap: 8px;
   /* Keep the tool options pinned to the left; the canvas controls stay right. */
-  margin-right: auto;
   /* Never shrink into the controls on the right; the bar scrolls if needed. */
   flex: 0 0 auto;
 }
@@ -201,6 +206,21 @@
 .tool-options-toggle-btn:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 1px;
+}
+
+/* Select panel tabbers (Mode / Select / Overwrite). Each title sits above its
+   horizontal tabber, matching the Pattern Scale control. */
+.tool-options-field {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+.tool-options-color-btn {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 4px 5px;
+  min-width: 29px;
 }
 
 .canvas-tabs {
@@ -862,19 +882,71 @@
 .canvas-workspace.is-ctrl-pan { cursor: grab; }
 .canvas-workspace.is-ctrl-pan .cell { cursor: grab; }
 
-/* Selection — theme-aware, visible over black pixels */
+/* While a pan key (Space / Ctrl / ⌘) is held, hide every hover or draft
+   preview so the canvas stays clean during a pan gesture. */
+.canvas-workspace.pan-key-held .cell.circle-hover::after,
+.canvas-workspace.pan-key-held .cell.star-hover::after,
+.canvas-workspace.pan-key-held .cell.line-hover::after,
+.canvas-workspace.pan-key-held .cell.pencil-hover::after,
+.canvas-workspace.pan-key-held .cell.paste-hover::after,
+.canvas-workspace.pan-key-held .cell.fill-hover::after,
+.canvas-workspace.pan-key-held .cell.fill-hover-mark::after {
+  display: none;
+}
+.canvas-workspace.pan-key-held .cell.paste-hover {
+  background: transparent;
+}
+.canvas-workspace.pan-key-held .cell.line-start {
+  box-shadow: none;
+}
+
+/* Selection — theme-aware, visible over black pixels. Each state pairs a light
+   inner edge with the accent so it reads against both white and filled cells. */
 .selection-cell {
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 2px var(--accent);
 }
-.select-area-preview {
-  outline: 1px dashed var(--accent);
-  outline-offset: -1px;
-  background: rgba(12, 124, 201, 0.35);
+/* The pending marker is drawn as an overlay rather than a cell background, so
+   the pixel underneath (filled or empty) stays visible. Thin alternating
+   light/accent hatch lines read over both black and white cells. */
+.cell.select-area-preview {
+  /* Blue while adding; overridden to danger while subtracting below. */
+  --preview-edge: var(--accent-dark);
+  --preview-dot: var(--accent);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    inset 0 0 0 2px var(--preview-edge);
 }
-.paste-hover {
-  background: rgba(12, 124, 201, 0.25);
+/* A small centered dot marks the cell without covering its pixel. The light
+   halo keeps the dot readable over filled/black cells. */
+.cell.select-area-preview::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28%;
+  height: 28%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: var(--preview-dot);
+  pointer-events: none;
 }
-.selection-active .cell:not(.selection-cell) {
+/* Removing from the selection is destructive, so mark the preview danger-red
+   instead of blue. */
+.selection-remove .cell.select-area-preview {
+  --preview-edge: var(--danger);
+  --preview-dot: var(--danger);
+}
+/* Keep the paste preview as an overlay for the same reason: its tint should
+   sit on top of filled cells instead of replacing their background. */
+.cell.paste-hover {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7),
+    inset 0 0 0 2px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+/* Keep the pending preview at full strength while dimming the rest. */
+.selection-active .cell:not(.selection-cell):not(.select-area-preview) {
   opacity: 0.55;
 }
 

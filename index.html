@@ -82,11 +82,11 @@
               <span class="tool-label">Cut</span>
             </button>
             <button id="copyBtn" class="tool-btn action-btn" title="Copy selection (⌘/Ctrl+C)">
-              <span class="tool-icon">⧉</span>
+              <span class="tool-icon">⮺</span>
               <span class="tool-label">Copy</span>
             </button>
             <button id="pasteBtn" class="tool-btn action-btn" title="Paste clipboard (⌘/Ctrl+V)">
-              <span class="tool-icon">⎘</span>
+              <span class="tool-icon">⮻</span>
               <span class="tool-label">Paste</span>
             </button>
           </div>
@@ -159,6 +159,20 @@
             </div>
           </div>
 
+          <div class="tool-strip-separator"></div>
+
+          <!-- Pattern Scale tabs — compact so they fit the toolbar height -->
+          <div class="tool-strip-group">
+            <div class="ctrl-col toolbar-scale-col">
+              <label class="ctrl-label toolbar-scale-label" for="scaleTabs">Pattern Scale</label>
+              <div id="scaleTabs" class="ctrl-tabs toolbar-scale-tabs" role="tablist">
+                <button type="button" class="ctrl-tab selected" data-scale="0" aria-selected="true">1×</button>
+                <button type="button" class="ctrl-tab" data-scale="1" aria-selected="false">2×</button>
+                <button type="button" class="ctrl-tab" data-scale="2" aria-selected="false">4×</button>
+              </div>
+            </div>
+          </div>
+
           <!-- Guide buttons injected here by gridGuides.ts -->
 
         </div><!-- end .tool-strip -->
@@ -173,7 +187,7 @@
             <!-- Export panel -->
             <div id="exportPanel" class="ei-panel export-grid">
               <!-- <div class="ei-panel-section"> -->
-                <button id="copyJsonBtn"      class="ei-copy-btn" title="Copy Raw JSON">JSON</button>
+                <button id="copyPatternBtn"   class="ei-copy-btn" title="Copy Pattern Code (Base64)">Base64</button>
                 <button id="copyDevStorageBtn"   class="ei-copy-btn" title="Copy Dev Storage for Console">Console</button>
                 <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy Preview Link">Preview Link</button>
               <!-- </div> -->
@@ -202,6 +216,8 @@
             <!-- Per-tool options (populated by toolOptions.ts) -->
             <div id="toolOptions" class="tool-options" hidden></div>
 
+            <div class="canvas-controls-divider"></div>
+
             <!-- Width -->
             <div class="ctrl-col">
               <label class="ctrl-label" for="tileWidthValue">Width</label>
@@ -226,18 +242,6 @@
                   <button id="tileHeightUp"   class="stepper-btn" aria-label="Increase height">▲</button>
                   <button id="tileHeightDown" class="stepper-btn" aria-label="Decrease height">▼</button>
                 </div>
-              </div>
-            </div>
-
-            <div class="canvas-controls-divider"></div>
-
-            <!-- Pattern Scale tabs — default 1× (value="0") -->
-            <div class="ctrl-col">
-              <label class="ctrl-label" for="scaleTabs">Pattern Scale</label>
-              <div id="scaleTabs" class="ctrl-tabs" role="tablist">
-                <button type="button" class="ctrl-tab selected" data-scale="0" aria-selected="true">1×</button>
-                <button type="button" class="ctrl-tab" data-scale="1" aria-selected="false">2×</button>
-                <button type="button" class="ctrl-tab" data-scale="2" aria-selected="false">4×</button>
               </div>
             </div>
 
@@ -325,9 +329,9 @@
               <button id="previewZoomInBtn" class="preview-zoom-btn" aria-label="Zoom in">+</button>
             </div>
             <button id="mapSimBtn" class="preview-map-btn" title="Game Simulations" aria-label="Game Simulations" aria-haspopup="true" aria-expanded="false">🗺</button>
-            <button id="copyPreviewImageBtn" class="preview-copy-btn" title="Copy pattern image" aria-label="Copy pattern image to clipboard">⎙</button>
-            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">❐</button>
-            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>❏</button>
+            <button id="copyPreviewImageBtn" class="preview-copy-btn" title="Copy image to clipboard" aria-label="Copy image to clipboard">⎙</button>
+            <button id="floatPreviewBtn" class="preview-float-btn" title="Float preview"  aria-label="Float preview">◱</button>
+            <button id="dockPreviewBtn"  class="preview-float-btn" title="Dock preview"   aria-label="Dock preview" hidden>◫</button>
           </div>
 
           <!-- Preview canvas -->
@@ -404,7 +408,7 @@
         </aside>
 
         <!-- Show-preview button (visible when preview is collapsed) -->
-        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">⇤</button>
+        <button id="showPreviewBtn" class="show-preview-btn" aria-label="Show preview" title="Show preview">↤</button>
 
         <!-- Toolbar resize handle (left edge of preview sidebar) -->
         <div id="toolbarResizeHandle" class="resize-handle toolbar-resize-handle" role="separator" aria-label="Resize toolbar" style="display:none"></div>
@@ -442,7 +446,7 @@
           <li>Select part of your pattern to <strong>cut, copy, paste, shift, rotate or flip</strong> it.</li>
           <li>Use the <strong>Test Canvas</strong> as a scratchpad while you work on the main pattern.</li>
           <li>Preview your pattern against different scale sizes and colours before submitting.</li>
-          <li>Import/Export patterns as JSON (or copy the URL) — and when satisfied <strong>Submit</strong> your pattern.</li>
+          <li>Import/Export pattern codes (Base64), or copy the URL — and when satisfied <strong>Submit</strong> your pattern.</li>
         </ul>
 
         <p>⚠️ <em>This tool is in beta. I can't guarantee stability, uptime, maintenance or
@@ -504,11 +508,15 @@
             <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>C</kbd></td><td>Copy selection</td></tr>
             <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>X</kbd></td><td>Cut selection</td></tr>
             <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>V</kbd></td><td>Paste clipboard</td></tr>
+            <tr><td><kbd>Shift</kbd> (hold)</td><td>Temporarily switch into selection mode</td></tr>
+            <tr><td><kbd>Shift</kbd> + <kbd>Alt</kbd>/<kbd>⌥</kbd> (hold)</td><td>Temporarily use lasso / freehand selection</td></tr>
+            <tr><td><kbd>Shift</kbd> + <kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></td><td>Move the active selection by one cell</td></tr>
+            <tr><td><kbd>Shift</kbd> + <kbd>+</kbd> / <kbd>-</kbd></td><td>Increase / decrease the current tool size</td></tr>
+            <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>A</kbd></td><td>Select all</td></tr>
             <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>D</kbd></td><td>Deselect</td></tr>
             <tr><td><kbd>Backspace</kbd> / <kbd>Delete</kbd></td><td>Clear selection</td></tr>
             <tr><td><kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>I</kbd></td><td>Invert pixels (selection, or whole canvas)</td></tr>
             <tr><td><kbd>Shift</kbd> + <kbd>I</kbd></td><td>Invert selection area</td></tr>
-            <tr><td><kbd>Shift</kbd> (hold)</td><td>Temporarily switch into selection mode</td></tr>
             <tr><td><kbd>Space</kbd> / <kbd>Ctrl</kbd>/<kbd>⌘</kbd> (hold) + drag</td><td>Pan the canvas (grab hand)</td></tr>
             <tr><td><kbd>←</kbd><kbd>↑</kbd><kbd>↓</kbd><kbd>→</kbd></td><td>Pan the canvas by 5 cells</td></tr>
             <tr><td>Mouse wheel</td><td>Zoom the canvas</td></tr>
@@ -516,6 +524,8 @@
         </table>
         <p style="margin-top: 12px; color: var(--muted); font-size: 12px;">
           Shift-click or hold Shift with any drawing tool to temporarily use selection mode.
+          Hold Shift + Alt/⌥ for lasso selection. The lasso closes automatically and
+          selects every pixel inside it.
         </p>
       </div>
       <div class="modal-body info-panel" data-panel="links" hidden>

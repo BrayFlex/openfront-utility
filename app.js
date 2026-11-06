@@ -99,7 +99,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const exportPanel = document.getElementById("exportPanel");
     const importPanel = document.getElementById("importPanel");
     // Copy buttons
-    const copyJsonBtn = document.getElementById("copyJsonBtn");
+    const copyPatternBtn = document.getElementById("copyPatternBtn");
     const copyDevStorageBtn = document.getElementById("copyDevStorageBtn");
     const copyPreviewBtn = document.getElementById("copyPreviewBtn");
     // Preview panel
@@ -651,9 +651,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const pattern = mainGrid.getCurrentPattern();
         return generatePatternBase64(pattern, mainGrid.getTileWidth(), mainGrid.getTileHeight(), scaleExponent());
     };
-    copyJsonBtn.addEventListener("click", () => {
+    copyPatternBtn.addEventListener("click", () => {
         copyText(getOutputBase64());
-        showToast("Pattern JSON copied to clipboard.");
+        showToast("Pattern code (Base64) copied to clipboard.");
     });
     copyDevStorageBtn.addEventListener("click", () => {
         const b64 = getOutputBase64();
@@ -900,6 +900,14 @@ document.addEventListener("DOMContentLoaded", () => {
         resetButton: resetViewBtn,
         zoomValue: zoomValueEl,
         onChange: () => tileGhost.render(),
+        onShiftArrow: (dx, dy) => {
+            const grid = activeGrid();
+            if (!grid.hasSelection())
+                return false;
+            grid.shiftDir(dx, dy);
+            return true;
+        },
+        onAdjustSize: (delta) => toolState.adjustCurrentSize(delta),
     }).refresh;
     // ── Info Modal ────────────────────────────────────────────────────────────
     initInfoModal();
@@ -942,6 +950,7 @@ document.addEventListener("DOMContentLoaded", () => {
             activeGrid().clearSelection();
             toolState.restoreTool();
         },
+        onSelectAll: () => activeGrid().selectAll(),
         onClearSelection: () => {
             if (activeGrid().hasSelection()) {
                 activeGrid().clearGrid();
