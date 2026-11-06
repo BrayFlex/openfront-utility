@@ -2,17 +2,17 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
-## November 6th, 2026 — Selection Preview Contrast
+## November 4th, 2026 — Selection Preview Contrast
 - The drag **selection preview** is now easy to see over filled/black pixels: a small centered dot with a light halo plus a light-and-accent outline. The marker is drawn on top of the cell, so you can still tell filled and empty pixels apart while selecting.
 - Selected cells and the **paste preview** now carry a light inner edge so their outlines stand out against dark pixels too.
 - While an existing selection dims the canvas, **pending preview cells stay at full strength** instead of being dimmed along with everything else.
 - **Removing from a selection** now previews in the danger red instead of blue, so subtracting is visually distinct from adding.
 
-## November 5th, 2026 — Extra Fill Shades
+## November 3th, 2026 — Extra Fill Shades
 - Added two more Fill swatches: an **extra-light 12.5% dither** (three clear cells between marks horizontally and vertically, alternating with a single clear cell diagonally) and its inverse, an **extra-dense 87.5% dither**.
 - Both sit in density order with the existing swatches, between solid and 75%, and between 25% and Erase.
 
-## November 5th, 2026 — Export Label Accuracy
+## November 3th, 2026 — Export Label Accuracy
 - The export **JSON** button is now labelled **Base64**, since it copies the URL-safe Base64 pattern code rather than JSON. Its tooltip, copy confirmation toast, and the in-app help text now say the same.
 
 ## November 2nd, 2026 — Selection Bug Fixes and Canvas Wrap
