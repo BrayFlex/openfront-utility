@@ -2,6 +2,34 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## November 6th, 2026 — Selection Preview Contrast
+- The drag **selection preview** is now easy to see over filled/black pixels: a small centered dot with a light halo plus a light-and-accent outline. The marker is drawn on top of the cell, so you can still tell filled and empty pixels apart while selecting.
+- Selected cells and the **paste preview** now carry a light inner edge so their outlines stand out against dark pixels too.
+- While an existing selection dims the canvas, **pending preview cells stay at full strength** instead of being dimmed along with everything else.
+- **Removing from a selection** now previews in the danger red instead of blue, so subtracting is visually distinct from adding.
+
+## November 5th, 2026 — Extra Fill Shades
+- Added two more Fill swatches: an **extra-light 12.5% dither** (three clear cells between marks horizontally and vertically, alternating with a single clear cell diagonally) and its inverse, an **extra-dense 87.5% dither**.
+- Both sit in density order with the existing swatches, between solid and 75%, and between 25% and Erase.
+
+## November 5th, 2026 — Export Label Accuracy
+- The export **JSON** button is now labelled **Base64**, since it copies the URL-safe Base64 pattern code rather than JSON. Its tooltip, copy confirmation toast, and the in-app help text now say the same.
+
+## November 2nd, 2026 — Selection Bug Fixes and Canvas Wrap
+- Selection **translations now wrap around the canvas edges** instead of dropping pixels that leave the board.
+- The **Deselect** button now only tints its icon blue while a selection exists — its background and label stay neutral.
+- **Lasso selection now fills the area it encloses**: the outline closes automatically, the live preview shows the filled region, and starting on a selected pixel deselects everything inside it.
+- **Shift + Alt/⌥ no longer pans the canvas**, so it reliably starts a lasso with any tool.
+- **Shift + arrow keys** move the active selection by one cell instead of panning, and **Shift + `+` / `-`** adjust the current tool's size.
+- The Select **mode, Select and Overwrite tabbers are horizontal** with their titles above, styled like Pattern Scale.
+- Tool previews now hide while **Shift / Shift + Alt** selection gestures are active, and those gestures override **Object** mode for regular / lasso selection.
+
+## November 2nd, 2026 — Select Tool Controls, Lasso & Object Selection
+- **Select now has its own options strip** in the canvas controls bar, just like Shape, Line and the other tools.
+- Choose between **Regular ⬚**, **Lasso / freehand ◌** and **Object ⁜** selection. Object selection picks up every connected pixel of the same colour as the one you click.
+- Hold **Shift + Alt/⌥** with any tool to temporarily use lasso selection, and **Ctrl/⌘ + A** now selects the whole canvas.
+- Added **Select: Black / Both / White** and **Overwrite: Black / Both / White** tabbers (Both by default). Select controls which pixels enter a selection and which pixels are read by copy, invert, clear and every selection transform (shift, rotate and flip); Overwrite controls which destination pixels those actions may replace. Protected pixels now stay put instead of disappearing, and the selection only ever contains colours allowed by the Select filter.
+
 ## October 10th, 2026 — Improved Compatibility, Pencil Size/Drag Fixes, Performance Improvements
 - **The Shape tool now starts on Circle** instead of Star.
 - Removed the **browser-native number spinners** from the canvas Width/Height inputs on Firefox, leaving only the custom steppers.

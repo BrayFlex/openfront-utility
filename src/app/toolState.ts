@@ -32,6 +32,12 @@ export type LineMode = "straight" | "curve";
 /** Pencil footprint: a square block or a circular dot. */
 export type PencilTip = "sharp" | "soft";
 
+/** How the Select tool gathers cells. */
+export type SelectMode = "regular" | "lasso" | "object";
+
+/** Which pixel colours an operation reads (Select) or writes (Overwrite). */
+export type SelectionColor = "black" | "both" | "white";
+
 export const SHAPE_TYPES: { type: ShapeType; label: string; icon: string }[] = [
   { type: "circle", label: "Circle", icon: "○" },
   { type: "cube", label: "Cube", icon: "▣" },
@@ -90,13 +96,25 @@ export type ToolState = {
   getFillStyle: () => FillStyleId;
   setFillStyle: (style: FillStyleId) => void;
   getCircleRadius: () => number;
+  /** Select tool gathering mode (rectangle, freehand or connected pixels). */
+  getSelectMode: () => SelectMode;
+  setSelectMode: (mode: SelectMode) => void;
+  /** Which pixels operations read from the selection. */
+  getSelectColor: () => SelectionColor;
+  setSelectColor: (color: SelectionColor) => void;
+  /** Which pixels operations are allowed to overwrite. */
+  getOverwriteColor: () => SelectionColor;
+  setOverwriteColor: (color: SelectionColor) => void;
   subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
   subscribeToShapeChanges: (listener: () => void) => () => void;
   subscribeToFillChanges: (listener: () => void) => () => void;
   subscribeToPencilChanges: (listener: () => void) => () => void;
   subscribeToLineChanges: (listener: () => void) => () => void;
+  subscribeToSelectChanges: (listener: () => void) => () => void;
   /** Returns the current slider value for any sized tool */
   getCurrentSize: () => number;
+  /** Step the active tool's size up/down. Returns false when it has no size. */
+  adjustCurrentSize: (delta: number) => boolean;
   getPreviousTool: () => ToolKind;
   restoreTool: () => void;
 };
@@ -112,6 +130,9 @@ export function createToolState(options: ToolStateOptions): ToolState {
   let fillStyle: FillStyleId = DEFAULT_FILL_STYLE;
   let pencilTip: PencilTip = "sharp";
   let lineMode: LineMode = "straight";
+  let selectMode: SelectMode = "regular";
+  let selectColor: SelectionColor = "both";
+  let overwriteColor: SelectionColor = "both";
   // Per-tool remembered sizes
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
@@ -119,6 +140,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
   const fillListeners = new Set<() => void>();
   const pencilListeners = new Set<() => void>();
   const lineListeners = new Set<() => void>();
+  const selectListeners = new Set<() => void>();
 
   // Initialize noUiSlider
   const slider = createNoUiSlider(sizeSlider, {
@@ -254,6 +276,26 @@ export function createToolState(options: ToolStateOptions): ToolState {
     listeners.forEach((l) => l(tool));
   }
 
+  /**
+   * Step the current tool's size. Used by Ctrl/⌘ + arrow keys so the slider can
+   * be adjusted without opening the size popover.
+   */
+  const adjustCurrentSize = (delta: number) => {
+    const config = getSizeConfig(currentTool);
+    if (!config) return false;
+    const current = getSliderValue();
+    const next = Math.max(
+      config.min,
+      Math.min(config.max, current + delta * config.step)
+    );
+    if (next !== current) {
+      slider.set(next);
+      rememberedSizes[currentTool] = next;
+      if (sizeOutput) sizeOutput.value = String(next);
+    }
+    return true;
+  };
+
   // Wire up tool buttons
   toolButtons.forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -359,6 +401,24 @@ export function createToolState(options: ToolStateOptions): ToolState {
         : (rememberedSizes["circle"] ?? 7);
       return Math.max(0, Math.floor(size / 2));
     },
+    getSelectMode: () => selectMode,
+    setSelectMode: (mode) => {
+      if (selectMode === mode) return;
+      selectMode = mode;
+      selectListeners.forEach((listener) => listener());
+    },
+    getSelectColor: () => selectColor,
+    setSelectColor: (color) => {
+      if (selectColor === color) return;
+      selectColor = color;
+      selectListeners.forEach((listener) => listener());
+    },
+    getOverwriteColor: () => overwriteColor,
+    setOverwriteColor: (color) => {
+      if (overwriteColor === color) return;
+      overwriteColor = color;
+      selectListeners.forEach((listener) => listener());
+    },
     subscribeToToolChanges: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -379,6 +439,11 @@ export function createToolState(options: ToolStateOptions): ToolState {
       lineListeners.add(listener);
       return () => lineListeners.delete(listener);
     },
+    subscribeToSelectChanges: (listener) => {
+      selectListeners.add(listener);
+      return () => selectListeners.delete(listener);
+    },
     getCurrentSize: () => getSliderValue(),
+    adjustCurrentSize,
   };
 }
