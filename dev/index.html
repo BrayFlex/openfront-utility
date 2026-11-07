@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <title>Pattern Utility — 1-Bit Pattern Editor Designed for OpenFront</title>
-    <meta name="description" content="1-bit pixel pattern editor for OpenFront. Draw, edit, and export tile patterns with a full suite of drawing tools." />
+    <meta name="description" content="1-bit pixel pattern editor for OpenFront. Create, edit, and export tile patterns with a full suite of drawing tools." />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="index.css" />
     <link rel="stylesheet" href="styles/circle-tool.css" />
@@ -64,12 +64,6 @@
               <span class="tool-icon">╲</span>
               <span class="tool-label">Line</span>
             </button>
-          </div>
-
-          <div class="tool-strip-separator"></div>
-
-          <!-- Fill -->
-          <div class="tool-strip-group">
             <button id="tool-fill" class="tool-btn" data-tool="fill" title="Fill — flood fill with the chosen style; with selection: fills the whole selection">
               <span class="tool-icon">▦</span>
               <span class="tool-label">Fill</span>
@@ -139,7 +133,7 @@
                Col 3: RotateR, ShiftR
                Col 4: FlipV, FlipH
           -->
-          <div class="tool-strip-group transform-group">
+          <div class="tool-strip-group tool-strip-group-misc">
             <div class="transform-btns-grid">
               <button id="rotateLeftBtn"  class="tool-btn transform-btn" disabled title="Rotate Left">↺</button>
               <button id="shiftUpBtn"     class="tool-btn transform-btn" disabled title="Shift Up">↑</button>
@@ -155,7 +149,7 @@
           <div class="tool-strip-separator"></div>
 
           <!-- Invert / Clear (stacked) -->
-          <div class="tool-strip-group">
+          <div class="tool-strip-group tool-strip-group-misc">
             <div class="ctrl-col invert-clear-col">
               <button id="invertBtn" class="ctrl-btn ctrl-btn-sm" title="Invert canvas (or selection)">Invert</button>
               <button id="clearBtn"  class="ctrl-btn ctrl-btn-sm" title="Clear canvas">Clear</button>
@@ -165,10 +159,10 @@
           <div class="tool-strip-separator"></div>
 
           <!-- Pattern Scale tabs — compact so they fit the toolbar height -->
-          <div class="tool-strip-group">
+          <div class="tool-strip-group tool-strip-group-misc">
             <div class="ctrl-col toolbar-scale-col">
-              <label class="ctrl-label toolbar-scale-label" for="scaleTabs">Pattern Scale</label>
-              <div id="scaleTabs" class="ctrl-tabs toolbar-scale-tabs" role="tablist">
+              <span id="scaleTabsLabel" class="ctrl-label toolbar-scale-label">Pattern Scale</span>
+              <div id="scaleTabs" class="ctrl-tabs toolbar-scale-tabs" role="tablist" aria-labelledby="scaleTabsLabel">
                 <button type="button" class="ctrl-tab selected" data-scale="0" aria-selected="true">1×</button>
                 <button type="button" class="ctrl-tab" data-scale="1" aria-selected="false">2×</button>
                 <button type="button" class="ctrl-tab" data-scale="2" aria-selected="false">4×</button>
@@ -176,7 +170,7 @@
             </div>
           </div>
 
-          <!-- Guide buttons injected here by gridGuides.ts -->
+          <div class="tool-strip-separator"></div>
 
         </div><!-- end .tool-strip -->
 
@@ -194,11 +188,19 @@
                 <button id="copyDevStorageBtn"   class="ei-copy-btn" title="Copy Dev Storage for Console">Console</button>
                 <button id="copyPreviewBtn"   class="ei-copy-btn" title="Copy Preview Link">Preview Link</button>
               <!-- </div> -->
-              <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
+              <span id="submitPatternWrap" class="submit-btn-wrap">
+                <button id="submitPatternBtn" class="ei-copy-btn btn-submit" title="Submit your pattern">Submit</button>
+              </span>
             </div>
             <!-- Import panel -->
-            <div id="importPanel" class="ei-panel" hidden>
-              <input type="text" id="base64Input" class="ei-text-input" placeholder="Paste Base64 / pattern code" value="" />
+            <div id="importPanel" class="ei-panel import-panel" hidden>
+              <div class="ei-input-group">
+                <!-- <label class="ei-input-label" for="base64Input">URL/Base64 Code</label> -->
+                <div class="ei-input-field">
+                  <input type="text" id="base64Input" class="ei-text-input" placeholder="URL or Base 64 Code" value="" />
+                  <button id="clearBase64Btn" class="ei-clear-input" type="button" title="Clear import field" aria-label="Clear import field" hidden>×</button>
+                </div>
+              </div>
               <button id="loadBtn" class="ei-copy-btn btn-primary">Load</button>
               <div id="imageImportEntry"></div>
             </div>
@@ -311,8 +313,27 @@
               </div>
             </div>
           </div>
-        <!-- Watermark -->
-        <div class="canvas-credit">Made with 🍫 by Aotumuri &amp; BrayFlex</div>
+        <!-- Watermark + canvas readouts -->
+        <div class="canvas-credit">
+          <span class="canvas-credit-text">Made with 🍫 by Aotumuri &amp; BrayFlex</span>
+          <div class="canvas-status" aria-live="off">
+            <span class="canvas-status-group" title="Cursor position (pixels from the top-left)">
+              <span class="canvas-status-label">x</span>
+              <span id="cursorXValue" class="canvas-status-value canvas-status-coord">–</span>
+              <span class="canvas-status-label">y</span>
+              <span id="cursorYValue" class="canvas-status-value canvas-status-coord">–</span>
+            </span>
+            <span class="canvas-status-divider" aria-hidden="true">|</span>
+            <span class="canvas-status-group" title="Primary pixels">
+              <span class="canvas-status-label">Primary</span>
+              <span id="primaryPixelCount" class="canvas-status-value canvas-status-count">0</span>
+            </span>
+            <span class="canvas-status-group" title="Secondary pixels">
+              <span class="canvas-status-label">Secondary</span>
+              <span id="secondaryPixelCount" class="canvas-status-value canvas-status-count">0</span>
+            </span>
+          </div>
+        </div>
 
         </section>
 
@@ -376,7 +397,21 @@
             <div class="colors-body">
               <div class="color-row">
                 <div class="color-col">
-                  <span class="colors-inline-label">Colors:</span>
+                  <div class="colors-label-row">
+                    <button
+                      id="colorWarningBtn"
+                      class="color-warning-btn"
+                      type="button"
+                      aria-label="View team color warning"
+                      aria-haspopup="true"
+                      aria-expanded="false"
+                      aria-controls="colorWarningPopover"
+                      hidden
+                    >
+                      <span class="color-warning-icon" aria-hidden="true">⚠&#xFE0E;</span>
+                    </button>
+                    <span class="colors-inline-label">Colors:</span>
+                  </div>
                   <button id="swapColorsBtn" class="swap-btn">⇄ Swap</button>
                 </div>
                 <div class="color-field">
@@ -406,6 +441,21 @@
                 </div>
               </details>
             </div>
+          </div>
+
+          <!-- Team color warning popover -->
+          <div
+            id="colorWarningPopover"
+            class="color-warning-popover"
+            role="tooltip"
+            aria-hidden="true"
+            hidden
+          >
+            <div class="color-warning-title">
+              <span aria-hidden="true">⚠</span>
+              Team color warning
+            </div>
+            <p id="colorWarningText" class="color-warning-text"></p>
           </div>
 
         </aside>
@@ -485,10 +535,10 @@
         <h3>Coloring</h3>
         <p>
           In Team Modes your primary colour is replaced, so make sure your secondary still stands out.
-          Conversely, if most of your overall pattern is the secondary colour it may be confusing in team games.
+          Conversely, if most of your overall pattern is comprised mostly of secondary pixels it may be confusing in team games.
         </p>
         <p>
-          You can test 2 Teams to see Red and Quads to see Orange/Yellow; use your better judgement for the other team colours. 
+          You can also use the Pattern Utility's Map/Team Simulation (🗺) feature to preview how your pattern looks on the in-game map with the team colours. 
         </p>
 
         <h3>Standards</h3>

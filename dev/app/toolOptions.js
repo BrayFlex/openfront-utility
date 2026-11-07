@@ -251,7 +251,7 @@ export function setupToolOptions({ container, toolState }) {
             if (shapeToolIcon)
                 shapeToolIcon.textContent = shape.icon;
             if (shapeToolButton)
-                shapeToolButton.title = `Shape — ${shape.label}`;
+                shapeToolButton.title = `Shape: ${shape.label}`;
         }
     };
     const syncRatioInputs = () => {
@@ -308,7 +308,7 @@ export function setupToolOptions({ container, toolState }) {
             if (selectToolIcon)
                 selectToolIcon.textContent = entry.icon;
             if (selectToolButton)
-                selectToolButton.title = `Select — ${entry.label} (Shift)`;
+                selectToolButton.title = `Select: ${entry.label}`;
         }
     };
     const updateVisibility = (tool) => {

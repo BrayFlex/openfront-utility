@@ -4,14 +4,14 @@ export function createPatternLoader(options) {
     return function loadFromBase64() {
         const base64 = normalizePatternInput(base64Input.value);
         if (!base64)
-            return;
+            return false;
         let decoded;
         try {
             decoded = decodePatternBase64(base64);
         }
         catch (e) {
             alert(e.message);
-            return;
+            return false;
         }
         // Show the bare code rather than a pasted preview link.
         base64Input.value = base64;
@@ -21,5 +21,6 @@ export function createPatternLoader(options) {
         tileWidthValue.value = tileWidthInput.value;
         tileHeightValue.value = tileHeightInput.value;
         onPatternLoaded(pattern, scale);
+        return true;
     };
 }

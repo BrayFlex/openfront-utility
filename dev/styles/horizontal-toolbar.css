@@ -131,7 +131,7 @@
   display: flex;
   align-items: center;
   flex: 1;
-  gap: 6px;
+  gap: 4px;
   overflow-x: auto;
   padding: 0 8px;
 }
@@ -142,6 +142,11 @@
   align-items: center;
   gap: 4px;
 }
+
+.tool-strip-group-misc {
+  margin: 0px 4px;
+}
+
 .tool-group-label {
   font-size: 10px;
   text-transform: uppercase;
@@ -382,6 +387,22 @@
   color: #fff;
 }
 
+/* Keep hover events reachable while the submit button is disabled by the
+   team color warning; the wrapper receives them and opens the warning. */
+.submit-btn-wrap {
+  display: flex;
+  min-width: 0;
+}
+.submit-btn-wrap > .btn-submit {
+  flex: 1;
+}
+.submit-btn-wrap.is-warning {
+  cursor: not-allowed;
+}
+.submit-btn-wrap.is-warning > .btn-submit {
+  pointer-events: none;
+}
+
 .btn-primary {
   background: var(--accent);
   border-color: var(--accent-dark);
@@ -396,4 +417,59 @@
   width: 160px;
   font-size: 12px;
   padding: 4px 8px;
+}
+
+.import-panel {
+  align-items: flex-end;
+}
+
+.ei-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ei-input-label {
+  font-size: 10px;
+  line-height: 1;
+  color: var(--muted);
+  letter-spacing: 0.02em;
+  user-select: none;
+}
+
+.ei-input-field {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.ei-input-field .ei-text-input {
+  padding-right: 26px;
+}
+
+.ei-clear-input {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+.ei-clear-input:hover {
+  background: var(--border);
+  color: var(--text);
+}
+.ei-clear-input[hidden] {
+  display: none;
 }

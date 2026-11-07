@@ -412,13 +412,20 @@ export function createGridManager(options) {
         onPatternChange();
     };
     // ── Paste preview ─────────────────────────────────────────────────────────
+    // `paste-hover-on` / `paste-hover-off` distinguish filled and empty source
+    // pixels so the preview shows the copied pattern instead of a solid block.
+    const PASTE_PREVIEW_CLASSES = [
+        "paste-hover",
+        "paste-hover-on",
+        "paste-hover-off",
+    ];
     const clearPastePreview = () => {
-        pastePreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove("paste-hover"); });
+        pastePreviewCells.forEach((p) => { var _a, _b; return (_b = (_a = cellMatrix[p.y]) === null || _a === void 0 ? void 0 : _a[p.x]) === null || _b === void 0 ? void 0 : _b.classList.remove(...PASTE_PREVIEW_CLASSES); });
         pastePreviewCells = [];
         pastePreviewOrigin = null;
     };
     const showPastePreview = (anchorX, anchorY, entry) => {
-        var _a, _b;
+        var _a;
         clearPastePreview();
         pastePreviewOrigin = { ox: entry.originX, oy: entry.originY };
         // Center the paste on the cursor cell
@@ -435,7 +442,11 @@ export function createGridManager(options) {
             if (!passesOverwriteFilter(isCellActive(tx, ty)))
                 continue;
             pts.push({ x: tx, y: ty });
-            (_b = (_a = cellMatrix[ty]) === null || _a === void 0 ? void 0 : _a[tx]) === null || _b === void 0 ? void 0 : _b.classList.add("paste-hover");
+            const cell = (_a = cellMatrix[ty]) === null || _a === void 0 ? void 0 : _a[tx];
+            if (cell) {
+                cell.classList.add("paste-hover");
+                cell.classList.add(c.active ? "paste-hover-on" : "paste-hover-off");
+            }
         }
         pastePreviewCells = pts;
     };

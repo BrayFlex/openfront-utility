@@ -5,13 +5,30 @@
 .cell.circle-hover::after,
 .cell.star-hover::after,
 .cell.line-hover::after,
-.cell.pencil-hover::after,
-.cell.paste-hover::after {
+.cell.pencil-hover::after {
   content: "";
   position: absolute;
   inset: 0;
   background: rgba(12, 124, 201, 0.24); /* Blue accent with opacity */
   pointer-events: none;
+}
+
+/* Paste preview: show the copied pixels themselves. Filled source pixels get a
+   dark tint and empty ones a faint accent wash, so the pattern's shape is
+   readable instead of the whole selection previewing as one solid block. */
+.cell.paste-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cell.paste-hover-on::after {
+  background: rgba(36, 49, 58, 0.82);
+}
+
+.cell.paste-hover-off::after {
+  background: rgba(12, 124, 201, 0.1);
 }
 
 /* Fill preview: a faint tint on every cell the fill would touch, and a
