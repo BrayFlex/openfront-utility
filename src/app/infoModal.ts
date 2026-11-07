@@ -152,7 +152,7 @@ function setupInfoGlow(openBtn: HTMLButtonElement) {
 
   const setGlow = (on: boolean) => {
     openBtn.classList.toggle("info-btn-glow", on);
-    openBtn.title = on ? "Tool Information — new changes" : baseTitle;
+    openBtn.title = on ? "Pattern Utility Information — New changes" : baseTitle;
   };
 
   // A first-time visitor should see the invitation right away, before the

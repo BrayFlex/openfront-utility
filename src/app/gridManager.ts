@@ -604,9 +604,17 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   };
 
   // ── Paste preview ─────────────────────────────────────────────────────────
+  // `paste-hover-on` / `paste-hover-off` distinguish filled and empty source
+  // pixels so the preview shows the copied pattern instead of a solid block.
+  const PASTE_PREVIEW_CLASSES = [
+    "paste-hover",
+    "paste-hover-on",
+    "paste-hover-off",
+  ] as const;
+
   const clearPastePreview = () => {
     pastePreviewCells.forEach((p) =>
-      cellMatrix[p.y]?.[p.x]?.classList.remove("paste-hover")
+      cellMatrix[p.y]?.[p.x]?.classList.remove(...PASTE_PREVIEW_CLASSES)
     );
     pastePreviewCells = [];
     pastePreviewOrigin = null;
@@ -630,7 +638,11 @@ export function createGridManager(options: GridManagerOptions): GridManager {
       if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty))) continue;
       if (!passesOverwriteFilter(isCellActive(tx, ty))) continue;
       pts.push({ x: tx, y: ty });
-      cellMatrix[ty]?.[tx]?.classList.add("paste-hover");
+      const cell = cellMatrix[ty]?.[tx];
+      if (cell) {
+        cell.classList.add("paste-hover");
+        cell.classList.add(c.active ? "paste-hover-on" : "paste-hover-off");
+      }
     }
     pastePreviewCells = pts;
   };
