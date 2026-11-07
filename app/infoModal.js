@@ -143,7 +143,7 @@ function setupInfoGlow(openBtn) {
     };
     const setGlow = (on) => {
         openBtn.classList.toggle("info-btn-glow", on);
-        openBtn.title = on ? "Tool Information — new changes" : baseTitle;
+        openBtn.title = on ? "Pattern Utility Information — New changes" : baseTitle;
     };
     // A first-time visitor should see the invitation right away, before the
     // changelog request resolves.

@@ -21,7 +21,7 @@ export function setupOfflineSupport() {
             return;
         notified = true;
         if (hadWorker) {
-            showToast("A new version is ready. Reload the page to update.", 6000);
+            showToast("A new version is ready. Reload the page to update.", 5000);
         }
         else {
             showToast("Saved for offline use. You can keep drawing without internet.", 5000);

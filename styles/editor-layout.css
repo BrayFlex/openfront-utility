@@ -31,6 +31,7 @@
   display: flex;
   flex-direction: column;
   background: var(--surface);
+  container-type: inline-size;
 }
 
 .canvas-controls-bar {
@@ -772,15 +773,70 @@
   transform: translateX(-50%);
 }
 
-/* Watermark is at the bottom of the canvas workspace panel */
+/* Canvas footer: centred watermark with fixed-position readouts on the right. */
 .canvas-credit {
-  text-align: center;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px;
   font-size: 11px;
   color: var(--muted);
-  opacity: 0.6;
   background: var(--surface-muted);
   border-top: 1px solid var(--border);
+}
+.canvas-credit-text {
+  opacity: 0.6;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.canvas-status {
+  position: absolute;
+  top: 50%;
+  right: 10px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  opacity: 0.9;
+  pointer-events: none;
+}
+.canvas-status-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.canvas-status-label {
+  opacity: 0.75;
+}
+.canvas-status-value {
+  display: inline-block;
+  text-align: right;
+}
+.canvas-status-coord {
+  min-width: 3ch;
+}
+.canvas-status-count {
+  min-width: 4ch;
+}
+.canvas-status-divider {
+  opacity: 0.4;
+}
+@container (max-width: 760px) {
+  .canvas-credit {
+    justify-content: flex-start;
+  }
+  .canvas-status {
+    position: static;
+    margin-left: auto;
+    transform: none;
+  }
 }
 
 .grid {
@@ -1248,12 +1304,96 @@
   min-height: 0;
 }
 /* Inline "Colors" label — on top of the Swap button in the column */
+.colors-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  min-height: 18px;
+}
 .colors-inline-label {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--muted);
   user-select: none;
+}
+.color-warning-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--danger);
+  font-family: "Segoe UI Symbol", "Apple Symbols", "DM Sans", sans-serif;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+}
+.color-warning-icon {
+  display: block;
+  color: var(--danger);
+  animation: color-warning-glow 1.8s ease-in-out infinite;
+}
+.color-warning-btn:hover,
+.color-warning-btn:focus-visible {
+  color: var(--danger);
+  background: color-mix(in srgb, var(--danger) 14%, transparent);
+  outline: none;
+}
+.color-warning-btn:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--danger) 45%, transparent);
+}
+.color-warning-btn[hidden] {
+  display: none;
+}
+.color-warning-popover {
+  position: fixed;
+  z-index: 200;
+  width: min(300px, calc(100vw - 16px));
+  padding: 10px 12px;
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, var(--border));
+  border-left: 3px solid var(--danger);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--surface) 94%, transparent);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  font-size: 12px;
+  line-height: 1.45;
+  pointer-events: auto;
+}
+.color-warning-popover[hidden] {
+  display: none !important;
+}
+.color-warning-title {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 4px;
+  color: var(--danger);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.color-warning-text {
+  margin: 0;
+}
+@keyframes color-warning-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 2px color-mix(in srgb, var(--danger) 55%, transparent);
+    opacity: 0.82;
+  }
+  50% {
+    text-shadow: 0 0 7px color-mix(in srgb, var(--danger) 95%, transparent);
+    opacity: 1;
+  }
 }
 .colors-body {
   padding: 14px;
@@ -1370,3 +1510,11 @@
 
 /* Prevent text selection while dragging */
 body.is-resizing-pane * { user-select: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .color-warning-icon {
+    animation: none;
+    opacity: 1;
+    text-shadow: 0 0 3px color-mix(in srgb, var(--danger) 70%, transparent);
+  }
+}

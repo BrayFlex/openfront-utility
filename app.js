@@ -8,6 +8,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
     });
 };
 import { createClipboardManager } from "./app/clipboard.js";
+import { initCanvasStatus } from "./app/canvasStatus.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
@@ -22,6 +23,7 @@ import { decodePatternBase64, generatePatternBase64, } from "./app/patternEncodi
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
+import { initTeamColorWarning } from "./app/teamColorWarning.js";
 import { createToolState } from "./app/toolState.js";
 import { createTileGhostRenderer } from "./app/tileGhostRenderer.js";
 import { setupToolOptions } from "./app/toolOptions.js";
@@ -109,6 +111,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewPrimaryColor = document.getElementById("previewPrimaryColor");
     const previewSecondaryColor = document.getElementById("previewSecondaryColor");
     const swapColorsBtn = document.getElementById("swapColorsBtn");
+    const colorWarningBtn = document.getElementById("colorWarningBtn");
+    const colorWarningPopover = document.getElementById("colorWarningPopover");
+    const colorWarningText = document.getElementById("colorWarningText");
     const colorPresetContainer = document.getElementById("colorPresetContainer");
     const selectedPresetLabel = document.getElementById("selectedPresetLabel");
     const hidePreviewBtn = document.getElementById("hidePreviewBtn");
@@ -136,6 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mapTeamColorsCanvas = document.getElementById("mapTeamColorsCanvas");
     // Submission
     const submitPatternBtn = document.getElementById("submitPatternBtn");
+    const submitPatternWrap = document.getElementById("submitPatternWrap");
     // Workspace zoom
     const zoomInBtn = document.getElementById("zoomInBtn");
     const zoomOutBtn = document.getElementById("zoomOutBtn");
@@ -146,6 +152,13 @@ document.addEventListener("DOMContentLoaded", () => {
     const previewCtx = previewCanvas.getContext("2d");
     if (!previewCtx)
         throw new Error("2D context not supported");
+    const teamColorWarning = initTeamColorWarning({
+        button: colorWarningBtn,
+        submitButton: submitPatternBtn,
+        submitTrigger: submitPatternWrap,
+        popover: colorWarningPopover,
+        text: colorWarningText,
+    });
     // ── Clipboard ─────────────────────────────────────────────────────────────
     const clipboard = createClipboardManager();
     // ── Canvas switcher state ─────────────────────────────────────────────────
@@ -266,6 +279,33 @@ document.addEventListener("DOMContentLoaded", () => {
     scrapGrid.setDrawingTools(scrapDrawingTools);
     // Helper — active grid
     const activeGrid = () => (isScrapActive ? scrapGrid : mainGrid);
+    // ── Canvas footer readouts (cursor + pixel counts) ────────────────────────
+    const canvasStatus = initCanvasStatus({
+        grids: [
+            {
+                element: gridDiv,
+                getSize: () => ({
+                    width: mainGrid.getTileWidth(),
+                    height: mainGrid.getTileHeight(),
+                }),
+            },
+            {
+                element: scrapGridDiv,
+                getSize: () => ({
+                    width: scrapGrid.getTileWidth(),
+                    height: scrapGrid.getTileHeight(),
+                }),
+            },
+        ],
+        cursorX: document.getElementById("cursorXValue"),
+        cursorY: document.getElementById("cursorYValue"),
+        primaryCount: document.getElementById("primaryPixelCount"),
+        secondaryCount: document.getElementById("secondaryPixelCount"),
+    });
+    // Warn when a secondary-heavy pattern could be confused with a team color.
+    const updateTeamColorWarning = () => {
+        teamColorWarning.update(activeGrid().getCurrentPattern(), previewSecondaryColor.value);
+    };
     // ── Faded tiling around the canvas ────────────────────────────────────────
     // Shows the next tile(s) over faintly on the workspace background so the
     // pattern can be judged as a seamless repeat while drawing.
@@ -378,6 +418,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const renderPreviewOnly = () => {
         const grid = activeGrid();
         const pattern = grid.getCurrentPattern();
+        updateTeamColorWarning();
         if (isScrapActive) {
             renderPreview(pattern, true);
         }
@@ -409,6 +450,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const grid = activeGrid();
         const pattern = grid.getCurrentPattern();
         const primary = previewPrimaryColor.value;
+        canvasStatus.updateCounts(pattern);
+        updateTeamColorWarning();
         // Test canvas: render + record directly from the raw pattern. It can't be
         // base64-encoded (128×128 exceeds the format's height limit), so we skip
         // the URL hash and encoding entirely for it.
@@ -669,6 +712,17 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Preview link copied to clipboard.");
     });
     // ── Import ────────────────────────────────────────────────────────────────
+    const clearBase64Btn = document.getElementById("clearBase64Btn");
+    const syncBase64ClearButton = () => {
+        clearBase64Btn.hidden = base64Input.value.length === 0;
+    };
+    base64Input.addEventListener("input", syncBase64ClearButton);
+    clearBase64Btn.addEventListener("click", () => {
+        base64Input.value = "";
+        syncBase64ClearButton();
+        base64Input.focus();
+    });
+    syncBase64ClearButton();
     const loadFromBase64 = createPatternLoader({
         base64Input,
         tileWidthInput,
@@ -987,7 +1041,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const [patternPart, queryPart] = hashValue.split("?");
         if (patternPart) {
             base64Input.value = patternPart;
-            setTimeout(loadFromBase64, 0);
+            syncBase64ClearButton();
+            setTimeout(() => {
+                // Auto-loaded from the URL: leave the import field clean so it does not
+                // look like the user pasted something themselves.
+                if (loadFromBase64()) {
+                    base64Input.value = "";
+                    syncBase64ClearButton();
+                }
+            }, 0);
         }
         if (queryPart) {
             const params = new URLSearchParams(queryPart);
