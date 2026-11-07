@@ -2,6 +2,15 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## November 6th, 2026 — Team Color Warning
+- A glowing **warning icon** now appears next to **Colors** when more than 40% of a pattern uses a bright, highly saturated secondary color. Hover or click it to learn why the pattern may be confusing in team games.
+- **Submit is disabled** while the warning is active; hovering or pressing it shows the same explanation.
+- Secondary colors must be **clearly darker** or **near white** to avoid the warning.
+- Added canvas pixel counts and mouse position to the footer
+
+## November 6th, 2026 — Paste Preview Shows the Copied Pattern
+- The **paste preview** now shows what is on the clipboard: filled pixels preview dark and empty pixels preview faint, so you can see the pattern's shape before placing it instead of the whole selection showing as one solid block.
+
 ## November 5th, 2026 — Offline Support (credit oncenot)
 - The utility now **works with no internet**: a service worker saves the app on the first visit (about 0.7 MB up front, map backgrounds finish in the background).
 - **Fonts are bundled** with the app, so text looks the same offline and the page no longer requests Google Fonts.

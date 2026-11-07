@@ -1,4 +1,5 @@
 import { createClipboardManager } from "./app/clipboard.js";
+import { initCanvasStatus } from "./app/canvasStatus.js";
 import { initColorPresetControls } from "./app/colorPresets.js";
 import { copyText } from "./app/copyText.js";
 import { createDrawingTools } from "./app/drawingTools.js";
@@ -19,6 +20,7 @@ import {
 import { createPatternLoader } from "./app/patternLoader.js";
 import { initPaneResizeControls } from "./app/paneResizeControls.js";
 import { createPreviewRenderer } from "./app/previewRenderer.js";
+import { initTeamColorWarning } from "./app/teamColorWarning.js";
 import { createToolState } from "./app/toolState.js";
 import { createTileGhostRenderer } from "./app/tileGhostRenderer.js";
 import { setupToolOptions } from "./app/toolOptions.js";
@@ -117,6 +119,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const previewPrimaryColor = document.getElementById("previewPrimaryColor") as HTMLInputElement;
   const previewSecondaryColor = document.getElementById("previewSecondaryColor") as HTMLInputElement;
   const swapColorsBtn = document.getElementById("swapColorsBtn") as HTMLButtonElement;
+  const colorWarningBtn = document.getElementById("colorWarningBtn") as HTMLButtonElement;
+  const colorWarningPopover = document.getElementById("colorWarningPopover") as HTMLDivElement;
+  const colorWarningText = document.getElementById("colorWarningText") as HTMLParagraphElement;
   const colorPresetContainer = document.getElementById("colorPresetContainer") as HTMLDivElement;
   const selectedPresetLabel = document.getElementById("selectedPresetLabel");
   const hidePreviewBtn = document.getElementById("hidePreviewBtn") as HTMLButtonElement;
@@ -146,6 +151,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Submission
   const submitPatternBtn = document.getElementById("submitPatternBtn") as HTMLButtonElement;
+  const submitPatternWrap = document.getElementById("submitPatternWrap") as HTMLElement;
 
   // Workspace zoom
   const zoomInBtn = document.getElementById("zoomInBtn") as HTMLButtonElement;
@@ -156,6 +162,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (!colorPresetContainer) throw new Error("Missing #colorPresetContainer");
   const previewCtx = previewCanvas.getContext("2d");
   if (!previewCtx) throw new Error("2D context not supported");
+
+  const teamColorWarning = initTeamColorWarning({
+    button: colorWarningBtn,
+    submitButton: submitPatternBtn,
+    submitTrigger: submitPatternWrap,
+    popover: colorWarningPopover,
+    text: colorWarningText,
+  });
 
   // ── Clipboard ─────────────────────────────────────────────────────────────
   const clipboard = createClipboardManager();
@@ -290,6 +304,38 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Helper — active grid
   const activeGrid = () => (isScrapActive ? scrapGrid : mainGrid);
+
+  // ── Canvas footer readouts (cursor + pixel counts) ────────────────────────
+  const canvasStatus = initCanvasStatus({
+    grids: [
+      {
+        element: gridDiv,
+        getSize: () => ({
+          width: mainGrid.getTileWidth(),
+          height: mainGrid.getTileHeight(),
+        }),
+      },
+      {
+        element: scrapGridDiv,
+        getSize: () => ({
+          width: scrapGrid.getTileWidth(),
+          height: scrapGrid.getTileHeight(),
+        }),
+      },
+    ],
+    cursorX: document.getElementById("cursorXValue")!,
+    cursorY: document.getElementById("cursorYValue")!,
+    primaryCount: document.getElementById("primaryPixelCount")!,
+    secondaryCount: document.getElementById("secondaryPixelCount")!,
+  });
+
+  // Warn when a secondary-heavy pattern could be confused with a team color.
+  const updateTeamColorWarning = () => {
+    teamColorWarning.update(
+      activeGrid().getCurrentPattern(),
+      previewSecondaryColor.value
+    );
+  };
 
   // ── Faded tiling around the canvas ────────────────────────────────────────
   // Shows the next tile(s) over faintly on the workspace background so the
@@ -433,6 +479,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const renderPreviewOnly = () => {
     const grid = activeGrid();
     const pattern = grid.getCurrentPattern();
+    updateTeamColorWarning();
 
     if (isScrapActive) {
       renderPreview(pattern, true);
@@ -471,6 +518,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const grid = activeGrid();
     const pattern = grid.getCurrentPattern();
     const primary = previewPrimaryColor.value;
+    canvasStatus.updateCounts(pattern);
+    updateTeamColorWarning();
 
     // Test canvas: render + record directly from the raw pattern. It can't be
     // base64-encoded (128×128 exceeds the format's height limit), so we skip
@@ -743,6 +792,18 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   // ── Import ────────────────────────────────────────────────────────────────
+  const clearBase64Btn = document.getElementById("clearBase64Btn") as HTMLButtonElement;
+  const syncBase64ClearButton = () => {
+    clearBase64Btn.hidden = base64Input.value.length === 0;
+  };
+  base64Input.addEventListener("input", syncBase64ClearButton);
+  clearBase64Btn.addEventListener("click", () => {
+    base64Input.value = "";
+    syncBase64ClearButton();
+    base64Input.focus();
+  });
+  syncBase64ClearButton();
+
   const loadFromBase64 = createPatternLoader({
     base64Input,
     tileWidthInput,
@@ -1082,7 +1143,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const [patternPart, queryPart] = hashValue.split("?");
     if (patternPart) {
       base64Input.value = patternPart;
-      setTimeout(loadFromBase64, 0);
+      syncBase64ClearButton();
+      setTimeout(() => {
+        // Auto-loaded from the URL: leave the import field clean so it does not
+        // look like the user pasted something themselves.
+        if (loadFromBase64()) {
+          base64Input.value = "";
+          syncBase64ClearButton();
+        }
+      }, 0);
     }
     if (queryPart) {
       const params = new URLSearchParams(queryPart);

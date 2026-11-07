@@ -319,7 +319,7 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
     ratioGroup.hidden = type !== "cube";
     if (shape) {
       if (shapeToolIcon) shapeToolIcon.textContent = shape.icon;
-      if (shapeToolButton) shapeToolButton.title = `Shape — ${shape.label}`;
+      if (shapeToolButton) shapeToolButton.title = `Shape: ${shape.label}`;
     }
   };
 
@@ -383,7 +383,7 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
     const entry = selectModes.find((candidate) => candidate.mode === mode);
     if (entry) {
       if (selectToolIcon) selectToolIcon.textContent = entry.icon;
-      if (selectToolButton) selectToolButton.title = `Select — ${entry.label} (Shift)`;
+      if (selectToolButton) selectToolButton.title = `Select: ${entry.label}`;
     }
   };
 
