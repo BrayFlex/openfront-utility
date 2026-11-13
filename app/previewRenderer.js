@@ -126,7 +126,7 @@ export function createPreviewRenderer(options) {
             context.fillRect(0, height - 34, width, 34);
             context.globalAlpha = 1;
             context.fillStyle = "#ffffff";
-            context.font = "bold 15px 'Space Grotesk', sans-serif";
+            context.font = "bold 15px 'DM Sans', sans-serif";
             context.textAlign = "center";
             context.textBaseline = "middle";
             context.fillText("< Test Canvas >", width / 2, height - 17);

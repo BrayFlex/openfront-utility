@@ -644,41 +644,65 @@ document.addEventListener("DOMContentLoaded", () => {
     setInterval(updateTransformButtons, 200);
     // ── Cut / Copy / Paste ─────────────────────────────────────────────────────
     let prePasteTool = null;
+    // Enter paste mode from the button or the keyboard shortcut. Re-pressing it
+    // while already pasting must not replace the tool to restore afterwards.
+    const startPaste = () => {
+        if (!clipboard.hasContent() || toolState.getCurrentTool() === "paste")
+            return;
+        prePasteTool = toolState.getCurrentTool();
+        toolState.selectTool("paste");
+    };
     cutBtn.addEventListener("click", () => {
         activeGrid().cutSelection(clipboard);
     });
     copyBtn.addEventListener("click", () => {
         activeGrid().copySelection(clipboard);
     });
-    pasteBtn.addEventListener("click", () => {
-        if (clipboard.hasContent()) {
-            prePasteTool = toolState.getCurrentTool();
-            toolState.selectTool("paste");
-        }
-    });
-    // When paste tool is active and user clicks on grid, paste happens
-    // This is handled via onclick in gridManager by calling paste() from app
-    // We override the paste behavior by listening after tool change
+    pasteBtn.addEventListener("click", startPaste);
+    // When the paste tool is active the next grid click pastes and then switches
+    // back to the previous tool. Keep the armed listener so it can be removed if
+    // the user picks a different tool first — otherwise that new tool's first
+    // click would both draw and paste.
+    let armedPasteClick = null;
+    const disarmPasteClick = () => {
+        if (!armedPasteClick)
+            return;
+        armedPasteClick.element.removeEventListener("click", armedPasteClick.handler);
+        armedPasteClick = null;
+    };
+    const armPasteClick = () => {
+        disarmPasteClick();
+        const grid = activeGrid();
+        const gridEl = isScrapActive ? scrapGridDiv : gridDiv;
+        const onGridClick = (e) => {
+            var _a, _b;
+            const target = e.target;
+            if (!target.classList.contains("cell"))
+                return;
+            const x = parseInt((_a = target.dataset.x) !== null && _a !== void 0 ? _a : "0");
+            const y = parseInt((_b = target.dataset.y) !== null && _b !== void 0 ? _b : "0");
+            const restoreTool = prePasteTool || "selectArea";
+            disarmPasteClick();
+            grid.paste(x, y, clipboard);
+            // Switch back to previous tool after single paste
+            toolState.selectTool(restoreTool);
+            prePasteTool = null;
+        };
+        armedPasteClick = { element: gridEl, handler: onGridClick };
+        gridEl.addEventListener("click", onGridClick);
+    };
     toolState.subscribeToToolChanges((tool) => {
-        if (tool === "paste") {
-            // Override cell onclick for paste: handled in gridManager via cell click,
-            // but gridManager needs clipboard reference. We wire it here:
-            const grid = activeGrid();
-            const gridEl = isScrapActive ? scrapGridDiv : gridDiv;
-            const onGridClick = (e) => {
-                var _a, _b;
-                const target = e.target;
-                if (!target.classList.contains("cell"))
-                    return;
-                const x = parseInt((_a = target.dataset.x) !== null && _a !== void 0 ? _a : "0");
-                const y = parseInt((_b = target.dataset.y) !== null && _b !== void 0 ? _b : "0");
-                grid.paste(x, y, clipboard);
-                // Switch back to previous tool after single paste
-                toolState.selectTool(prePasteTool || "selectArea");
-                prePasteTool = null;
-                gridEl.removeEventListener("click", onGridClick);
-            };
-            gridEl.addEventListener("click", onGridClick);
+        disarmPasteClick();
+        const pasteActive = tool === "paste";
+        // Paste is a tool mode, so mirror it on the Paste toolbar button even
+        // though that button is not one of the data-tool buttons.
+        pasteBtn.classList.toggle("selected", pasteActive);
+        pasteBtn.setAttribute("aria-pressed", String(pasteActive));
+        if (pasteActive) {
+            armPasteClick();
+        }
+        else {
+            prePasteTool = null;
         }
     });
     // ── Export / Import tab toggle ────────────────────────────────────────────
@@ -1010,12 +1034,7 @@ document.addEventListener("DOMContentLoaded", () => {
         onInvertSelection: () => activeGrid().invertSelection(),
         onCopy: () => activeGrid().copySelection(clipboard),
         onCut: () => activeGrid().cutSelection(clipboard),
-        onPaste: () => {
-            if (clipboard.hasContent()) {
-                prePasteTool = toolState.getCurrentTool();
-                toolState.selectTool("paste");
-            }
-        },
+        onPaste: startPaste,
     });
     // ── Submission ────────────────────────────────────────────────────────────
     submitPatternBtn.addEventListener("click", () => {

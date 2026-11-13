@@ -3,7 +3,7 @@
  * This is a TEMPLATE: scripts/copy-static.js fills in the file list and a
  * content hash and writes the result to docs/sw.js on every build.
  */
-const VERSION = "573b3f85c9";
+const VERSION = "582b2ffe00";
 
 // Include the scope (e.g. "/" or "/openfront-utility/dev/") in the cache name so
 // the production site and the dev preview never delete each other's caches.
@@ -61,10 +61,6 @@ const CORE = [
   "fonts/dm-sans-latin-500-normal.woff2",
   "fonts/dm-sans-latin-600-normal.woff2",
   "fonts/dm-sans-latin-700-normal.woff2",
-  "fonts/space-grotesk-latin-400-normal.woff2",
-  "fonts/space-grotesk-latin-500-normal.woff2",
-  "fonts/space-grotesk-latin-600-normal.woff2",
-  "fonts/space-grotesk-latin-700-normal.woff2",
   "icon-192.png",
   "icon-512.png",
   "icon-maskable-512.png",
