@@ -247,6 +247,12 @@ document.addEventListener("DOMContentLoaded", () => {
     () => handleGuideChange()
   );
 
+  // Pattern edits can fire far faster than the screen refreshes (one event per
+  // cell hovered while dragging), so the output/preview refresh is coalesced to
+  // at most once per animation frame.
+  let outputFrame = 0;
+  let requestOutputUpdate = () => {};
+
   // ── MAIN grid manager ─────────────────────────────────────────────────────
   const mainGrid = createGridManager({
     gridDiv,
@@ -257,7 +263,7 @@ document.addEventListener("DOMContentLoaded", () => {
     guideState,
     toolState,
     clipboard,
-    onPatternChange: () => { if (!isScrapActive) updateOutput(); },
+    onPatternChange: () => { if (!isScrapActive) requestOutputUpdate(); },
   });
 
   const mainDrawingTools = createDrawingTools({
@@ -291,7 +297,7 @@ document.addEventListener("DOMContentLoaded", () => {
     clipboard,
     fixedWidth: SCRAP_SIZE,
     fixedHeight: SCRAP_SIZE,
-    onPatternChange: () => { if (isScrapActive) updateOutput(); },
+    onPatternChange: () => { if (isScrapActive) requestOutputUpdate(); },
   });
 
   const scrapDrawingTools = createDrawingTools({
@@ -481,22 +487,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const pattern = grid.getCurrentPattern();
     updateTeamColorWarning();
 
-    if (isScrapActive) {
-      renderPreview(pattern, true);
-    } else {
-      const scale = scaleExponent();
-      try {
-        const base64 = lastMainBase64 ?? generatePatternBase64(
-          pattern,
-          grid.getTileWidth(),
-          grid.getTileHeight(),
-          scale
-        );
-        renderPreview(base64, false);
-      } catch {
-        return;
-      }
-    }
+    // Render straight from the pattern matrix — no base64 encode/decode round
+    // trip. The encoded scale is passed through so the tile size still matches.
+    renderPreview(pattern, isScrapActive, isScrapActive ? 0 : scaleExponent());
 
     if (previewCanvasWrap) {
       setPreviewWrapBackground();
@@ -546,7 +539,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const secondary = previewSecondaryColor.value;
 
-    renderPreview(base64, false);
+    renderPreview(pattern, false, scale);
     if (previewCanvasWrap) {
       setPreviewWrapBackground();
     }
@@ -561,6 +554,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     updateHistoryButtons();
     tileGhost.render();
+  };
+
+  // Coalesce the (potentially expensive) output refresh to one animation frame,
+  // so a fast drag that delivers dozens of cell events between paints only
+  // re-encodes and re-renders once.
+  requestOutputUpdate = () => {
+    if (outputFrame) return;
+    outputFrame = window.requestAnimationFrame(() => {
+      outputFrame = 0;
+      updateOutput();
+    });
   };
 
   // ── Colour-only updates ───────────────────────────────────────────────────

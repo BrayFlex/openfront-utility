@@ -9,6 +9,14 @@
 - The **Paste toolbar button stays highlighted** while paste mode is active.
 - The **paste preview is much easier to see**: filled pixels use a strong accent tint that stays visible over black cells, and protected cells show the full footprint with a red hatch instead of disappearing.
 
+## November 12th, 2026 — Faster Preview & Drawing
+- The **pattern preview is much smoother**, especially on large canvases and at higher zoom. It now draws the pattern as a repeating tile instead of rebuilding every pixel.
+- **Map simulation and team colours no longer hitch** while the preview updates — their expensive layers are cached and reused between frames.
+- **Drawing stays responsive while the preview follows**: canvas output is updated once per animation frame instead of repeatedly for every cell change.
+- **Fast strokes stay smooth** because the brush shape is worked out once per stroke rather than again for every cell it touches.
+- The **cursor position readout** no longer does extra layout work on every pointer move.
+- Preview, maps and colours render **exactly as before** — this is a performance pass with no visual changes.
+
 ## November 6th, 2026 — Team Color Warning
 - A glowing **warning icon** now appears next to **Colors** when more than 40% of a pattern uses a bright, highly saturated secondary color. Hover or click it to learn why the pattern may be confusing in team games.
 - **Submit is disabled** while the warning is active; hovering or pressing it shows the same explanation.

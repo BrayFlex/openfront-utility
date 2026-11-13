@@ -122,15 +122,16 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
   }
 
   /**
-   * Footprint of one brush stamp. Size 1 is always a single pixel. Sharp tips
-   * are square (matching the long-standing pencil behaviour), soft tips are a
-   * filled circle.
+   * Footprint of one brush stamp, as offsets from the stamp centre. Size 1 is
+   * always a single pixel. Sharp tips are square (matching the long-standing
+   * pencil behaviour), soft tips are a filled circle. Computed once per stroke
+   * so stamping a line doesn't rebuild the footprint at every step.
    */
-  function getBrushCells(cx: number, cy: number, size: number, tip: BrushTip) {
-    const cells: { x: number; y: number }[] = [];
+  function getBrushOffsets(size: number, tip: BrushTip) {
+    const offsets: { x: number; y: number }[] = [];
     if (size <= 1) {
-      cells.push({ x: cx, y: cy });
-      return cells;
+      offsets.push({ x: 0, y: 0 });
+      return offsets;
     }
 
     // Keep the footprint exactly `size` cells wide/tall. Using a radius alone
@@ -146,18 +147,22 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
         for (let dx = start; dx <= end; dx++) {
           const ox = dx - centre;
           const oy = dy - centre;
-          if (ox * ox + oy * oy <= limit) cells.push({ x: cx + dx, y: cy + dy });
+          if (ox * ox + oy * oy <= limit) offsets.push({ x: dx, y: dy });
         }
       }
-      return cells;
+      return offsets;
     }
 
     for (let dy = start; dy <= end; dy++) {
       for (let dx = start; dx <= end; dx++) {
-        cells.push({ x: cx + dx, y: cy + dy });
+        offsets.push({ x: dx, y: dy });
       }
     }
-    return cells;
+    return offsets;
+  }
+
+  function getBrushCells(cx: number, cy: number, size: number, tip: BrushTip) {
+    return getBrushOffsets(size, tip).map((o) => ({ x: cx + o.x, y: cy + o.y }));
   }
 
   /** Stamp the brush at every step along a Bresenham line. */
@@ -171,12 +176,13 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     tip: BrushTip,
     active = true
   ) {
+    const offsets = getBrushOffsets(size, tip);
     let dx = Math.abs(x1 - x0), sx = x0 < x1 ? 1 : -1;
     let dy = -Math.abs(y1 - y0), sy = y0 < y1 ? 1 : -1;
     let err = dx + dy, e2;
     while (true) {
-      for (const cell of getBrushCells(x0, y0, size, tip)) {
-        setIfAllowed(cell.x, cell.y, active, selection);
+      for (const o of offsets) {
+        setIfAllowed(x0 + o.x, y0 + o.y, active, selection);
       }
       if (x0 === x1 && y0 === y1) break;
       e2 = 2 * err;
