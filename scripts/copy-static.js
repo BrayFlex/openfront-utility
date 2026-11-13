@@ -41,7 +41,6 @@ await copyStaticFiles(srcDir);
 const fonts = [
   ["dm-sans", [400, 500, 600, 700]],
   ["dm-mono", [400, 500]],
-  ["space-grotesk", [400, 500, 600, 700]],
 ];
 const fontsOutDir = path.join(outDir, "fonts");
 await mkdir(fontsOutDir, { recursive: true });
