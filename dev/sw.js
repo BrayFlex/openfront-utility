@@ -3,7 +3,7 @@
  * This is a TEMPLATE: scripts/copy-static.js fills in the file list and a
  * content hash and writes the result to docs/sw.js on every build.
  */
-const VERSION = "582b2ffe00";
+const VERSION = "e7f25cf19f";
 
 // Include the scope (e.g. "/" or "/openfront-utility/dev/") in the cache name so
 // the production site and the dev preview never delete each other's caches.

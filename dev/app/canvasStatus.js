@@ -14,6 +14,19 @@ export function initCanvasStatus(options) {
     };
     for (const grid of grids) {
         grid.element.addEventListener("pointermove", (event) => {
+            // The pointer sits over a cell, so its data attributes give the position
+            // directly. Measuring the first cell with getBoundingClientRect would
+            // force a synchronous layout on every mouse move while drawing.
+            const target = event.target;
+            if (target && target.classList.contains("cell")) {
+                const x = Number(target.dataset.x);
+                const y = Number(target.dataset.y);
+                const size = grid.getSize();
+                if (Number.isFinite(x) && Number.isFinite(y) && x >= 0 && y >= 0 && x < size.width && y < size.height) {
+                    setCursor(x, y);
+                    return;
+                }
+            }
             const firstCell = grid.element.querySelector(".cell");
             const cellRect = firstCell === null || firstCell === void 0 ? void 0 : firstCell.getBoundingClientRect();
             const size = grid.getSize();
