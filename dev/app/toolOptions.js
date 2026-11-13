@@ -239,6 +239,16 @@ export function setupToolOptions({ container, toolState }) {
     selectModeField.append(selectModeLabel, selectModeGroup);
     selectPanel.append(selectModeField, selectColorTabs.wrapper, overwriteColorTabs.wrapper);
     container.appendChild(selectPanel);
+    // ── Paste panel ──────────────────────────────────────────────────────────
+    // Paste has its own Overwrite filter so it can be adjusted without leaving
+    // the paste tool. It starts from the Select Overwrite value each session and
+    // changing it never touches the Select setting.
+    const pastePanel = document.createElement("div");
+    pastePanel.className = "tool-options-panel";
+    pastePanel.dataset.tool = "paste";
+    const pasteOverwriteTabs = createColorTabs("Overwrite", "Paste overwrite pixels", (color) => toolState.setPasteOverwriteColor(color));
+    pastePanel.append(pasteOverwriteTabs.wrapper);
+    container.appendChild(pastePanel);
     // ── State sync ───────────────────────────────────────────────────────────
     const shapeToolButton = document.querySelector("#tool-shape");
     const shapeToolIcon = (_a = shapeToolButton === null || shapeToolButton === void 0 ? void 0 : shapeToolButton.querySelector(".tool-icon")) !== null && _a !== void 0 ? _a : null;
@@ -311,18 +321,24 @@ export function setupToolOptions({ container, toolState }) {
                 selectToolButton.title = `Select: ${entry.label}`;
         }
     };
+    const syncPaste = () => {
+        syncColorButtons(pasteOverwriteTabs.buttons, toolState.getPasteOverwriteColor());
+    };
     const updateVisibility = (tool) => {
         const isShape = tool === "shape";
         const isFill = tool === "fill";
         const isPencil = tool === "pencil";
         const isLine = tool === "line";
         const isSelect = tool === "selectArea";
-        container.hidden = !isShape && !isFill && !isPencil && !isLine && !isSelect;
+        const isPaste = tool === "paste";
+        container.hidden =
+            !isShape && !isFill && !isPencil && !isLine && !isSelect && !isPaste;
         shapePanel.hidden = !isShape;
         fillPanel.hidden = !isFill;
         pencilPanel.hidden = !isPencil;
         linePanel.hidden = !isLine;
         selectPanel.hidden = !isSelect;
+        pastePanel.hidden = !isPaste;
         if (isShape) {
             syncType();
             syncRatioInputs();
@@ -335,6 +351,8 @@ export function setupToolOptions({ container, toolState }) {
             syncLineMode();
         if (isSelect)
             syncSelect();
+        if (isPaste)
+            syncPaste();
     };
     syncType();
     syncRatioInputs();
@@ -342,6 +360,7 @@ export function setupToolOptions({ container, toolState }) {
     syncPencilTip();
     syncLineMode();
     syncSelect();
+    syncPaste();
     updateVisibility(toolState.getCurrentTool());
     toolState.subscribeToToolChanges(updateVisibility);
     toolState.subscribeToShapeChanges(syncType);
@@ -349,4 +368,5 @@ export function setupToolOptions({ container, toolState }) {
     toolState.subscribeToPencilChanges(syncPencilTip);
     toolState.subscribeToLineChanges(syncLineMode);
     toolState.subscribeToSelectChanges(syncSelect);
+    toolState.subscribeToPasteChanges(syncPaste);
 }

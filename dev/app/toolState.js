@@ -32,6 +32,9 @@ export function createToolState(options) {
     let selectMode = "regular";
     let selectColor = "both";
     let overwriteColor = "both";
+    // Paste gets its own Overwrite filter. It inherits the Select value when the
+    // paste tool starts and resets afterwards.
+    let pasteOverwriteColor = overwriteColor;
     // Per-tool remembered sizes
     const rememberedSizes = {};
     const listeners = new Set();
@@ -40,6 +43,7 @@ export function createToolState(options) {
     const pencilListeners = new Set();
     const lineListeners = new Set();
     const selectListeners = new Set();
+    const pasteListeners = new Set();
     // Initialize noUiSlider
     const slider = createNoUiSlider(sizeSlider, {
         start: [1],
@@ -153,6 +157,11 @@ export function createToolState(options) {
         // Save current size before switching
         if (getSizeConfig(currentTool)) {
             rememberedSizes[currentTool] = getSliderValue();
+        }
+        // Each new paste session starts from the Select Overwrite filter. Changes
+        // made in the Paste options strip only live for that session.
+        if (tool === "paste" && currentTool !== "paste") {
+            pasteOverwriteColor = overwriteColor;
         }
         previousTool = currentTool;
         currentTool = tool;
@@ -321,6 +330,13 @@ export function createToolState(options) {
             overwriteColor = color;
             selectListeners.forEach((listener) => listener());
         },
+        getPasteOverwriteColor: () => pasteOverwriteColor,
+        setPasteOverwriteColor: (color) => {
+            if (pasteOverwriteColor === color)
+                return;
+            pasteOverwriteColor = color;
+            pasteListeners.forEach((listener) => listener());
+        },
         subscribeToToolChanges: (listener) => {
             listeners.add(listener);
             return () => listeners.delete(listener);
@@ -344,6 +360,10 @@ export function createToolState(options) {
         subscribeToSelectChanges: (listener) => {
             selectListeners.add(listener);
             return () => selectListeners.delete(listener);
+        },
+        subscribeToPasteChanges: (listener) => {
+            pasteListeners.add(listener);
+            return () => pasteListeners.delete(listener);
         },
         getCurrentSize: () => getSliderValue(),
         adjustCurrentSize,
