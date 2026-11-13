@@ -5,7 +5,6 @@
 // marks. In dark mode a faint paper wash lifts the workspace background just
 // enough for the black marks to read, rather than inverting the pattern.
 const GHOST_PAPER = "#ffffff";
-const GHOST_INK = "#000000";
 const GHOST_ALPHA = {
     light: { paper: 0, ink: 0.22 },
     dark: { paper: 0.15, ink: 0.5 },
@@ -14,6 +13,7 @@ export function createTileGhostRenderer(options) {
     const { canvas, workspace, getGrid } = options;
     const ctx = canvas.getContext("2d");
     const tile = document.createElement("canvas");
+    const tileCtx = tile.getContext("2d");
     let raf = 0;
     const draw = () => {
         var _a, _b;
@@ -56,23 +56,30 @@ export function createTileGhostRenderer(options) {
             canvas.width = bitmapW;
         if (canvas.height !== bitmapH)
             canvas.height = bitmapH;
-        // Rebuild the 1px-per-cell tile bitmap from the current pattern.
+        // Rebuild the 1px-per-cell tile bitmap from the current pattern. Built as
+        // one ImageData upload instead of one fillRect per set cell (thousands of
+        // individual draw calls every frame while drawing).
         if (tile.width !== patternW)
             tile.width = patternW;
         if (tile.height !== patternH)
             tile.height = patternH;
-        const tileCtx = tile.getContext("2d");
         if (!tileCtx)
             return;
-        tileCtx.clearRect(0, 0, patternW, patternH);
-        tileCtx.fillStyle = GHOST_INK;
+        const tileImage = tileCtx.createImageData(patternW, patternH);
+        const tileData = tileImage.data;
         for (let y = 0; y < patternH; y++) {
             const row = pattern[y];
             for (let x = 0; x < patternW; x++) {
-                if (row[x] === 1)
-                    tileCtx.fillRect(x, y, 1, 1);
+                if (row[x] !== 1)
+                    continue;
+                const i = (y * patternW + x) * 4;
+                tileData[i] = 0;
+                tileData[i + 1] = 0;
+                tileData[i + 2] = 0;
+                tileData[i + 3] = 255;
             }
         }
+        tileCtx.putImageData(tileImage, 0, 0);
         const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "light";
         const alphas = GHOST_ALPHA[theme];
         ctx.setTransform(1, 0, 0, 1, 0, 0);
