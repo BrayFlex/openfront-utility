@@ -14,8 +14,8 @@
 }
 
 /* Paste preview: show the copied pixels themselves. Filled source pixels get a
-   dark tint and empty ones a faint accent wash, so the pattern's shape is
-   readable instead of the whole selection previewing as one solid block. */
+   strong accent tint and empty ones a faint accent wash, so the pattern's shape
+   is readable over both white and already-filled cells. */
 .cell.paste-hover::after {
   content: "";
   position: absolute;
@@ -24,11 +24,27 @@
 }
 
 .cell.paste-hover-on::after {
-  background: rgba(36, 49, 58, 0.82);
+  background: rgba(12, 124, 201, 0.55);
 }
 
 .cell.paste-hover-off::after {
-  background: rgba(12, 124, 201, 0.1);
+  background: rgba(12, 124, 201, 0.14);
+}
+
+/* Cells the selection or Paste Overwrite filter would protect. The red hatch
+   sits above the pattern tint so the full paste footprint stays visible even
+   when most destination pixels cannot be written. */
+.cell.paste-hover-blocked::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: repeating-linear-gradient(
+    45deg,
+    rgba(238, 29, 22, 0.26) 0 2px,
+    transparent 2px 6px
+  );
+  pointer-events: none;
 }
 
 /* Fill preview: a faint tint on every cell the fill would touch, and a

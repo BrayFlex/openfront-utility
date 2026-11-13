@@ -36,7 +36,7 @@ export function drawPlaceholder(
   context.strokeStyle = "rgba(31, 42, 46, 0.12)";
   context.strokeRect(0.5, 0.5, canvas.width - 1, canvas.height - 1);
   context.fillStyle = accent;
-  context.font = '600 15px "Space Grotesk", sans-serif';
+  context.font = '600 15px "DM Sans", sans-serif';
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.fillText(message, canvas.width / 2, canvas.height / 2);
