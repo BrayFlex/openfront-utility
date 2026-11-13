@@ -102,7 +102,21 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
   // Allow intercepting setIfAllowed for previews
   let currentSetCellActive = setCellActive;
 
+  // Shapes tile across the canvas seams: a shape that crosses an edge continues
+  // on the opposite side. Set only while a shape is being drawn so the pencil,
+  // line and other tools keep their existing edge behaviour.
+  let wrapShapeEdits = false;
+
+  const wrapIndex = (value: number, size: number) => {
+    if (size <= 0) return value;
+    return ((value % size) + size) % size;
+  };
+
   function setIfAllowed(x: number, y: number, active: boolean, selection: Set<string> | undefined) {
+    if (wrapShapeEdits) {
+      x = wrapIndex(x, getTileWidth());
+      y = wrapIndex(y, getTileHeight());
+    }
     if (!isInSelection(x, y, selection)) return;
     currentSetCellActive(x, y, active);
   }
@@ -335,6 +349,25 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     ratio: ShapeRatio,
     selection?: Set<string>
   ) {
+    // Every cell a shape touches is wrapped at the canvas seams, so the shape
+    // (and its preview) continues on the opposite side instead of being cut off.
+    const previousWrap = wrapShapeEdits;
+    wrapShapeEdits = true;
+    try {
+      drawShapeUnwrapped(type, cx, cy, size, ratio, selection);
+    } finally {
+      wrapShapeEdits = previousWrap;
+    }
+  }
+
+  function drawShapeUnwrapped(
+    type: ShapeType,
+    cx: number,
+    cy: number,
+    size: number,
+    ratio: ShapeRatio,
+    selection?: Set<string>
+  ) {
     if (size <= 0) {
       // size=0: just place the center pixel
       setIfAllowed(cx, cy, true, selection);
@@ -342,7 +375,9 @@ export function createDrawingTools(options: DrawingOptions): DrawingTools {
     }
 
     if (type === "circle") {
-      getCircleCellsBySize({ x: cx, y: cy }, size, getTileWidth(), getTileHeight())
+      // Unlimited bounds keep the part of the outline that falls outside the
+      // canvas so setIfAllowed can wrap it onto the opposite edge.
+      getCircleCellsBySize({ x: cx, y: cy }, size, Infinity, Infinity)
         .forEach((p) => setIfAllowed(p.x, p.y, true, selection));
       return;
     }

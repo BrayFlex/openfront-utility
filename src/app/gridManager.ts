@@ -155,6 +155,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   // Paste preview
   let pastePreviewCells: GridPoint[] = [];
   let pastePreviewOrigin: { ox: number; oy: number } | null = null;
+  // Last cell under the pointer, so the paste preview can refresh immediately
+  // when its Overwrite setting changes.
+  let lastHoverPoint: GridPoint | null = null;
 
   const baseCellSize = 20;
 
@@ -167,6 +170,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   // ── Helpers ───────────────────────────────────────────────────────────────
   const isInBounds = (x: number, y: number) =>
     x >= 0 && y >= 0 && x < tileWidth && y < tileHeight;
+
+  /** Wrap a cell coordinate around the canvas so pastes tile across the seams. */
+  const wrapIndex = (value: number, size: number) => {
+    if (size <= 0) return value;
+    return ((value % size) + size) % size;
+  };
 
   const key = (x: number, y: number) => `${x},${y}`;
 
@@ -257,6 +266,9 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   const passesSelectFilter = (active: boolean) => matchesSelectionColor(active, getSelectColor());
   const passesOverwriteFilter = (active: boolean) =>
     matchesSelectionColor(active, getOverwriteColor());
+  // Paste uses its own Overwrite filter, which starts from the Select value.
+  const passesPasteOverwriteFilter = (active: boolean) =>
+    matchesSelectionColor(active, toolState.getPasteOverwriteColor());
 
   const selectAll = () => {
     activeSelection = new Set<string>();
@@ -606,10 +618,13 @@ export function createGridManager(options: GridManagerOptions): GridManager {
   // ── Paste preview ─────────────────────────────────────────────────────────
   // `paste-hover-on` / `paste-hover-off` distinguish filled and empty source
   // pixels so the preview shows the copied pattern instead of a solid block.
+  // `paste-hover-blocked` marks footprint cells that the active selection or
+  // paste Overwrite filter would protect, so the whole paste stays visible.
   const PASTE_PREVIEW_CLASSES = [
     "paste-hover",
     "paste-hover-on",
     "paste-hover-off",
+    "paste-hover-blocked",
   ] as const;
 
   const clearPastePreview = () => {
@@ -632,16 +647,19 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     const halfH = Math.floor(entry.height / 2);
     const pts: GridPoint[] = [];
     for (const c of entry.cells) {
-      const tx = anchorX + (c.x - entry.originX) - halfW;
-      const ty = anchorY + (c.y - entry.originY) - halfH;
-      if (!isInBounds(tx, ty)) continue;
-      if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty))) continue;
-      if (!passesOverwriteFilter(isCellActive(tx, ty))) continue;
+      // Wrap at the canvas edges so a paste that crosses a seam shows both
+      // halves — one on each side — exactly as it will be committed.
+      const tx = wrapIndex(anchorX + (c.x - entry.originX) - halfW, tileWidth);
+      const ty = wrapIndex(anchorY + (c.y - entry.originY) - halfH, tileHeight);
+      const writable =
+        (activeSelection.size === 0 || activeSelection.has(key(tx, ty))) &&
+        passesPasteOverwriteFilter(isCellActive(tx, ty));
       pts.push({ x: tx, y: ty });
       const cell = cellMatrix[ty]?.[tx];
       if (cell) {
         cell.classList.add("paste-hover");
         cell.classList.add(c.active ? "paste-hover-on" : "paste-hover-off");
+        if (!writable) cell.classList.add("paste-hover-blocked");
       }
     }
     pastePreviewCells = pts;
@@ -697,12 +715,13 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     const halfW = Math.floor(entry.width / 2);
     const halfH = Math.floor(entry.height / 2);
     for (const c of entry.cells) {
-      const tx = anchorX + (c.x - entry.originX) - halfW;
-      const ty = anchorY + (c.y - entry.originY) - halfH;
+      // Wrapped exactly like the preview so what you see is what gets pasted.
+      const tx = wrapIndex(anchorX + (c.x - entry.originX) - halfW, tileWidth);
+      const ty = wrapIndex(anchorY + (c.y - entry.originY) - halfH, tileHeight);
       // Respect active selection boundary if one exists
       if (activeSelection.size > 0 && !activeSelection.has(key(tx, ty))) continue;
-      // The Overwrite filter decides which destination pixels can be replaced.
-      if (!passesOverwriteFilter(isCellActive(tx, ty))) continue;
+      // The paste Overwrite filter decides which destination pixels can be replaced.
+      if (!passesPasteOverwriteFilter(isCellActive(tx, ty))) continue;
       setCellActive(tx, ty, c.active);
     }
     onPatternChange();
@@ -964,7 +983,12 @@ export function createGridManager(options: GridManagerOptions): GridManager {
     // Keep a curved-line draft visible if the pointer briefly leaves the grid
     // (for example while moving toward the Draw button).
     if (!curveDraft) clearLinePreview();
-    clearPastePreview();
+    // Paste keeps its preview while the pointer visits the Paste options strip,
+    // so changing Overwrite updates the preview in place.
+    if (toolState.getCurrentTool() !== "paste") {
+      lastHoverPoint = null;
+      clearPastePreview();
+    }
   });
 
   // ── Guides: center overlay + outside rulers ───────────────────────────────
@@ -1324,6 +1348,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
         cell.onmouseover = () => {
           if (isPanKeyHeld()) return;
+          lastHoverPoint = { x: cx, y: cy };
           const tool = toolState.getCurrentTool();
           const sel = activeSelection.size > 0 ? activeSelection : undefined;
 
@@ -1434,6 +1459,7 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   // ── Tool change listener ──────────────────────────────────────────────────
   toolState.subscribeToToolChanges((tool) => {
+    lastHoverPoint = null;
     if (tool !== "line") {
       setLineStart(null);
       clearCurveDraft();
@@ -1460,6 +1486,14 @@ export function createGridManager(options: GridManagerOptions): GridManager {
 
   toolState.subscribeToPencilChanges(() => {
     clearPencilPreview();
+  });
+
+  toolState.subscribeToPasteChanges(() => {
+    // Refresh in place when the Paste Overwrite tabs change, including while
+    // the pointer is over the options strip.
+    if (toolState.getCurrentTool() !== "paste" || !lastHoverPoint) return;
+    const entry = clipboard?.paste();
+    if (entry) showPastePreview(lastHoverPoint.x, lastHoverPoint.y, entry);
   });
 
   toolState.subscribeToSelectChanges(() => {

@@ -105,12 +105,19 @@ export type ToolState = {
   /** Which pixels operations are allowed to overwrite. */
   getOverwriteColor: () => SelectionColor;
   setOverwriteColor: (color: SelectionColor) => void;
+  /**
+   * Overwrite filter for the current paste session. Starts as the Select
+   * Overwrite value and can be changed without affecting the Select setting.
+   */
+  getPasteOverwriteColor: () => SelectionColor;
+  setPasteOverwriteColor: (color: SelectionColor) => void;
   subscribeToToolChanges: (listener: (tool: ToolKind) => void) => () => void;
   subscribeToShapeChanges: (listener: () => void) => () => void;
   subscribeToFillChanges: (listener: () => void) => () => void;
   subscribeToPencilChanges: (listener: () => void) => () => void;
   subscribeToLineChanges: (listener: () => void) => () => void;
   subscribeToSelectChanges: (listener: () => void) => () => void;
+  subscribeToPasteChanges: (listener: () => void) => () => void;
   /** Returns the current slider value for any sized tool */
   getCurrentSize: () => number;
   /** Step the active tool's size up/down. Returns false when it has no size. */
@@ -133,6 +140,9 @@ export function createToolState(options: ToolStateOptions): ToolState {
   let selectMode: SelectMode = "regular";
   let selectColor: SelectionColor = "both";
   let overwriteColor: SelectionColor = "both";
+  // Paste gets its own Overwrite filter. It inherits the Select value when the
+  // paste tool starts and resets afterwards.
+  let pasteOverwriteColor: SelectionColor = overwriteColor;
   // Per-tool remembered sizes
   const rememberedSizes: Partial<Record<ToolKind, number>> = {};
   const listeners = new Set<(tool: ToolKind) => void>();
@@ -141,6 +151,7 @@ export function createToolState(options: ToolStateOptions): ToolState {
   const pencilListeners = new Set<() => void>();
   const lineListeners = new Set<() => void>();
   const selectListeners = new Set<() => void>();
+  const pasteListeners = new Set<() => void>();
 
   // Initialize noUiSlider
   const slider = createNoUiSlider(sizeSlider, {
@@ -261,7 +272,13 @@ export function createToolState(options: ToolStateOptions): ToolState {
     if (getSizeConfig(currentTool)) {
       rememberedSizes[currentTool] = getSliderValue();
     }
-    
+
+    // Each new paste session starts from the Select Overwrite filter. Changes
+    // made in the Paste options strip only live for that session.
+    if (tool === "paste" && currentTool !== "paste") {
+      pasteOverwriteColor = overwriteColor;
+    }
+
     previousTool = currentTool;
     currentTool = tool;
     
@@ -419,6 +436,12 @@ export function createToolState(options: ToolStateOptions): ToolState {
       overwriteColor = color;
       selectListeners.forEach((listener) => listener());
     },
+    getPasteOverwriteColor: () => pasteOverwriteColor,
+    setPasteOverwriteColor: (color) => {
+      if (pasteOverwriteColor === color) return;
+      pasteOverwriteColor = color;
+      pasteListeners.forEach((listener) => listener());
+    },
     subscribeToToolChanges: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -442,6 +465,10 @@ export function createToolState(options: ToolStateOptions): ToolState {
     subscribeToSelectChanges: (listener) => {
       selectListeners.add(listener);
       return () => selectListeners.delete(listener);
+    },
+    subscribeToPasteChanges: (listener) => {
+      pasteListeners.add(listener);
+      return () => pasteListeners.delete(listener);
     },
     getCurrentSize: () => getSliderValue(),
     adjustCurrentSize,

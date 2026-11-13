@@ -2,6 +2,13 @@
 
 *Note: some changes may be undocumented prior to September 2026 because I didn't keep track ¯\_(ツ)_/¯*
 
+## November 13th, 2026 — Wrapping Shapes & Better Paste
+- **Shape** and **Paste** now **wrap around the canvas edges**: a shape or pasted pattern that crosses a seam continues on the opposite side, and its preview shows both halves.
+- Fixed **paste mode still pasting after switching tools** — choosing the pencil, shape (or any other tool) before clicking now uses that tool instead of pasting the clipboard.
+- **Paste now has its own Overwrite setting** (Black / Both / White) in the canvas options strip. It starts from the Select value each time and changing it only affects the current paste.
+- The **Paste toolbar button stays highlighted** while paste mode is active.
+- The **paste preview is much easier to see**: filled pixels use a strong accent tint that stays visible over black cells, and protected cells show the full footprint with a red hatch instead of disappearing.
+
 ## November 6th, 2026 — Team Color Warning
 - A glowing **warning icon** now appears next to **Colors** when more than 40% of a pattern uses a bright, highly saturated secondary color. Hover or click it to learn why the pattern may be confusing in team games.
 - **Submit is disabled** while the warning is active; hovering or pressing it shows the same explanation.

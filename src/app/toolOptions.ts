@@ -308,6 +308,22 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
   );
   container.appendChild(selectPanel);
 
+  // ── Paste panel ──────────────────────────────────────────────────────────
+  // Paste has its own Overwrite filter so it can be adjusted without leaving
+  // the paste tool. It starts from the Select Overwrite value each session and
+  // changing it never touches the Select setting.
+  const pastePanel = document.createElement("div");
+  pastePanel.className = "tool-options-panel";
+  pastePanel.dataset.tool = "paste";
+
+  const pasteOverwriteTabs = createColorTabs(
+    "Overwrite",
+    "Paste overwrite pixels",
+    (color) => toolState.setPasteOverwriteColor(color)
+  );
+  pastePanel.append(pasteOverwriteTabs.wrapper);
+  container.appendChild(pastePanel);
+
   // ── State sync ───────────────────────────────────────────────────────────
   const shapeToolButton = document.querySelector<HTMLButtonElement>("#tool-shape");
   const shapeToolIcon = shapeToolButton?.querySelector<HTMLElement>(".tool-icon") ?? null;
@@ -387,18 +403,25 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
     }
   };
 
+  const syncPaste = () => {
+    syncColorButtons(pasteOverwriteTabs.buttons, toolState.getPasteOverwriteColor());
+  };
+
   const updateVisibility = (tool: ToolKind) => {
     const isShape = tool === "shape";
     const isFill = tool === "fill";
     const isPencil = tool === "pencil";
     const isLine = tool === "line";
     const isSelect = tool === "selectArea";
-    container.hidden = !isShape && !isFill && !isPencil && !isLine && !isSelect;
+    const isPaste = tool === "paste";
+    container.hidden =
+      !isShape && !isFill && !isPencil && !isLine && !isSelect && !isPaste;
     shapePanel.hidden = !isShape;
     fillPanel.hidden = !isFill;
     pencilPanel.hidden = !isPencil;
     linePanel.hidden = !isLine;
     selectPanel.hidden = !isSelect;
+    pastePanel.hidden = !isPaste;
     if (isShape) {
       syncType();
       syncRatioInputs();
@@ -407,6 +430,7 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
     if (isPencil) syncPencilTip();
     if (isLine) syncLineMode();
     if (isSelect) syncSelect();
+    if (isPaste) syncPaste();
   };
 
   syncType();
@@ -415,6 +439,7 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
   syncPencilTip();
   syncLineMode();
   syncSelect();
+  syncPaste();
   updateVisibility(toolState.getCurrentTool());
 
   toolState.subscribeToToolChanges(updateVisibility);
@@ -423,4 +448,5 @@ export function setupToolOptions({ container, toolState }: ToolOptionsConfig) {
   toolState.subscribeToPencilChanges(syncPencilTip);
   toolState.subscribeToLineChanges(syncLineMode);
   toolState.subscribeToSelectChanges(syncSelect);
+  toolState.subscribeToPasteChanges(syncPaste);
 }
